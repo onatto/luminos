@@ -15,8 +15,7 @@ function luminosProject(LUA_DIR)
 		BGFX_DIR .. "include",
 		BGFX_DIR .. "3rdparty",
 		BGFX_DIR .. "examples/common",
-                LUA_DIR .. "include",
-		"$(SDL2_DIR)/include",
+                LUA_DIR .. "src",
 	}
 
 	files {

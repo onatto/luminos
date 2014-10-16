@@ -6,9 +6,11 @@
 #include "common.h"
 #include <bgfx.h>
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 #undef main
-#include "SDL_syswm.h"
+#include "SDL2/SDL_syswm.h"
+
+#include "lua.h"
 
 int _main_(int /*_argc*/, char** /*_argv*/)
 {
