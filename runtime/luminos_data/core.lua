@@ -20,7 +20,7 @@ function execTransform(transform)
   
   -- All inputs are ready at this point, evaluate the transform which sets up any outputs it can too
   transform.eval(transform)
-  
+  transform.visited = true
   -- The outputs of this transform are ready, maybe they're there, maybe not
   return transform
 end
