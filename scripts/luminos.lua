@@ -1,163 +1,163 @@
 function luminosProject(LUA_DIR)
 
-        LUMINOS_DIR = BGFX_DIR .. "luminos/"
-        _name = "luminos"
-	project (_name)
-		uuid (os.uuid(_name))
-		kind "WindowedApp"
+    LUMINOS_DIR = BGFX_DIR .. "luminos/"
+    _name = "luminos"
+    project (_name)
+    uuid (os.uuid(_name))
+    kind "WindowedApp"
 
-	configuration {}
+    configuration {}
 
-	debugdir (BGFX_DIR .. "examples/runtime/")
+    debugdir (BGFX_DIR .. "luminos/runtime/")
 
-	includedirs {
-		BX_DIR .. "include",
-		BGFX_DIR .. "include",
-		BGFX_DIR .. "3rdparty",
-		BGFX_DIR .. "examples/common",
-                LUA_DIR .. "src",
-	}
+    includedirs {
+        BX_DIR .. "include",
+        BGFX_DIR .. "include",
+        BGFX_DIR .. "3rdparty",
+        BGFX_DIR .. "examples/common",
+        LUA_DIR .. "src",
+    }
 
-	files {
-	        LUMINOS_DIR .. "src/**.cpp",
-	        LUMINOS_DIR .. "src/**.h",
-	}
+    files {
+        LUMINOS_DIR .. "src/**.cpp",
+        LUMINOS_DIR .. "src/**.h",
+    }
 
-	links {
-		"bgfx",
-		"example-common",
-                "lua51",
-	}
-        
-        libdirs { LUA_DIR .. "/src" }
+    links {
+        "bgfx",
+        "example-common",
+        "lua51",
+    }
 
-	if _OPTIONS["with-sdl"] then
-		defines { "ENTRY_CONFIG_USE_SDL=1" }
-		links   { "SDL2" }
+    libdirs { LUA_DIR .. "/src" }
 
-		configuration { "x32", "windows" }
-			libdirs { "$(SDL2_DIR)/lib/x86" }
+    if _OPTIONS["with-sdl"] then
+        defines { "ENTRY_CONFIG_USE_SDL=1" }
+        links   { "SDL2" }
 
-		configuration { "x64", "windows" }
-			libdirs { "$(SDL2_DIR)/lib/x64" }
+        configuration { "x32", "windows" }
+            libdirs { "$(SDL2_DIR)/lib/x86" }
 
-		configuration {}
-	end
+        configuration { "x64", "windows" }
+            libdirs { "$(SDL2_DIR)/lib/x64" }
 
-	configuration { "vs*" }
-		linkoptions {
-			"/ignore:4199", -- LNK4199: /DELAYLOAD:*.dll ignored; no imports found from *.dll
-		}
-		links { -- this is needed only for testing with GLES2/3 on Windows with VS2008
-			"DelayImp",
-		}
+        configuration {}
+    end
 
-	configuration { "vs201*" }
-		linkoptions { -- this is needed only for testing with GLES2/3 on Windows with VS201x
-			"/DELAYLOAD:\"libEGL.dll\"",
-			"/DELAYLOAD:\"libGLESv2.dll\"",
-		}
+    configuration { "vs*" }
+        linkoptions {
+            "/ignore:4199", -- LNK4199: /DELAYLOAD:*.dll ignored; no imports found from *.dll
+        }
+        links { -- this is needed only for testing with GLES2/3 on Windows with VS2008
+            "DelayImp",
+        }
 
-	configuration { "windows" }
-		links {
-			"gdi32",
-			"psapi",
-		}
+    configuration { "vs201*" }
+        linkoptions { -- this is needed only for testing with GLES2/3 on Windows with VS201x
+            "/DELAYLOAD:\"libEGL.dll\"",
+            "/DELAYLOAD:\"libGLESv2.dll\"",
+        }
 
-	configuration { "android*" }
-		kind "ConsoleApp"
-		targetextension ".so"
-		linkoptions {
-			"-shared",
-		}
-		links {
-			"EGL",
-			"GLESv2",
-		}
+    configuration { "windows" }
+        links {
+            "gdi32",
+            "psapi",
+        }
 
-	configuration { "nacl or nacl-arm" }
-		kind "ConsoleApp"
-		targetextension ".nexe"
-		links {
-			"ppapi",
-			"ppapi_gles2",
-			"pthread",
-		}
+    configuration { "android*" }
+        kind "ConsoleApp"
+        targetextension ".so"
+        linkoptions {
+            "-shared",
+        }
+        links {
+            "EGL",
+            "GLESv2",
+        }
 
-	configuration { "pnacl" }
-		kind "ConsoleApp"
-		targetextension ".pexe"
-		links {
-			"ppapi",
-			"ppapi_gles2",
-			"pthread",
-		}
+    configuration { "nacl or nacl-arm" }
+        kind "ConsoleApp"
+        targetextension ".nexe"
+        links {
+            "ppapi",
+            "ppapi_gles2",
+            "pthread",
+        }
 
-	configuration { "asmjs" }
-		kind "ConsoleApp"
-		targetextension ".bc"
+    configuration { "pnacl" }
+        kind "ConsoleApp"
+        targetextension ".pexe"
+        links {
+            "ppapi",
+            "ppapi_gles2",
+            "pthread",
+        }
 
-	configuration { "linux-*" }
-		links {
-			"X11",
-			"GL",
-			"pthread",
-		}
+    configuration { "asmjs" }
+        kind "ConsoleApp"
+        targetextension ".bc"
 
-	configuration { "rpi" }
-		links {
-			"X11",
-			"GLESv2",
-			"EGL",
-			"bcm_host",
-			"vcos",
-			"vchiq_arm",
-			"pthread",
-		}
+    configuration { "linux-*" }
+        links {
+            "X11",
+            "GL",
+            "pthread",
+        }
 
-	configuration { "osx" }
-		files {
-			BGFX_DIR .. "examples/common/**.mm",
-		}
-		links {
-			"Cocoa.framework",
-			"OpenGL.framework",
-		}
+    configuration { "rpi" }
+        links {
+            "X11",
+            "GLESv2",
+            "EGL",
+            "bcm_host",
+            "vcos",
+            "vchiq_arm",
+            "pthread",
+        }
 
-	configuration { "xcode4" }
-		platforms {
-			"Universal"
-		}
-		files {
-			BGFX_DIR .. "examples/common/**.mm",
-		}
-		links {
-			"Cocoa.framework",
-			"Foundation.framework",
-			"OpenGL.framework",
-		}
+    configuration { "osx" }
+        files {
+            BGFX_DIR .. "examples/common/**.mm",
+        }
+        links {
+            "Cocoa.framework",
+            "OpenGL.framework",
+        }
 
-	configuration { "ios*" }
-		kind "ConsoleApp"
-		files {
-			BGFX_DIR .. "examples/common/**.mm",
-		}
-		linkoptions {
-			"-framework CoreFoundation",
-			"-framework Foundation",
-			"-framework OpenGLES",
-			"-framework UIKit",
-			"-framework QuartzCore",
-		}
+    configuration { "xcode4" }
+        platforms {
+            "Universal"
+        }
+        files {
+            BGFX_DIR .. "examples/common/**.mm",
+        }
+        links {
+            "Cocoa.framework",
+            "Foundation.framework",
+            "OpenGL.framework",
+        }
 
-	configuration { "qnx*" }
-		targetextension ""
-		links {
-			"EGL",
-			"GLESv2",
-		}
+    configuration { "ios*" }
+        kind "ConsoleApp"
+        files {
+            BGFX_DIR .. "examples/common/**.mm",
+        }
+        linkoptions {
+            "-framework CoreFoundation",
+            "-framework Foundation",
+            "-framework OpenGLES",
+            "-framework UIKit",
+            "-framework QuartzCore",
+        }
 
-	configuration {}
+    configuration { "qnx*" }
+        targetextension ""
+        links {
+            "EGL",
+            "GLESv2",
+        }
 
-	strip()
+    configuration {}
+
+    strip()
 end

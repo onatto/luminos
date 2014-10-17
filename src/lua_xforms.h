@@ -3,9 +3,9 @@
 
 struct LuaEnvironments
 {
-    enum
+    enum Enum
     {
-        Default,
+        Default = 0,
         Count
     };
 };
