@@ -7,8 +7,14 @@
 #include <bgfx.h>
 #include "lua_xforms.h"
 
+#include "nanovg/nanovg.h"
+
+#define BLENDISH_IMPLEMENTATION
+#include "blendish.h"
+
 static char status_msg[256] = {0};
 static char error_msg[2048] = {0};
+static char stdout_msg[2048] = {0};
 
 bool quit = false;
 
@@ -22,15 +28,22 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     bgfx::init();
     bgfx::reset(width, height);
 
+    NVGcontext* nvg = nvgCreate(512, 512, 1, 0);
+	bgfx::setViewSeq(0, true);
+
+	bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
+	bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png"));
+
     initLua();
 
     strcpy(status_msg, "Compiled Lua successfully!");
-    strcpy(error_msg, "Description: Initialization and debug text.");
-    if (compileLua("luminos_data/core.lua", error_msg))
+    strcpy(error_msg, "Luminos - think xform");
+    if (compileLua("luminos_data/program.lua", error_msg))
     {
         strcpy(status_msg, "Couldn't load file:");
     }
 
+    port_programStart("portProgramStart", stdout_msg);
 
     // Enable debug text.
     bgfx::setDebug(debug);
@@ -56,6 +69,19 @@ int _main_(int /*_argc*/, char** /*_argv*/)
         bgfx::dbgTextClear();
         bgfx::dbgTextPrintf(0, 1, 0x4f, status_msg);
         bgfx::dbgTextPrintf(0, 2, 0x6f, error_msg);
+        bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
+
+        nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
+
+        for (int i = 0; i < 3; i++)
+        {
+            bndNodePort(nvg, 640 + i * 50, 100 + i * 90, (BNDwidgetState)i, nvgRGBA(255, 50, 100, 255));
+            bndNodeWire(nvg, 640 + i * 50, 100 + i * 90, 800 + i * 50, 400 + i * 90, (BNDwidgetState)i, BNDwidgetState::BND_ACTIVE);
+            bndNodeBackground(nvg, 300 + i * 300, 600, 200, 100, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
+            //bndNodeIconLabel(nvg, 300 + i * 300, 490, 200, 100, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 40, "Check out");
+        }
+
+		nvgEndFrame(nvg);
 
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.

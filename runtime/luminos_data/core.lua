@@ -34,32 +34,16 @@ end
 
 concat_transform = {
     name = "Concat",
-    
     -- Just change the default for that node instead of going one node deeper for constant inputs
     inputs = {
         str_a = {type = "string", default = ""},
         str_b = {type = "string", default = ""}
     },
-    
-    connections = {
-    },
-
+    connections = {},
     outputs = {
         concat_str = {type = "string"}
     },
-
     eval = function(self)
          self.outputs.concat_str.value = self.inputs.str_a.value .. self.inputs.str_b.value
     end
-}
-
--- We don't need this complexity anymore, change default value in the inputs table for constant inputs
-  string_generator = {
-       name = "String",
-       inputs = {},
-       str = "",
-
-       eval = function()
-          return str
-       end
 }

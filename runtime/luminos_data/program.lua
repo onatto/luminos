@@ -1,5 +1,5 @@
-dofile "luminos/core.lua"
-dofile "luminos/table_ops.lua"
+dofile "luminos_data/core.lua"
+dofile "luminos_data/table_ops.lua"
 
 concat_xform = deepcopy(concat_transform)
 concat_xform.inputs.str_a.default = "Say "
@@ -22,8 +22,11 @@ top_transform = {
     },
     eval = function(self)
          self.outputs.stdout.value = self.inputs.input_str.value
-         print(self.outputs.stdout.value)
     end
 }
 
-execTransform(top_transform)
+
+function portProgramStart()
+    execTransform(top_transform)
+    return top_transform.outputs.stdout.value 
+end
