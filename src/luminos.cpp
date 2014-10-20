@@ -1,7 +1,9 @@
 /*
- * Copyright 2011-2014 Branimir Karadzic. All rights reserved.
+ * Copyright 2014 Onat Turkcuoglu. All rights reserved.
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
+
+#include <bx/timer.h>
 
 #include "common.h"
 #include <bgfx.h>
@@ -11,6 +13,8 @@
 
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
+#include <bx/timer.h>
+#include "ui_xforms.h"
 
 static char status_msg[256] = {0};
 static char error_msg[2048] = {0};
@@ -25,6 +29,9 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     uint32_t debug = BGFX_DEBUG_TEXT;
     uint32_t reset = BGFX_RESET_VSYNC;
 
+    strcpy(status_msg, "Compiled Lua successfully!");
+    strcpy(error_msg, "Luminos - think xform");
+
     bgfx::init();
     bgfx::reset(width, height);
 
@@ -33,17 +40,6 @@ int _main_(int /*_argc*/, char** /*_argv*/)
 
 	bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
 	bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png"));
-
-    initLua();
-
-    strcpy(status_msg, "Compiled Lua successfully!");
-    strcpy(error_msg, "Luminos - think xform");
-    if (compileLua("luminos_data/program.lua", error_msg))
-    {
-        strcpy(status_msg, "Couldn't load file:");
-    }
-
-    port_programStart("portProgramStart", stdout_msg);
 
     // Enable debug text.
     bgfx::setDebug(debug);
@@ -55,9 +51,25 @@ int _main_(int /*_argc*/, char** /*_argv*/)
         , 1.0f
         , 0
         );
+	int64_t timeOffset = bx::getHPCounter();
 
-    while (!entry::processEvents(width, height, debug, reset) )
+    // Setup Lua
+    initLua();
+    ui_init();
+    if (compileLua("luminos_data/program.lua", error_msg))
     {
+        strcpy(status_msg, "Couldn't load file:");
+    }
+
+    entry::MouseState mouse_state;
+    while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
+    {
+		int64_t now = bx::getHPCounter();
+		const double freq = double(bx::getHPFrequency() );
+		float time = (float)( (now-timeOffset)/freq);
+
+        float scale = 1.0f + 0.1f * sinf(time);
+
         // Set view 0 default viewport.
         bgfx::setViewRect(0, 0, 0, width, height);
 
@@ -71,13 +83,17 @@ int _main_(int /*_argc*/, char** /*_argv*/)
         bgfx::dbgTextPrintf(0, 2, 0x6f, error_msg);
         bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
+        ui_uploadMouseGlobals(&mouse_state);
+        port_programStart("portProgramStart", stdout_msg);
+
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
 
         for (int i = 0; i < 3; i++)
         {
             bndNodePort(nvg, 640 + i * 50, 100 + i * 90, (BNDwidgetState)i, nvgRGBA(255, 50, 100, 255));
-            bndNodeWire(nvg, 640 + i * 50, 100 + i * 90, 800 + i * 50, 400 + i * 90, (BNDwidgetState)i, BNDwidgetState::BND_ACTIVE);
-            bndNodeBackground(nvg, 300 + i * 300, 600, 200, 100, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
+            bndNodeWire(nvg, 640 + i * 50, 100 + i * 90, 800 + i * 50, 400 + i * 90, (BNDwidgetState)i, BNDwidgetState::BND_DEFAULT);
+            //bndNodeIconLabel(nvg, 300 + i * 300, 300, 200 * scale, 100 * scale, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 20, "Check out");
+            bndNodeBackground(nvg, 300 + i * 300, 400, 200 * scale, 100 * scale, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
             //bndNodeIconLabel(nvg, 300 + i * 300, 490, 200, 100, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 40, "Check out");
         }
 

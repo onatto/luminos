@@ -1,13 +1,14 @@
 dofile "luminos_data/core.lua"
 dofile "luminos_data/table_ops.lua"
+dofile "luminos_data/xform_ops.lua"
 
-concat_xform = deepcopy(concat_transform)
-concat_xform.inputs.str_a.default = "Say "
-concat_xform.inputs.str_b.default = "Hey"
+mouse_xform = clone_xform(mouse_input_transform, {})
+concat_xform = clone_xform(concat_transform, { str_a = "Lua ", str_b = "says: "})
+concat_xform_2 = clone_xform(concat_transform, { str_a = "MouseX: " })
+concat_xform_2.connections.str_b = { transform = mouse_xform, name = "mx" }
 
-concat_xform_2 = deepcopy(concat_transform)
-concat_xform_2.connections.str_a = { transform = concat_xform, name = "concat_str" }
-concat_xform_2.inputs.str_b.default = " Onat"
+-- clone_xform(concat_transform, { str_a = "Say", str_b = " Hey" })
+-- can set name field later from the UI, but gets the concat_transform's name
 
 top_transform = {
     name = "stdout",
@@ -25,8 +26,13 @@ top_transform = {
     end
 }
 
+transforms = { concat_xform, concat_xform_2, top_transform, mouse_xform}
 
 function portProgramStart()
+    for _k,transform in ipairs(transforms) do
+        transform.visited = false
+    end
     execTransform(top_transform)
-    return top_transform.outputs.stdout.value 
+    return top_transform.outputs.stdout.value
 end
+

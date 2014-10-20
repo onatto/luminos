@@ -1,6 +1,4 @@
-#include "lua.hpp"
-#include "lauxlib.h"
-
+struct lua_State;
 struct LuaEnvironments
 {
     enum Enum
@@ -9,6 +7,7 @@ struct LuaEnvironments
         Count
     };
 };
+extern lua_State* states[LuaEnvironments::Count];
 
 int initLua(int env = 0);
 int compileLua(const char* filename, char* error_msg, int env = 0);
@@ -16,3 +15,4 @@ int execPort(const char* port_name, char* error_msg, int env = 0);
 int shutdownLua(int env = 0);
 
 int port_programStart(const char* port_name, char* std_out, int env = 0);
+inline lua_State* get_luastate(int env) { return states[env]; }

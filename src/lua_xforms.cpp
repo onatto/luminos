@@ -1,29 +1,23 @@
+#include "lua.hpp"
+#include "lauxlib.h"
+
 #include "lua_xforms.h"
 #include "string.h"
+#include <bx/string.h>
 
-static lua_State* states[LuaEnvironments::Count];
+lua_State* states[LuaEnvironments::Count];
 
-inline lua_State** get_luastate(int env)
-{
-    return &states[env];
-}
 int initLua(int env)
 {
-    lua_State** L = get_luastate(env);
+    lua_State** L = &states[env];
     *L = luaL_newstate();
-    luaopen_base(*L);
-    luaopen_string(*L);
-    luaopen_table(*L);
-    luaopen_math(*L);
-    luaopen_io(*L);
-    luaopen_os(*L);
-    luaopen_debug(*L);
+    luaL_openlibs(*L);
     return 0;
 }
 
 int compileLua(const char* filename, char* error_msg, int env)
 {
-    lua_State* L = *get_luastate(env);
+    lua_State* L = get_luastate(env);
     /* Load the file containing the script we are going to run */
     int result = luaL_loadfile(L, filename);
     if (result) {
@@ -44,7 +38,7 @@ int compileLua(const char* filename, char* error_msg, int env)
 
 int shutdownLua(int env)
 {
-    lua_State* L = *get_luastate(env);
+    lua_State* L = get_luastate(env);
     lua_close(L);
     return 0;
 }
@@ -57,19 +51,17 @@ int shutdownLua(int env)
 // Staying close to hardware does not only mean C(faster readable assembly code - only the compiler expands it and optimizes it), but another optimizing software(by analysing the transformations of the program)
 // optimizing for the data flow too, since the future is all about the data
 
-// A port is a function that manages the 
+// A port is a function that manages the
 int execPort(const char* port_name, char* error_msg, int env)
 {
-    lua_State* L = *get_luastate(env);
+    lua_State* L = get_luastate(env);
 
     // Top before the port function call - so the function can return multiple variables
     int top = lua_gettop(L);
     lua_getglobal(L, port_name);
-    int type = lua_type(L, -1);
-    strcpy(error_msg, lua_typename(L, type));
     if (!lua_isfunction(L, -1))
         return -1;
-    
+
     /* Ask Lua to run our little script */
     int result = lua_pcall(L, 0, LUA_MULTRET, 0);
     if (result) {
@@ -84,14 +76,18 @@ int execPort(const char* port_name, char* error_msg, int env)
 
 int port_programStart(const char* port_name, char* std_out, int env)
 {
-    lua_State* L = *get_luastate(env);
+    lua_State* L = get_luastate(env);
+    int top = lua_gettop(L);
     int numOutputs = execPort(port_name, std_out);
     if (numOutputs > 0)
     {
         size_t len = 0;
+        if (!lua_isstring(L, -1))
+            return -1;
         char* str = (char*)lua_tolstring(L, -1, &len);
         strncpy(std_out, str, len);
     }
+    lua_settop(L, top);
     return 0;
 }
 // Meh, seems like a bad idea - doesn't get better than data(just write a xform(for reuse) for the logic that causes the event to happen)

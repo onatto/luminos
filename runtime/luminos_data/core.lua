@@ -1,11 +1,11 @@
 function execTransform(transform)
   -- transform.visited means that the output table for that transform was calculated(cached) from an earlier transform
   -- that is, that this vertex has been visited in the DAG traversal before
-  
+
   if transform.visited then
     return transform
   end
-  
+
   local inputs = transform.inputs
   local connections = transform.connections
   for input_name, input_def in pairs(inputs) do -- Iterate over each input
@@ -17,7 +17,7 @@ function execTransform(transform)
         input_def.value = input_def.default
       end
   end
-  
+
   -- All inputs are ready at this point, evaluate the transform which sets up any outputs it can too
   transform.eval(transform)
   transform.visited = true
@@ -45,5 +45,19 @@ concat_transform = {
     },
     eval = function(self)
          self.outputs.concat_str.value = self.inputs.str_a.value .. self.inputs.str_b.value
+    end
+}
+
+mouse_input_transform = {
+    name = "Mouse Input",
+    inputs = {},
+    connections = {},
+    outputs = {
+        mx = {type = "number"},
+        my = {type = "number"}
+    },
+    eval = function(self)
+        self.outputs.mx.value = g_mouseState.mx
+        self.outputs.my.value = g_mouseState.my
     end
 }
