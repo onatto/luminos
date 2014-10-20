@@ -23,12 +23,14 @@ int compileLua(const char* filename, char* error_msg, int env)
     if (result) {
         /* If something went wrong, error message is at the top of */
         /* the stack */
+		memset(error_msg, 0, strlen(error_msg));
         strcpy(error_msg, lua_tostring(L, -1));
         return result;
     }
 
     result = lua_pcall(L, 0, LUA_MULTRET, 0);
     if (result) {
+		memset(error_msg, 0, strlen(error_msg));
         strcpy(error_msg, lua_tostring(L, -1));
         return result;
     }
@@ -85,15 +87,35 @@ int port_programStart(const char* port_name, char* std_out, int env)
         if (!lua_isstring(L, -1))
             return -1;
         char* str = (char*)lua_tolstring(L, -1, &len);
+		memset(std_out, 0, strlen(std_out));
         strncpy(std_out, str, len);
     }
     lua_settop(L, top);
     return 0;
 }
-// Meh, seems like a bad idea - doesn't get better than data(just write a xform(for reuse) for the logic that causes the event to happen)
-// Events that happen per frame - ordered, unbuffered (one can buffer the critical events for the logic of the program anyway)
-// int eventSink(const char* event_name, const char* err_msg, int env)
 
-// For GUI input processing: GUI items have AABB references that get uploaded to a common AABB list that gets checked for events every frame
-// So, a lot more optimizations are possible to reduce the number of AABB tests(JIT compiled hopefully)
-// Gather events to GUI in a very specific transform
+int initEnvironmentVariables(int env)
+{
+	lua_State* L = get_luastate(env);
+	lua_pushnumber(L, 0.0);
+	lua_setglobal(L, "g_time");
+	return 0;
+}
+
+int uploadEnvironmentVariables(float time, int env)
+{
+	lua_State* L = get_luastate(env);
+	lua_pushnumber(L, time);
+	lua_setglobal(L, "g_time");
+	return 0;
+}
+
+void cmdRecompile(const void* userdata)
+{
+    RecompileInput* in = (RecompileInput*)userdata;
+    if (compileLua(in->filename, in->error_msg))
+    {
+		memset(in->status_msg, 0, strlen(in->status_msg));
+        strcpy(in->status_msg, "Couldn't load file:");
+    }
+}

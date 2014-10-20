@@ -2,10 +2,11 @@ dofile "luminos_data/core.lua"
 dofile "luminos_data/table_ops.lua"
 dofile "luminos_data/xform_ops.lua"
 
-mouse_xform = clone_xform(mouse_input_transform, {})
-concat_xform = clone_xform(concat_transform, { str_a = "Lua ", str_b = "says: "})
-concat_xform_2 = clone_xform(concat_transform, { str_a = "MouseX: " })
-concat_xform_2.connections.str_b = { transform = mouse_xform, name = "mx" }
+concat_xform = clone_xform(concat_transform, {str_a = "Time: "})
+concat_xform_2 = clone_xform(concat_transform, {str_a = "MouseX: " })
+
+concat_xform.connections.str_b = {transform = time_xform, name = "time"}
+concat_xform_2.connections.str_b = {transform = mouse_xform, name = "mx"}
 
 -- clone_xform(concat_transform, { str_a = "Say", str_b = " Hey" })
 -- can set name field later from the UI, but gets the concat_transform's name
@@ -26,7 +27,8 @@ top_transform = {
     end
 }
 
-transforms = { concat_xform, concat_xform_2, top_transform, mouse_xform}
+-- This table contains all the xforms present in the workspace
+transforms = { concat_xform, concat_xform_2, top_transform, mouse_xform, time_xform}
 
 function portProgramStart()
     for _k,transform in ipairs(transforms) do

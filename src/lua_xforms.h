@@ -16,3 +16,14 @@ int shutdownLua(int env = 0);
 
 int port_programStart(const char* port_name, char* std_out, int env = 0);
 inline lua_State* get_luastate(int env) { return states[env]; }
+
+int initEnvironmentVariables(int env = 0);
+int uploadEnvironmentVariables(float time, int env = 0);
+
+struct RecompileInput
+{
+    char* filename;
+    char* status_msg;
+    char* error_msg;
+};
+void cmdRecompile(const void* userdata);

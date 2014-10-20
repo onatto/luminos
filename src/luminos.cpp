@@ -20,7 +20,13 @@ static char status_msg[256] = {0};
 static char error_msg[2048] = {0};
 static char stdout_msg[2048] = {0};
 
-bool quit = false;
+#include "entry/input.h"
+RecompileInput rc_in = { "luminos_data/program.lua", status_msg, error_msg };
+static const InputBinding s_bindings[] =
+{
+    { entry::Key::F5,    entry::Modifier::None,      1, cmdRecompile, &rc_in },
+    INPUT_BINDING_END
+};
 
 int _main_(int /*_argc*/, char** /*_argv*/)
 {
@@ -56,19 +62,19 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     // Setup Lua
     initLua();
     ui_init();
+	initEnvironmentVariables();
     if (compileLua("luminos_data/program.lua", error_msg))
     {
         strcpy(status_msg, "Couldn't load file:");
     }
 
+	inputAddBindings("ui_bindings", s_bindings);
     entry::MouseState mouse_state;
     while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
     {
 		int64_t now = bx::getHPCounter();
 		const double freq = double(bx::getHPFrequency() );
 		float time = (float)( (now-timeOffset)/freq);
-
-        float scale = 1.0f + 0.1f * sinf(time);
 
         // Set view 0 default viewport.
         bgfx::setViewRect(0, 0, 0, width, height);
@@ -84,6 +90,7 @@ int _main_(int /*_argc*/, char** /*_argv*/)
         bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
         ui_uploadMouseGlobals(&mouse_state);
+		uploadEnvironmentVariables(time);
         port_programStart("portProgramStart", stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
@@ -93,7 +100,7 @@ int _main_(int /*_argc*/, char** /*_argv*/)
             bndNodePort(nvg, 640 + i * 50, 100 + i * 90, (BNDwidgetState)i, nvgRGBA(255, 50, 100, 255));
             bndNodeWire(nvg, 640 + i * 50, 100 + i * 90, 800 + i * 50, 400 + i * 90, (BNDwidgetState)i, BNDwidgetState::BND_DEFAULT);
             //bndNodeIconLabel(nvg, 300 + i * 300, 300, 200 * scale, 100 * scale, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 20, "Check out");
-            bndNodeBackground(nvg, 300 + i * 300, 400, 200 * scale, 100 * scale, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
+            bndNodeBackground(nvg, 300 + i * 300, 400, 200, 100, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
             //bndNodeIconLabel(nvg, 300 + i * 300, 490, 200, 100, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 40, "Check out");
         }
 
