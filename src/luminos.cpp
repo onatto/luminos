@@ -35,9 +35,6 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     uint32_t debug = BGFX_DEBUG_TEXT;
     uint32_t reset = BGFX_RESET_VSYNC;
 
-    strcpy(status_msg, "Compiled Lua successfully!");
-    strcpy(error_msg, "Luminos - think xform");
-
     bgfx::init();
     bgfx::reset(width, height);
 
@@ -62,11 +59,9 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     // Setup Lua
     initLua();
     ui_init();
+    ui_setNVGContext(nvg);
 	initEnvironmentVariables();
-    if (compileLua("luminos_data/program.lua", error_msg))
-    {
-        strcpy(status_msg, "Couldn't load file:");
-    }
+    cmdRecompile((const void*) &rc_in);
 
 	inputAddBindings("ui_bindings", s_bindings);
     entry::MouseState mouse_state;
@@ -89,7 +84,7 @@ int _main_(int /*_argc*/, char** /*_argv*/)
         bgfx::dbgTextPrintf(0, 2, 0x6f, error_msg);
         bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
-        ui_uploadMouseGlobals(&mouse_state);
+        ui_uploadMouseGlobals(&mouse_state, 0);
 		uploadEnvironmentVariables(time);
         port_programStart("portProgramStart", stdout_msg);
 

@@ -118,4 +118,11 @@ void cmdRecompile(const void* userdata)
 		memset(in->status_msg, 0, strlen(in->status_msg));
         strcpy(in->status_msg, "Couldn't load file:");
     }
+    else
+    {
+        memset(in->status_msg, 0, strlen(in->status_msg));
+        strcpy(in->status_msg, "Compiled Lua successfully!");
+        memset(in->error_msg, 0, strlen(in->error_msg));
+        strcpy(in->error_msg, "Luminos");
+    }
 }

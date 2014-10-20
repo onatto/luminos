@@ -1,12 +1,15 @@
 dofile "luminos_data/core.lua"
 dofile "luminos_data/table_ops.lua"
 dofile "luminos_data/xform_ops.lua"
+dofile "luminos_data/ui_controls.lua"
 
 concat_xform = clone_xform(concat_transform, {str_a = "Time: "})
 concat_xform_2 = clone_xform(concat_transform, {str_a = "MouseX: " })
 
 concat_xform.connections.str_b = {transform = time_xform, name = "time"}
 concat_xform_2.connections.str_b = {transform = mouse_xform, name = "mx"}
+
+create_node(400, 100, concat_xform)
 
 -- clone_xform(concat_transform, { str_a = "Say", str_b = " Hey" })
 -- can set name field later from the UI, but gets the concat_transform's name
@@ -35,6 +38,6 @@ function portProgramStart()
         transform.visited = false
     end
     execTransform(top_transform)
+    draw_nodes()
     return top_transform.outputs.stdout.value
 end
-

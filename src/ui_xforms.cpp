@@ -8,7 +8,11 @@
 
 #include "bx/string.h"
 
+#include "nanovg/nanovg.h"
+#include "blendish.h"
+
 #define TABLE_ENTRIES 6
+static NVGcontext* nvg;
 
 int ui_init(int env)
 {
@@ -88,4 +92,16 @@ int ui_debugPrintfStack(int base, int env)
         bgfx::dbgTextPrintf(0, i + base, 0x4f, dump_str);
     }
     return top;
+}
+
+int ui_setNVGContext(void* _nvg)
+{
+    nvg = (NVGcontext*)_nvg;
+    return 0;
+}
+
+int ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a)
+{
+    bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widget_state, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
+    return 0;
 }

@@ -20,6 +20,7 @@ function luminosProject(LUA_DIR)
 
     files {
         LUMINOS_DIR .. "src/**.cpp",
+        LUMINOS_DIR .. "src/**.c",
         LUMINOS_DIR .. "src/**.h",
     }
 
