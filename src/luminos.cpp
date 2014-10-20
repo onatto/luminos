@@ -20,14 +20,6 @@ static char status_msg[256] = {0};
 static char error_msg[2048] = {0};
 static char stdout_msg[2048] = {0};
 
-#include "entry/input.h"
-RecompileInput rc_in = { "luminos_data/program.lua", status_msg, error_msg };
-static const InputBinding s_bindings[] =
-{
-    { entry::Key::F5,    entry::Modifier::None,      1, cmdRecompile, &rc_in },
-    INPUT_BINDING_END
-};
-
 int _main_(int /*_argc*/, char** /*_argv*/)
 {
     uint32_t width = 1280;

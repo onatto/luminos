@@ -14,6 +14,8 @@
 #define TABLE_ENTRIES 6
 static NVGcontext* nvg;
 
+#include "SDL2/SDL.h"
+
 int ui_init(int env)
 {
     lua_State* L = get_luastate(env);
@@ -100,8 +102,27 @@ int ui_setNVGContext(void* _nvg)
     return 0;
 }
 
+void ui_dbgTextPrintf(int y, const char* str)
+{
+    bgfx::dbgTextPrintf(0, y, 0x4f, str);
+}
+
 int ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a)
 {
     bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widget_state, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
     return 0;
+}
+
+int ui_handleKeyEvent(SDL_KeyboardEvent* ev)
+{
+    lua_State* L = get_luastate(env);
+    lua_getglobal(L, "keyboardEventHandler");
+    lua_pushnumber(L, ev->keysym.sym);
+	lua_pushnumber(L, ev->keysym.mod);
+
+    result = lua_pcall(L, 2, LUA_MULTRET, 0);
+    return result;
+}
+int ui_handleMouseEvent(const /*SDL_MouseEvent*/ void* mouse_ev)
+{
 }

@@ -38,6 +38,8 @@ function portProgramStart()
         transform.visited = false
     end
     execTransform(top_transform)
+    dbgText(6, tostring(g_mouseState.left))
     draw_nodes()
     return top_transform.outputs.stdout.value
 end
+
