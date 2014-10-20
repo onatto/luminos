@@ -20,6 +20,13 @@ static char status_msg[256] = {0};
 static char error_msg[2048] = {0};
 static char stdout_msg[2048] = {0};
 
+RecompileInput rc_in = 
+{
+    "scripts/program.lua",
+    status_msg,
+    error_msg
+};
+
 int _main_(int /*_argc*/, char** /*_argv*/)
 {
     uint32_t width = 1280;
@@ -51,6 +58,7 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     // Setup Lua
     initLua();
     ui_init();
+    cmdRecompile((const void*)&rc_in);
     ui_setNVGContext(nvg);
 	initEnvironmentVariables();
 

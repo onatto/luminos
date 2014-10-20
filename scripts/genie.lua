@@ -1,6 +1,53 @@
-function luminosProject(LUA_DIR)
+--
+-- Copyright 2011-2014 Onat Turkcuoglu. All rights reserved.
+-- License: http://www.opensource.org/licenses/BSD-2-Clause
+-- 
+-- Edited from bgfx
 
-    LUMINOS_DIR = BGFX_DIR .. "luminos/"
+newoption {
+	trigger = "with-sdl",
+	description = "Enable SDL entry.",
+}
+
+solution "luminos"
+	configurations {
+		"Debug",
+		"Release",
+	}
+
+    language "C++"
+
+	platforms {
+		"x32",
+		"x64",
+--		"Xbox360",
+		"Native", -- for targets where bitness is not specified
+	}
+
+LUMINOS_DIR = path.getabsolute("./../") .. "/"
+BGFX_DIR = LUMINOS_DIR .. "../bgfx/"
+BX_DIR = LUMINOS_DIR .. "../bx/"
+LUA_DIR = LUMINOS_DIR .. "../luajit-2.0/"
+
+local LUMINOS_BUILD_DIR = (LUMINOS_DIR .. ".build/")
+local LUMINOS_THIRD_PARTY_DIR = (LUMINOS_DIR .. "3rdparty/")
+
+dofile (BX_DIR .. "scripts/toolchain.lua")
+toolchain(LUMINOS_BUILD_DIR, LUMINOS_THIRD_PARTY_DIR)
+
+function copyLib()
+end
+
+if _OPTIONS["with-sdl"] then
+	if os.is("windows") then
+		if not os.getenv("SDL2_DIR") then
+			print("Set SDL2_DIR enviroment variable.")
+		end
+	end
+end
+
+function luminosProject()
+
     _name = "luminos"
     project (_name)
     uuid (os.uuid(_name))
@@ -8,7 +55,7 @@ function luminosProject(LUA_DIR)
 
     configuration {}
 
-    debugdir (BGFX_DIR .. "luminos/runtime/")
+    debugdir (LUMINOS_DIR .. "runtime/")
 
     includedirs {
         BX_DIR .. "include",
@@ -26,12 +73,34 @@ function luminosProject(LUA_DIR)
     }
 
     links {
-        "bgfx",
-        "example-common",
         "lua51",
+        "SDL2"
     }
 
-    libdirs { LUA_DIR .. "/src" }
+    libdirs { 
+        LUA_DIR .. "/src",
+    }
+
+	configuration { "x32", "windows*" }
+        libdirs {
+            BGFX_DIR .. ".build/win32_" .. _ACTION .. "/bin"
+        }
+	configuration { "x64", "windows*" }
+        libdirs {
+            BGFX_DIR .. ".build/win64_" .. _ACTION .. "/bin"
+        }
+
+    configuration { "Debug" }
+        links {
+            "bgfxDebug",
+            "example-commonDebug"
+        }
+    configuration { "Release" }
+        links {
+            "bgfxRelease",
+            "example-commonRelease"
+        }
+
 
     if _OPTIONS["with-sdl"] then
         defines { "ENTRY_CONFIG_USE_SDL=1" }
@@ -163,3 +232,5 @@ function luminosProject(LUA_DIR)
 
     strip()
 end
+
+luminosProject()

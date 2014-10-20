@@ -1,7 +1,7 @@
-dofile "luminos_data/core.lua"
-dofile "luminos_data/table_ops.lua"
-dofile "luminos_data/xform_ops.lua"
-dofile "luminos_data/ui_controls.lua"
+dofile "scripts/core.lua"
+dofile "scripts/table_ops.lua"
+dofile "scripts/xform_ops.lua"
+dofile "scripts/ui_controls.lua"
 
 concat_xform = clone_xform(concat_transform, {str_a = "Time: "})
 concat_xform_2 = clone_xform(concat_transform, {str_a = "MouseX: " })
