@@ -53,9 +53,7 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     ui_init();
     ui_setNVGContext(nvg);
 	initEnvironmentVariables();
-    cmdRecompile((const void*) &rc_in);
 
-	inputAddBindings("ui_bindings", s_bindings);
     entry::MouseState mouse_state;
     while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
     {

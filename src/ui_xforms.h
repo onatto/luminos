@@ -16,5 +16,4 @@ extern "C"
 	FFI_EXPORT int ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
 }
 
-int ui_handleKeyEvent(const /*SDL_KeyboardEvent*/ void* key_ev);
-int ui_handleMouseEvent(const /*SDL_MouseEvent*/ void* mouse_ev);
+int ui_handleKeyEvent(const /*SDL_KeyboardEvent*/ void* key_ev, int env);

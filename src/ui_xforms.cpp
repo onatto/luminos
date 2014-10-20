@@ -113,16 +113,13 @@ int ui_drawNode(float x, float y, float w, float h, int widget_state, const char
     return 0;
 }
 
-int ui_handleKeyEvent(SDL_KeyboardEvent* ev)
+int ui_handleKeyEvent(SDL_KeyboardEvent* ev, int env)
 {
     lua_State* L = get_luastate(env);
     lua_getglobal(L, "keyboardEventHandler");
     lua_pushnumber(L, ev->keysym.sym);
 	lua_pushnumber(L, ev->keysym.mod);
 
-    result = lua_pcall(L, 2, LUA_MULTRET, 0);
+    int result = lua_pcall(L, 2, LUA_MULTRET, 0);
     return result;
-}
-int ui_handleMouseEvent(const /*SDL_MouseEvent*/ void* mouse_ev)
-{
 }
