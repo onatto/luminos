@@ -6,6 +6,8 @@
 #include <bx/timer.h>
 
 #include <SDL2/SDL.h>
+#undef main
+#include <SDL2/SDL_syswm.h>
 
 #include <bgfx.h>
 #include <bgfxplatform.h>
@@ -16,7 +18,6 @@
 
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
-#include <bx/timer.h>
 #include "ui_xforms.h"
 
 static char status_msg[256] = {0};
