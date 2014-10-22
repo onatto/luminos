@@ -7,7 +7,6 @@
 
 #include <SDL2/SDL.h>
 #undef main
-#include <SDL2/SDL_syswm.h>
 
 #include <bgfx.h>
 #include <bgfxplatform.h>
@@ -40,6 +39,18 @@ int main(int _argc, char** _argv)
     uint32_t debug = BGFX_DEBUG_TEXT;
     uint32_t reset = BGFX_RESET_VSYNC;
 
+	SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* wnd = SDL_CreateWindow("luminos"
+                    , SDL_WINDOWPOS_UNDEFINED
+                    , SDL_WINDOWPOS_UNDEFINED
+                    , width
+                    , height
+                    , SDL_WINDOW_SHOWN
+                    | SDL_WINDOW_RESIZABLE
+                    );
+
+    bgfx::sdlSetWindow(wnd);
+
     bgfx::init();
     bgfx::reset(width, height);
 
@@ -68,25 +79,10 @@ int main(int _argc, char** _argv)
     ui_setNVGContext(nvg);
 	initEnvironmentVariables();
 
-	SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* wnd = SDL_CreateWindow("luminos"
-                    , SDL_WINDOWPOS_UNDEFINED
-                    , SDL_WINDOWPOS_UNDEFINED
-                    , width
-                    , height
-                    , SDL_WINDOW_SHOWN
-                    | SDL_WINDOW_RESIZABLE
-                    );
-
-    bgfx::sdlSetWindow(wnd);
-    bgfx::renderFrame();
-
 	SDL_Event event;
     //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
     while (!quit)
     {
-        bgfx::renderFrame();
-
         while (SDL_PollEvent(&event) )
         {
             switch (event.type)
