@@ -9,7 +9,7 @@ concat_xform_2 = clone_xform(concat_transform, {str_a = "MouseX: " })
 concat_xform.connections.str_b = {transform = time_xform, name = "time"}
 concat_xform_2.connections.str_b = {transform = mouse_xform, name = "mx"}
 
-create_node(400, 100, concat_xform)
+create_node(0, 0, concat_xform)
 
 -- clone_xform(concat_transform, { str_a = "Say", str_b = " Hey" })
 -- can set name field later from the UI, but gets the concat_transform's name

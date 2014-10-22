@@ -5,8 +5,11 @@
 
 #include <bx/timer.h>
 
-#include "common.h"
+#include <SDL2/SDL.h>
+
 #include <bgfx.h>
+#include <bgfxplatform.h>
+
 #include "lua_xforms.h"
 
 #include "nanovg/nanovg.h"
@@ -20,14 +23,16 @@ static char status_msg[256] = {0};
 static char error_msg[2048] = {0};
 static char stdout_msg[2048] = {0};
 
-RecompileInput rc_in = 
+RecompileInput rc_in =
 {
     "scripts/program.lua",
     status_msg,
     error_msg
 };
 
-int _main_(int /*_argc*/, char** /*_argv*/)
+bool quit = false;
+
+int main(int _argc, char** _argv)
 {
     uint32_t width = 1280;
     uint32_t height = 720;
@@ -62,9 +67,37 @@ int _main_(int /*_argc*/, char** /*_argv*/)
     ui_setNVGContext(nvg);
 	initEnvironmentVariables();
 
-    entry::MouseState mouse_state;
-    while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
+	SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* wnd = SDL_CreateWindow("luminos"
+                    , SDL_WINDOWPOS_UNDEFINED
+                    , SDL_WINDOWPOS_UNDEFINED
+                    , width
+                    , height
+                    , SDL_WINDOW_SHOWN
+                    | SDL_WINDOW_RESIZABLE
+                    );
+
+    bgfx::sdlSetWindow(wnd);
+    bgfx::renderFrame();
+
+	SDL_Event event;
+    //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
+    while (!quit)
     {
+        bgfx::renderFrame();
+
+        while (SDL_PollEvent(&event) )
+        {
+            switch (event.type)
+            {
+                case SDL_QUIT:
+                    quit = true;
+                    break;
+            }
+        }
+
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+
 		int64_t now = bx::getHPCounter();
 		const double freq = double(bx::getHPFrequency() );
 		float time = (float)( (now-timeOffset)/freq);
@@ -81,8 +114,13 @@ int _main_(int /*_argc*/, char** /*_argv*/)
         bgfx::dbgTextPrintf(0, 1, 0x4f, status_msg);
         bgfx::dbgTextPrintf(0, 2, 0x6f, error_msg);
         bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
+        if (state[SDL_SCANCODE_RETURN]) {
+            bgfx::dbgTextPrintf(0, 4, 0x4f, "Return is pressed");
+        }
+        if (state[SDL_SCANCODE_RIGHT] && state[SDL_SCANCODE_UP]) {
+            bgfx::dbgTextPrintf(0, 4, 0x4f, "Ayayayayaya");
+        }
 
-        ui_uploadMouseGlobals(&mouse_state, 0);
 		uploadEnvironmentVariables(time);
         port_programStart("portProgramStart", stdout_msg);
 
@@ -90,10 +128,11 @@ int _main_(int /*_argc*/, char** /*_argv*/)
 
         for (int i = 0; i < 3; i++)
         {
-            bndNodePort(nvg, 640 + i * 50, 100 + i * 90, (BNDwidgetState)i, nvgRGBA(255, 50, 100, 255));
-            bndNodeWire(nvg, 640 + i * 50, 100 + i * 90, 800 + i * 50, 400 + i * 90, (BNDwidgetState)i, BNDwidgetState::BND_DEFAULT);
+			float k  =(float)i;
+            bndNodePort(nvg, 640 + k * 50, 100 + k * 90, (BNDwidgetState)i, nvgRGBA(255, 50, 100, 255));
+            bndNodeWire(nvg, 640 + k * 50, 100 + k * 90, 800 + k * 50, 400 + k * 90, (BNDwidgetState)i, BNDwidgetState::BND_DEFAULT);
             //bndNodeIconLabel(nvg, 300 + i * 300, 300, 200 * scale, 100 * scale, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 20, "Check out");
-            bndNodeBackground(nvg, 300 + i * 300, 400, 200, 100, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
+            bndNodeBackground(nvg, 300 + k * 300, 400, 200, 100, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
             //bndNodeIconLabel(nvg, 300 + i * 300, 490, 200, 100, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 40, "Check out");
         }
 
@@ -106,7 +145,9 @@ int _main_(int /*_argc*/, char** /*_argv*/)
 
     // Shutdown bgfx.
     bgfx::shutdown();
-
 	shutdownLua();
+
+    SDL_DestroyWindow(wnd);
+    SDL_Quit();
     return 0;
 }

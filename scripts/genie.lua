@@ -1,7 +1,7 @@
 --
 -- Copyright 2011-2014 Onat Turkcuoglu. All rights reserved.
 -- License: http://www.opensource.org/licenses/BSD-2-Clause
--- 
+--
 -- Edited from bgfx
 
 newoption {
@@ -35,17 +35,6 @@ local LUMINOS_THIRD_PARTY_DIR = (LUMINOS_DIR .. "3rdparty/")
 dofile (BX_DIR .. "scripts/toolchain.lua")
 toolchain(LUMINOS_BUILD_DIR, LUMINOS_THIRD_PARTY_DIR)
 
-function copyLib()
-end
-
-if _OPTIONS["with-sdl"] then
-	if os.is("windows") then
-		if not os.getenv("SDL2_DIR") then
-			print("Set SDL2_DIR enviroment variable.")
-		end
-	end
-end
-
 function luminosProject()
 
     _name = "luminos"
@@ -54,22 +43,22 @@ function luminosProject()
     kind "WindowedApp"
 
     configuration {}
+    defines { "UNICODE" }
 
     debugdir (LUMINOS_DIR .. "runtime/")
 
     includedirs {
+        LUMINOS_DIR .. "3rdparty",
         BX_DIR .. "include",
         BGFX_DIR .. "include",
-        BGFX_DIR .. "3rdparty",
-        BGFX_DIR .. "examples/common",
         LUA_DIR .. "src",
-        "$(SDL2_DIR)" .. "include",
     }
 
     files {
         LUMINOS_DIR .. "src/**.cpp",
         LUMINOS_DIR .. "src/**.c",
         LUMINOS_DIR .. "src/**.h",
+        LUMINOS_DIR .. "3rdparty/nanovg/*.cpp"
     }
 
     links {
@@ -77,7 +66,7 @@ function luminosProject()
         "SDL2"
     }
 
-    libdirs { 
+    libdirs {
         LUA_DIR .. "/src",
     }
 
@@ -93,12 +82,10 @@ function luminosProject()
     configuration { "Debug" }
         links {
             "bgfxDebug",
-            "example-commonDebug"
         }
     configuration { "Release" }
         links {
             "bgfxRelease",
-            "example-commonRelease"
         }
 
 

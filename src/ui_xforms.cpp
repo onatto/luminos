@@ -4,9 +4,11 @@
 #include "lauxlib.h"
 
 #include "bgfx.h"
-#include "entry/entry.h"
 
 #include "bx/string.h"
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype/stb_truetype.h"
 
 #include "nanovg/nanovg.h"
 #include "blendish.h"
@@ -39,7 +41,7 @@ int ui_init(int env)
 
 int ui_uploadMouseGlobals(void* _state, int env)
 {
-    const entry::MouseState* state = (const entry::MouseState*)_state;
+ /*   const entry::MouseState* state = (const entry::MouseState*)_state;
 
     lua_State* L = get_luastate(env);
     lua_getglobal(L, "g_mouseState");
@@ -57,7 +59,7 @@ int ui_uploadMouseGlobals(void* _state, int env)
     lua_pushboolean(L, state->m_buttons[entry::MouseButton::Right]);
     lua_setfield(L, -2, "right");
 
-    lua_pop(L, 1);
+    lua_pop(L, 1);*/
     return 0;
 }
 
