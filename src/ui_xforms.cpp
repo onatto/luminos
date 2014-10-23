@@ -18,6 +18,9 @@ static NVGcontext* nvg;
 
 #include "SDL2/SDL.h"
 
+static Uint8 keyboard_state_prev[512];
+static const Uint8 *keyboard_state;
+
 int ui_init(int env)
 {
     lua_State* L = get_luastate(env);
@@ -38,6 +41,8 @@ int ui_init(int env)
     lua_setglobal(L, "g_mouseState");
     return 0;
 }
+
+
 
 int ui_uploadMouseGlobals(void* _state, int env)
 {
@@ -124,4 +129,29 @@ int ui_handleKeyEvent(SDL_KeyboardEvent* ev, int env)
 
     int result = lua_pcall(L, 2, LUA_MULTRET, 0);
     return result;
+}
+
+/* Return values:
+ * 0 if not pressed
+ * 1 if keypress event
+ * 2 if release (key is not pressed, but was pressed the prev. frame)
+ * 3 if keeping pressed
+ */
+int ui_getKeyboardState(uint16_t key)
+{
+    return (keyboard_state_prev[key] << 1) | (keyboard_state[key] << 0);
+}
+
+bool ui_frameStart()
+{
+    keyboard_state = SDL_GetKeyboardState(NULL);
+
+    if (keyboard_state[SDL_SCANCODE_ESCAPE])
+        return true;
+
+    return false;
+}
+void ui_frameEnd()
+{
+    memcpy((void*)keyboard_state_prev, keyboard_state, 512);
 }

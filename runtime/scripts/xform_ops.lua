@@ -1,4 +1,7 @@
 function clone_xform(xform, default_overrides)
+    if xform.clone ~= nil then
+        return xform.clone(xform, default_overrides)
+    end
     local clone = deepcopy(xform)
     -- This is to copy(clone) an adjusted(defaults=constant inputs changed)
     for input_name,default_value in pairs(default_overrides) do

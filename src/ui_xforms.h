@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 struct SDL_KeyboardEvent;
 
 #define FFI_EXPORT __declspec(dllexport)
@@ -14,6 +16,9 @@ extern "C"
 {
     FFI_EXPORT void ui_dbgTextPrintf(int y, const char* str);
 	FFI_EXPORT int ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
+    FFI_EXPORT int ui_getKeyboardState(uint16_t key);
 }
 
 int ui_handleKeyEvent(const /*SDL_KeyboardEvent*/ void* key_ev, int env);
+bool ui_frameStart();
+void ui_frameEnd();

@@ -48,6 +48,33 @@ concat_transform = {
     end
 }
 
+-- #Inputs = #Outputs = x = variable input/output
+--[[
+keyboard_xform = {
+    name = "Keyboard",
+    inputs = {},
+    keys = {},
+
+    connections = {},
+    outputs = {},
+
+    eval = function(self)
+        for key, v in pairs(self.keys) do
+            local state = getKeyboardState(SDL.Key[key])
+            self.outputs[key].type = "number"
+            self.outputs[key].value = state
+        end
+    end,
+
+    clone = function(self, keys)
+        local c = deepcopy(self)
+        for _i, key in pairs(keys) do
+            self.keys[SDL.Key[key]] --= true
+--        end
+--    end
+-- }
+--]]
+
 mouse_xform = {
     name = "Mouse",
     inputs = {},

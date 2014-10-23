@@ -2,10 +2,12 @@ local ffi = require("ffi")
 ffi.cdef[[
 int ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
 void ui_dbgTextPrintf(int y, const char *str);
+int ui_getKeyboardState(uint16_t key);
 ]]
 
 local drawNode = ffi.C.ui_drawNode
 dbgText = ffi.C.ui_dbgTextPrintf
+getKeyboardState = ffi.C.ui_getKeyboardState
 local ui_nodes = {}
 
 function create_node(x, y, xform)

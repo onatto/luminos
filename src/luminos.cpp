@@ -79,22 +79,13 @@ int main(int _argc, char** _argv)
     ui_setNVGContext(nvg);
 	initEnvironmentVariables();
 
-	SDL_Event event;
+	//SDL_Event event;
     //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
     while (!quit)
     {
-        while (SDL_PollEvent(&event) )
-        {
-            switch (event.type)
-            {
-                case SDL_QUIT:
-                    quit = true;
-                    break;
-            }
-        }
-
-        const Uint8 *state = SDL_GetKeyboardState(NULL);
-
+        SDL_PumpEvents();
+        quit = ui_frameStart();
+        
 		int64_t now = bx::getHPCounter();
 		const double freq = double(bx::getHPFrequency() );
 		float time = (float)( (now-timeOffset)/freq);
@@ -111,12 +102,13 @@ int main(int _argc, char** _argv)
         bgfx::dbgTextPrintf(0, 1, 0x4f, status_msg);
         bgfx::dbgTextPrintf(0, 2, 0x6f, error_msg);
         bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
-        if (state[SDL_SCANCODE_RETURN]) {
+/*        if (state[SDL_SCANCODE_RETURN]) {
             bgfx::dbgTextPrintf(0, 4, 0x4f, "Return is pressed");
         }
         if (state[SDL_SCANCODE_RIGHT] && state[SDL_SCANCODE_UP]) {
             bgfx::dbgTextPrintf(0, 4, 0x4f, "Ayayayayaya");
         }
+        */
 
 		uploadEnvironmentVariables(time);
         port_programStart("portProgramStart", stdout_msg);
@@ -138,6 +130,8 @@ int main(int _argc, char** _argv)
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
+
+        ui_frameEnd();
     }
 
     // Shutdown bgfx.
