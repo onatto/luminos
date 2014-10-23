@@ -1,5 +1,5 @@
 #include "ui_xforms.h"
-#include "lua_xforms.h"
+#include "core_xforms.h"
 #include "lua.hpp"
 #include "lauxlib.h"
 
@@ -21,9 +21,9 @@ static NVGcontext* nvg;
 static Uint8 keyboard_state_prev[512];
 static const Uint8 *keyboard_state;
 
-int ui_init(int env)
+int ui_init()
 {
-    lua_State* L = get_luastate(env);
+    lua_State* L = get_luastate();
     lua_createtable(L, 0, TABLE_ENTRIES);
     lua_pushnumber(L, 0.0);
     lua_setfield(L, -2, "mx");
@@ -44,7 +44,7 @@ int ui_init(int env)
 
 
 
-int ui_uploadMouseGlobals(void* _state, int env)
+int ui_uploadMouseGlobals(void* _state)
 {
  /*   const entry::MouseState* state = (const entry::MouseState*)_state;
 
@@ -69,11 +69,11 @@ int ui_uploadMouseGlobals(void* _state, int env)
 }
 
 static char dump_str[256] = { 0 };
-int ui_debugPrintfStack(int base, int env)
+int ui_debugPrintfStack(int base)
 {
     static const int flt_size = 16;
     char flt[flt_size];
-    lua_State* L = get_luastate(env);
+    lua_State* L = get_luastate();
 
     bgfx::dbgTextPrintf(0, base, 0x4f, "Stack info:");
     int top = lua_gettop(L);
@@ -120,9 +120,9 @@ int ui_drawNode(float x, float y, float w, float h, int widget_state, const char
     return 0;
 }
 
-int ui_handleKeyEvent(SDL_KeyboardEvent* ev, int env)
+int ui_handleKeyEvent(SDL_KeyboardEvent* ev)
 {
-    lua_State* L = get_luastate(env);
+    lua_State* L = get_luastate();
     lua_getglobal(L, "keyboardEventHandler");
     lua_pushnumber(L, ev->keysym.sym);
 	lua_pushnumber(L, ev->keysym.mod);

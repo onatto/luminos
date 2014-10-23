@@ -6,12 +6,12 @@ struct SDL_KeyboardEvent;
 
 #define FFI_EXPORT __declspec(dllexport)
 
-int ui_init(int env = 0);
-int ui_uploadMouseGlobals(void*, int env = 0);
-int ui_debugPrintfStack(int base, int env = 0);
+int ui_init();
+int ui_uploadMouseGlobals(void*);
+int ui_debugPrintfStack(int base);
 int ui_setNVGContext(void* ctx);
 
-// For the FFI
+// For the FFI, export these as C functions
 extern "C"
 {
     FFI_EXPORT void ui_dbgTextPrintf(int y, const char* str);
@@ -19,6 +19,5 @@ extern "C"
     FFI_EXPORT int ui_getKeyboardState(uint16_t key);
 }
 
-int ui_handleKeyEvent(const /*SDL_KeyboardEvent*/ void* key_ev, int env);
 bool ui_frameStart();
 void ui_frameEnd();

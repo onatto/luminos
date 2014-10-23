@@ -11,7 +11,7 @@
 #include <bgfx.h>
 #include <bgfxplatform.h>
 
-#include "lua_xforms.h"
+#include "core_xforms.h"
 
 #include "nanovg/nanovg.h"
 
@@ -22,13 +22,6 @@
 static char status_msg[256] = {0};
 static char error_msg[2048] = {0};
 static char stdout_msg[2048] = {0};
-
-RecompileInput rc_in =
-{
-    "scripts/program.lua",
-    status_msg,
-    error_msg
-};
 
 bool quit = false;
 
@@ -73,11 +66,12 @@ int main(int _argc, char** _argv)
 	int64_t timeOffset = bx::getHPCounter();
 
     // Setup Lua
-    initLua();
+    core_init();
     ui_init();
-    cmdRecompile((const void*)&rc_in);
+    cmd_compile("scripts/program.lua", status_msg, error_msg);
     ui_setNVGContext(nvg);
-	initEnvironmentVariables();
+
+    core_initGlobals();
 
 	//SDL_Event event;
     //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
@@ -85,7 +79,7 @@ int main(int _argc, char** _argv)
     {
         SDL_PumpEvents();
         quit = ui_frameStart();
-        
+
 		int64_t now = bx::getHPCounter();
 		const double freq = double(bx::getHPFrequency() );
 		float time = (float)( (now-timeOffset)/freq);
@@ -110,7 +104,7 @@ int main(int _argc, char** _argv)
         }
         */
 
-		uploadEnvironmentVariables(time);
+		core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
@@ -136,7 +130,7 @@ int main(int _argc, char** _argv)
 
     // Shutdown bgfx.
     bgfx::shutdown();
-	shutdownLua();
+	core_shutdown();
 
     SDL_DestroyWindow(wnd);
     SDL_Quit();
