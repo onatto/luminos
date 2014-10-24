@@ -21,6 +21,9 @@ static NVGcontext* nvg;
 static Uint8 keyboard_state_prev[512];
 static const Uint8 *keyboard_state;
 
+static uint32_t mouse_state;
+static uint32_t mouse_state_prev;
+
 int ui_init()
 {
     lua_State* L = get_luastate();
@@ -39,32 +42,6 @@ int ui_init()
     lua_pushboolean(L, false);
     lua_setfield(L, -2, "right");
     lua_setglobal(L, "g_mouseState");
-    return 0;
-}
-
-
-
-int ui_uploadMouseGlobals(void* _state)
-{
- /*   const entry::MouseState* state = (const entry::MouseState*)_state;
-
-    lua_State* L = get_luastate(env);
-    lua_getglobal(L, "g_mouseState");
-    lua_pushnumber(L, state->m_mx);
-    lua_setfield(L, -2, "mx");
-    lua_pushnumber(L, state->m_my);
-    lua_setfield(L, -2, "my");
-    lua_pushnumber(L, state->m_mz);
-    lua_setfield(L, -2, "mz");
-
-    lua_pushboolean(L, state->m_buttons[entry::MouseButton::Left]);
-    lua_setfield(L, -2, "left");
-    lua_pushboolean(L, state->m_buttons[entry::MouseButton::Middle]);
-    lua_setfield(L, -2, "middle");
-    lua_pushboolean(L, state->m_buttons[entry::MouseButton::Right]);
-    lua_setfield(L, -2, "right");
-
-    lua_pop(L, 1);*/
     return 0;
 }
 
@@ -118,17 +95,6 @@ int ui_drawNode(float x, float y, float w, float h, int widget_state, const char
 {
     bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widget_state, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
     return 0;
-}
-
-int ui_handleKeyEvent(SDL_KeyboardEvent* ev)
-{
-    lua_State* L = get_luastate();
-    lua_getglobal(L, "keyboardEventHandler");
-    lua_pushnumber(L, ev->keysym.sym);
-	lua_pushnumber(L, ev->keysym.mod);
-
-    int result = lua_pcall(L, 2, LUA_MULTRET, 0);
-    return result;
 }
 
 /* Return values:

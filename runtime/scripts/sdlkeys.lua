@@ -321,3 +321,8 @@ SDL.Key['8'] = 37
 SDL.Key['9'] = 38
 SDL.Key['0'] = 39
 
+KeyEvent = {}
+KeyEvent.Nothing = 0
+KeyEvent.Press = 1
+KeyEvent.Release = 2
+KeyEvent.Hold = 3

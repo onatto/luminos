@@ -96,29 +96,18 @@ int main(int _argc, char** _argv)
         bgfx::dbgTextPrintf(0, 1, 0x4f, status_msg);
         bgfx::dbgTextPrintf(0, 2, 0x6f, error_msg);
         bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
-/*        if (state[SDL_SCANCODE_RETURN]) {
-            bgfx::dbgTextPrintf(0, 4, 0x4f, "Return is pressed");
-        }
-        if (state[SDL_SCANCODE_RIGHT] && state[SDL_SCANCODE_UP]) {
-            bgfx::dbgTextPrintf(0, 4, 0x4f, "Ayayayayaya");
-        }
-        */
 
 		core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
-
         for (int i = 0; i < 3; i++)
         {
 			float k  =(float)i;
             bndNodePort(nvg, 640 + k * 50, 100 + k * 90, (BNDwidgetState)i, nvgRGBA(255, 50, 100, 255));
             bndNodeWire(nvg, 640 + k * 50, 100 + k * 90, 800 + k * 50, 400 + k * 90, (BNDwidgetState)i, BNDwidgetState::BND_DEFAULT);
-            //bndNodeIconLabel(nvg, 300 + i * 300, 300, 200 * scale, 100 * scale, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 20, "Check out");
             bndNodeBackground(nvg, 300 + k * 300, 400, 200, 100, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
-            //bndNodeIconLabel(nvg, 300 + i * 300, 490, 200, 100, BND_ICONID(2, 11), nvgRGBA(255, 50, 100, 255), nvgRGBA(255, 50, 100, 10), 1, 40, "Check out");
         }
-
 		nvgEndFrame(nvg);
 
         // Advance to next frame. Rendering thread will be kicked to

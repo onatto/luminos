@@ -36,16 +36,30 @@ top_transform = {
 transforms = { concat_xform, concat_xform_2, top_transform, mouse_xform, time_xform}
 
 counter = 0
+error_msg = ""
+status_msg = ""
+stdout = ""
+
 function portProgramStart()
     for _k,transform in ipairs(transforms) do
         transform.visited = false
     end
     execTransform(top_transform)
-    if (getKeyboardState(SDL.Key.LCTRL) == 3 and getKeyboardState(SDL.Key.A) == 1) then
+    if (getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold and getKeyboardState(SDL.Key.A) == KeyEvent.Press) then
         counter = counter+1
     end
-        dbgText(6, tostring(counter))
+
+    if (getKeyboardState(SDL.Key.F5) == KeyEvent.Press) then
+        recompile("scripts/program.lua", status_msg, error_msg)
+    end
+
     draw_nodes()
-    return top_transform.outputs.stdout.value
+    stdout = top_transform.outputs.stdout.value
+
+    dbgText(0, status_msg)
+    dbgText(1, error_msg)
+    dbgText(2, stdout)
+    dbgText(9, tostring(counter))
+    return stdout
 end
 
