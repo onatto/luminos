@@ -4,10 +4,11 @@
 --
 -- Edited from bgfx
 
-newoption {
-	trigger = "with-sdl",
-	description = "Enable SDL entry.",
-}
+LUMINOS_DIR = path.getabsolute("./../") .. "/"
+BGFX_DIR = LUMINOS_DIR .. "../bgfx/"
+BX_DIR = LUMINOS_DIR .. "../bx/"
+LUA_DIR = LUMINOS_DIR .. "../luajit-2.0/"
+-- SDL2_DIR = LUMINOS_DIR .. "
 
 solution "luminos"
 	configurations {
@@ -23,11 +24,6 @@ solution "luminos"
 --		"Xbox360",
 		"Native", -- for targets where bitness is not specified
 	}
-
-LUMINOS_DIR = path.getabsolute("./../") .. "/"
-BGFX_DIR = LUMINOS_DIR .. "../bgfx/"
-BX_DIR = LUMINOS_DIR .. "../bx/"
-LUA_DIR = LUMINOS_DIR .. "../luajit-2.0/"
 
 local LUMINOS_BUILD_DIR = (LUMINOS_DIR .. ".build/")
 local LUMINOS_THIRD_PARTY_DIR = (LUMINOS_DIR .. "3rdparty/")
@@ -88,19 +84,11 @@ function luminosProject()
             "bgfxRelease",
         }
 
+    configuration { "x32", "windows" }
+        libdirs { "$(SDL2_DIR)/lib/x86" }
 
-    if _OPTIONS["with-sdl"] then
-        defines { "ENTRY_CONFIG_USE_SDL=1" }
-        links   { "SDL2" }
-
-        configuration { "x32", "windows" }
-            libdirs { "$(SDL2_DIR)/lib/x86" }
-
-        configuration { "x64", "windows" }
-            libdirs { "$(SDL2_DIR)/lib/x64" }
-
-        configuration {}
-    end
+    configuration { "x64", "windows" }
+        libdirs { "$(SDL2_DIR)/lib/x64" }
 
     configuration { "vs*" }
         linkoptions {

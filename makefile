@@ -18,5 +18,5 @@ endif
 GENIE=../bx/tools/bin/$(OS)/genie
 
 all:
-	$(GENIE) --with-sdl vs2012
-	$(GENIE) --with-sdl vs2013
+	$(GENIE) vs2012
+	$(GENIE) vs2013
