@@ -326,3 +326,5 @@ KeyEvent.Nothing = 0
 KeyEvent.Press = 1
 KeyEvent.Release = 2
 KeyEvent.Hold = 3
+
+KeyEventEnum = { "Nothing", "Press", "Release", "Hold" }

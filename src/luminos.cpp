@@ -19,11 +19,8 @@
 #include "blendish.h"
 #include "ui_xforms.h"
 
-static char status_msg[256] = {0};
-static char error_msg[2048] = {0};
 static char stdout_msg[2048] = {0};
-
-bool quit = false;
+static bool quit = false;
 
 int main(int _argc, char** _argv)
 {
@@ -68,10 +65,10 @@ int main(int _argc, char** _argv)
     // Setup Lua
     core_init();
     ui_init();
-    cmd_compile("scripts/program.lua", status_msg, error_msg);
     ui_setNVGContext(nvg);
 
     core_initGlobals();
+    cmd_compile("scripts/program.lua", s_statusMsg, s_errorMsg);
 
 	//SDL_Event event;
     //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
@@ -91,14 +88,10 @@ int main(int _argc, char** _argv)
         // if no other draw calls are submitted to view 0.
         bgfx::submit(0);
 
-        // Use debug font to print information about this example.
-        bgfx::dbgTextClear();
-        bgfx::dbgTextPrintf(0, 1, 0x4f, status_msg);
-        bgfx::dbgTextPrintf(0, 2, 0x6f, error_msg);
-        bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
-
 		core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
+
+        bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
         for (int i = 0; i < 3; i++)

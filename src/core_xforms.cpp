@@ -5,6 +5,8 @@
 #include "string.h"
 
 lua_State* s_luaState;
+char s_statusMsg[256] = {0};
+char s_errorMsg[2048] = {0};
 
 int core_init()
 {
@@ -15,7 +17,7 @@ int core_init()
 
 int core_compileLua(const char* filename, char* error_msg)
 {
-    lua_State* L = get_luastate();
+    lua_State* L = get_luaState();
     /* Load the file containing the script we are going to run */
     int result = luaL_loadfile(L, filename);
     if (result) {
@@ -37,14 +39,14 @@ int core_compileLua(const char* filename, char* error_msg)
 
 int core_shutdown()
 {
-    lua_State* L = get_luastate();
+    lua_State* L = get_luaState();
     lua_close(L);
     return 0;
 }
 
 int core_execPort(const char* port_name, char* error_msg)
 {
-    lua_State* L = get_luastate();
+    lua_State* L = get_luaState();
 
     // Top before the port function call - so the function can return multiple variables
     int top = lua_gettop(L);
@@ -66,7 +68,7 @@ int core_execPort(const char* port_name, char* error_msg)
 
 int port_programStart(const char* port_name, char* std_out)
 {
-    lua_State* L = get_luastate();
+    lua_State* L = get_luaState();
     int top = lua_gettop(L);
     int numOutputs = core_execPort(port_name, std_out);
     if (numOutputs > 0)
@@ -101,7 +103,7 @@ void cmd_compile(const char* filename, char* status_msg, char* error_msg)
 
 int core_initGlobals()
 {
-	lua_State* L = get_luastate();
+	lua_State* L = get_luaState();
 	lua_pushnumber(L, 0.0);
 	lua_setglobal(L, "g_time");
 	return 0;
@@ -109,7 +111,7 @@ int core_initGlobals()
 
 int core_updateGlobals(float time)
 {
-	lua_State* L = get_luastate();
+	lua_State* L = get_luaState();
 	lua_pushnumber(L, time);
 	lua_setglobal(L, "g_time");
 	return 0;

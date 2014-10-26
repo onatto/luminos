@@ -26,14 +26,12 @@ static uint32_t mouse_state_prev;
 
 int ui_init()
 {
-    lua_State* L = get_luastate();
+    lua_State* L = get_luaState();
     lua_createtable(L, 0, TABLE_ENTRIES);
     lua_pushnumber(L, 0.0);
     lua_setfield(L, -2, "mx");
     lua_pushnumber(L, 0.0);
     lua_setfield(L, -2, "my");
-    lua_pushnumber(L, 0.0);
-    lua_setfield(L, -2, "mz");
 
     lua_pushboolean(L, false);
     lua_setfield(L, -2, "left");
@@ -42,17 +40,69 @@ int ui_init()
     lua_pushboolean(L, false);
     lua_setfield(L, -2, "right");
     lua_setglobal(L, "g_mouseState");
+
     return 0;
 }
 
-static char dump_str[256] = { 0 };
-int ui_debugPrintfStack(int base)
+bool ui_frameStart()
+{
+    int mx,my;
+    uint32_t mleft, mright, mmiddle, mmask;
+
+    lua_State* L = get_luaState();
+    keyboard_state = SDL_GetKeyboardState(NULL);
+    mouse_state = SDL_GetMouseState(&mx, &my);
+
+    mmask = SDL_BUTTON(SDL_BUTTON_LEFT);
+    mleft = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
+    mmask = SDL_BUTTON(SDL_BUTTON_RIGHT);
+    mright = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
+    mmask = SDL_BUTTON(SDL_BUTTON_MIDDLE);
+    mmiddle = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
+
+    // Use debug font to print information about this example.
+    bgfx::dbgTextClear();
+    bgfx::dbgTextPrintf(0, 1, 0x4f, s_statusMsg);
+    bgfx::dbgTextPrintf(0, 2, 0x6f, s_errorMsg);
+
+    if (ui_getKeyboardState(SDL_SCANCODE_ESCAPE) == KeyEvent::Press)
+        return true;
+
+    if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent::Press)
+    {
+        cmd_compile("scripts/program.lua", s_statusMsg, s_errorMsg);
+    }
+
+    lua_getglobal(L, "g_mouseState");
+    lua_pushnumber(L, mx);
+    lua_setfield(L, -2, "mx");
+    lua_pushnumber(L, my);
+    lua_setfield(L, -2, "my");
+
+    lua_pushnumber(L,  mleft);
+    lua_setfield(L, -2, "left");
+    lua_pushnumber(L, mmiddle);
+    lua_setfield(L, -2, "middle");
+    lua_pushnumber(L, mright);
+    lua_setfield(L, -2, "right");
+    lua_pop(L, 1);
+
+    return false;
+}
+void ui_frameEnd()
+{
+    memcpy((void*)keyboard_state_prev, keyboard_state, 512);
+    mouse_state_prev = mouse_state;
+}
+
+static char dump_str[512] = { 0 };
+int ui_debugPrintfStack(int base_y)
 {
     static const int flt_size = 16;
     char flt[flt_size];
-    lua_State* L = get_luastate();
+    lua_State* L = get_luaState();
 
-    bgfx::dbgTextPrintf(0, base, 0x4f, "Stack info:");
+    bgfx::dbgTextPrintf(0, base_y, 0x4f, "Stack info:");
     int top = lua_gettop(L);
     for (int i = 1; i <= top; i++)
     {
@@ -75,7 +125,7 @@ int ui_debugPrintfStack(int base)
             default:  /* other values */
                 break;
         }
-        bgfx::dbgTextPrintf(0, i + base, 0x4f, dump_str);
+        bgfx::dbgTextPrintf(0, i + base_y, 0x4f, dump_str);
     }
     return top;
 }
@@ -97,27 +147,8 @@ int ui_drawNode(float x, float y, float w, float h, int widget_state, const char
     return 0;
 }
 
-/* Return values:
- * 0 if not pressed
- * 1 if keypress event
- * 2 if release (key is not pressed, but was pressed the prev. frame)
- * 3 if keeping pressed
- */
-int ui_getKeyboardState(uint16_t key)
+uint8_t ui_getKeyboardState(uint16_t key)
 {
     return (keyboard_state_prev[key] << 1) | (keyboard_state[key] << 0);
 }
 
-bool ui_frameStart()
-{
-    keyboard_state = SDL_GetKeyboardState(NULL);
-
-    if (keyboard_state[SDL_SCANCODE_ESCAPE])
-        return true;
-
-    return false;
-}
-void ui_frameEnd()
-{
-    memcpy((void*)keyboard_state_prev, keyboard_state, 512);
-}
