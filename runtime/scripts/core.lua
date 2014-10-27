@@ -1,4 +1,6 @@
-function execTransform(transform)
+local core = {}
+local debugger = require "debugger"
+function core.execTransform(transform)
   -- transform.visited means that the output table for that transform was calculated(cached) from an earlier transform
   -- that is, that this vertex has been visited in the DAG traversal before
 
@@ -11,7 +13,7 @@ function execTransform(transform)
   for input_name, input_def in pairs(inputs) do -- Iterate over each input
       local connection = rawget(connections, input_name)
       if connection then
-          local result = execTransform(connection.transform)
+          local result = core.execTransform(connection.transform)
           input_def.value = result.outputs[connection.name].value
       else
         input_def.value = input_def.default
@@ -32,7 +34,7 @@ end
 -- Outputs have connection infos too
 --
 
-concat_transform = {
+core.concat_transform = {
     name = "Concat",
     -- Just change the default for that node instead of going one node deeper for constant inputs
     inputs = {
@@ -48,34 +50,7 @@ concat_transform = {
     end
 }
 
--- #Inputs = #Outputs = x = variable input/output
---[[
-keyboard_xform = {
-    name = "Keyboard",
-    inputs = {},
-    keys = {},
-
-    connections = {},
-    outputs = {},
-
-    eval = function(self)
-        for key, v in pairs(self.keys) do
-            local state = getKeyboardState(SDL.Key[key])
-            self.outputs[key].type = "number"
-            self.outputs[key].value = state
-        end
-    end,
-
-    clone = function(self, keys)
-        local c = deepcopy(self)
-        for _i, key in pairs(keys) do
-            self.keys[SDL.Key[key]] --= true
---        end
---    end
--- }
---]]
-
-mouse_xform = {
+core.mouse_xform = {
     name = "Mouse",
     inputs = {},
     connections = {},
@@ -89,7 +64,7 @@ mouse_xform = {
     end
 }
 
-time_xform = {
+core.time_xform = {
     name = "Time",
     inputs = {},
     connections = {},
@@ -100,3 +75,5 @@ time_xform = {
         self.outputs.time.value = g_time;
     end
 }
+
+return core

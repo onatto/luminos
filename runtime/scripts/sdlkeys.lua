@@ -1,4 +1,4 @@
-SDL = {
+local SDL = {
     Key = {
         A = 4,
         B = 5,
@@ -328,3 +328,5 @@ KeyEvent.Release = 2
 KeyEvent.Hold = 3
 
 KeyEventEnum = { "Nothing", "Press", "Release", "Hold" }
+
+return SDL

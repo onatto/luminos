@@ -11,6 +11,7 @@ int core_updateGlobals(float time);
 /* Ports are C-Lua interfaces, every port has different expectations from the Lua function it runs */
 /* That is, different expectations for the inputs, different expectations for the outputs          */
 int port_programStart(const char* port_name, char* std_out);
+int port_debugInfo(const char* port_name, const char* stack_trace_table, int x, int y);
 
 #define FFI_EXPORT __declspec(dllexport)
 

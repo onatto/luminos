@@ -1,23 +1,28 @@
-dofile "scripts/core.lua"
-dofile "scripts/sdlkeys.lua"
-dofile "scripts/commands.lua"
-
 package.path = ";./scripts/?.lua"
-ui = require "ui"
+
+core =  require "core"
+ui =    require "ui"
 xform = require "xform_ops"
+commands = require "commands"
+SDL =   require "sdlkeys"
 
 -- We needn't even pass tables around, if we are storing those tables(xforms) in an array
 -- We just pass that transforms index in that array
-concat_0 = xform.clone(concat_transform, {str_a = "Time: "})
-concat_1 = xform.clone(concat_transform, {str_a = "MouseX: " })
+-- This is stored in the core module
+local concat_0 = xform.clone(core.concat_transform, {str_a = "Time: "})
+local concat_1 = xform.clone(core.concat_transform, {str_a = "MouseX: " })
+
+local mouse_xform = xform.clone(core.mouse_xform, {})
+local time_xform = xform.clone(core.time_xform, {})
 
 concat_0.connections.str_b = {transform = time_xform, name = "time"}
 concat_1.connections.str_b = {transform = mouse_xform, name = "mx"}
 
-ui.createNode(400, 0, concat_0)
-ui.createNode(200, 300, concat_1)
 
-top_transform = {
+ui.createNode(400, 0, concat_0)
+ui.createNode(200, 300, mouse_xform)
+
+local top_transform = {
     name = "stdout",
     inputs = {
         input_str = {type = "string", default = ""},
@@ -53,7 +58,7 @@ function portProgramStart()
     for _k,transform in ipairs(transforms) do
         transform.visited = false
     end
-    execTransform(top_transform)
+    core.execTransform(top_transform)
     if (ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold) then
         if (ui.getKeyboardState(SDL.Key.A) == KeyEvent.Press) then
             counter = counter+1

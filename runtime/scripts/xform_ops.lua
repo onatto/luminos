@@ -1,4 +1,6 @@
 local xform = {}
+local debugger = require "debugger"
+
 local function shallowcopy(orig)
   local t2 = {}
   for k,v in pairs(orig) do
@@ -22,11 +24,11 @@ local function deepcopy(orig)
     return copy
 end
 
-function xform.clone(xform, default_overrides)
-    if xform.clone ~= nil then
-        return xform.clone(xform, default_overrides)
+function xform.clone(transform, default_overrides)
+    if transform.clone ~= nil then
+        return transform.clone(transform, default_overrides)
     end
-    local clone = deepcopy(xform)
+    local clone = deepcopy(transform)
     -- This is to copy(clone) an adjusted(defaults=constant inputs changed)
     for input_name,default_value in pairs(default_overrides) do
         clone.inputs[input_name].default = default_value
