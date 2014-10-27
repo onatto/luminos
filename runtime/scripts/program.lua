@@ -1,16 +1,15 @@
 dofile "scripts/core.lua"
-dofile "scripts/table_ops.lua"
-dofile "scripts/xform_ops.lua"
 dofile "scripts/sdlkeys.lua"
 dofile "scripts/commands.lua"
 
 package.path = ";./scripts/?.lua"
-ui = require("ui")
+ui = require "ui"
+xform = require "xform_ops"
 
 -- We needn't even pass tables around, if we are storing those tables(xforms) in an array
 -- We just pass that transforms index in that array
-concat_0 = clone_xform(concat_transform, {str_a = "Time: "})
-concat_1 = clone_xform(concat_transform, {str_a = "MouseX: " })
+concat_0 = xform.clone(concat_transform, {str_a = "Time: "})
+concat_1 = xform.clone(concat_transform, {str_a = "MouseX: " })
 
 concat_0.connections.str_b = {transform = time_xform, name = "time"}
 concat_1.connections.str_b = {transform = mouse_xform, name = "mx"}
@@ -18,16 +17,13 @@ concat_1.connections.str_b = {transform = mouse_xform, name = "mx"}
 ui.createNode(400, 0, concat_0)
 ui.createNode(200, 300, concat_1)
 
--- clone_xform(concat_transform, { str_a = "Say", str_b = " Hey" })
--- can set name field later from the UI, but gets the concat_transform's name
-
 top_transform = {
     name = "stdout",
     inputs = {
         input_str = {type = "string", default = ""},
     },
     connections = {
-      input_str = { transform = concat_0, name = "concat_str" }
+        input_str = { transform = concat_0, name = "concat_str" }
     },
     outputs = {
         stdout = {type = "string"}
