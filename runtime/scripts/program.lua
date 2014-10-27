@@ -58,6 +58,7 @@ mouse_drag = {
     nodey = nil,
     dragging = false
 }
+
 selected_node = nil
 function portProgramStart()
     for _k,transform in ipairs(transforms) do
@@ -76,8 +77,10 @@ function portProgramStart()
 
     draw_nodes()
 
-    if (g_mouseState.left == KeyEvent.Press) then
+    if (not mouse_drag.dragging) then
         selected_node = nodes_pt_intersect(g_mouseState.mx, g_mouseState.my)
+    end
+    if (g_mouseState.left == KeyEvent.Press) then
         if (selected_node) then
             mouse_drag.mx = g_mouseState.mx
             mouse_drag.my = g_mouseState.my
@@ -90,6 +93,7 @@ function portProgramStart()
     if (g_mouseState.left == KeyEvent.Hold and mouse_drag.dragging) then
         selected_node.x = mouse_drag.nodex + g_mouseState.mx - mouse_drag.mx
         selected_node.y = mouse_drag.nodey + g_mouseState.my - mouse_drag.my
+        selected_node.bndWidgetState = BNDWidgetState.Active
     end
 
     if (g_mouseState.left == KeyEvent.Release and mouse_drag.dragging) then
