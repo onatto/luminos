@@ -91,7 +91,7 @@ int main(int _argc, char** _argv)
 		core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
 
-        bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
+        //bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
         for (int i = 0; i < 3; i++)

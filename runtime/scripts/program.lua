@@ -14,6 +14,7 @@ concat_0.connections.str_b = {transform = time_xform, name = "time"}
 concat_1.connections.str_b = {transform = mouse_xform, name = "mx"}
 
 create_node(400, 0, concat_0)
+create_node(200, 300, concat_1)
 
 -- clone_xform(concat_transform, { str_a = "Say", str_b = " Hey" })
 -- can set name field later from the UI, but gets the concat_transform's name
@@ -49,6 +50,15 @@ function dbgMouseData(base_y)
    dbgText(base_y+4, "Middle: " .. KeyEventEnum[g_mouseState.middle+1])
 end
 
+mouse_drag = {
+    -- Starting positions for drag and node
+    mx = nil,
+    my = nil,
+    nodex = nil,
+    nodey = nil,
+    dragging = false
+}
+selected_node = nil
 function portProgramStart()
     for _k,transform in ipairs(transforms) do
         transform.visited = false
@@ -65,6 +75,27 @@ function portProgramStart()
     end
 
     draw_nodes()
+
+    if (g_mouseState.left == KeyEvent.Press) then
+        selected_node = nodes_pt_intersect(g_mouseState.mx, g_mouseState.my)
+        if (selected_node) then
+            mouse_drag.mx = g_mouseState.mx
+            mouse_drag.my = g_mouseState.my
+            mouse_drag.nodex = selected_node.x
+            mouse_drag.nodey = selected_node.y
+            mouse_drag.dragging = true
+        end
+    end
+
+    if (g_mouseState.left == KeyEvent.Hold and mouse_drag.dragging) then
+        selected_node.x = mouse_drag.nodex + g_mouseState.mx - mouse_drag.mx
+        selected_node.y = mouse_drag.nodey + g_mouseState.my - mouse_drag.my
+    end
+
+    if (g_mouseState.left == KeyEvent.Release and mouse_drag.dragging) then
+        mouse_drag.dragging = false
+    end
+
     stdout = top_transform.outputs.stdout.value
 
     dbgText(0, status_msg)
