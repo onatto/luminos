@@ -3,6 +3,7 @@
 local ui = {}
 local ffi = require "ffi"
 local debugger = require "debugger"
+local helpers = require "helpers"
 
 ffi.cdef
 [[
@@ -34,15 +35,12 @@ function ui.createNode(x, y, xform)
 
     -- Calculate port locations
     local i = 0
-    local input_cnt = #(node.xform.inputs)
-    debugger.printTable(node.xform)
-    if input_cnt > 0 then
-        for input_name, input in pairs(node.xform.inputs) do
-            local port = { name = input_name }
-            port.x = marginx + (marginw / input_cnt) * i
-            port.y = 0.9
-            table.insert(node.inports, port)
-        end
+    local input_cnt = helpers.tableLength(node.xform.inputs)
+    for input_name, input in pairs(node.xform.inputs) do
+        local port = { name = input_name }
+        port.x = marginx + (marginw / input_cnt) * i
+        port.y = 0.9
+        table.insert(node.inports, port)
     end
     table.insert(ui_nodes, node)
     return node
@@ -51,7 +49,6 @@ end
 local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
     for i, port in ipairs(node.inports) do
-        ui.dbgText(20+i, port.name)
         ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, 1, 255, 50, 100, 255)
     end
 end
