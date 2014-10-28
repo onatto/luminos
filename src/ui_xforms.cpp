@@ -141,10 +141,9 @@ void ui_dbgTextPrintf(int y, const char* str)
     bgfx::dbgTextPrintf(0, y, 0x4f, str);
 }
 
-int ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a)
+void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a)
 {
     bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widget_state, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
-    return 0;
 }
 
 uint8_t ui_getKeyboardState(uint16_t key)
@@ -152,3 +151,7 @@ uint8_t ui_getKeyboardState(uint16_t key)
     return (keyboard_state_prev[key] << 1) | (keyboard_state[key] << 0);
 }
 
+void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a)
+{
+    bndNodePort(nvg, x, y, (BNDwidgetState)widget_state, nvgRGBA(r,g,b,a));
+}

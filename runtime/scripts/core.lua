@@ -34,7 +34,7 @@ end
 -- Outputs have connection infos too
 --
 
-core.concat_transform = {
+core.concat_xform = {
     name = "Concat",
     -- Just change the default for that node instead of going one node deeper for constant inputs
     inputs = {

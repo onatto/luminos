@@ -5,19 +5,20 @@ ui =    require "ui"
 xform = require "xform_ops"
 commands = require "commands"
 SDL =   require "sdlkeys"
+debugger = require "debugger"
+debugger.init()
 
 -- We needn't even pass tables around, if we are storing those tables(xforms) in an array
 -- We just pass that transforms index in that array
 -- This is stored in the core module
-local concat_0 = xform.clone(core.concat_transform, {str_a = "Time: "})
-local concat_1 = xform.clone(core.concat_transform, {str_a = "MouseX: " })
+local concat_0 = xform.clone(core.concat_xform, {str_a = "Time: "})
+local concat_1 = xform.clone(core.concat_xform, {str_a = "MouseX: " })
 
 local mouse_xform = xform.clone(core.mouse_xform, {})
 local time_xform = xform.clone(core.time_xform, {})
 
 concat_0.connections.str_b = {transform = time_xform, name = "time"}
 concat_1.connections.str_b = {transform = mouse_xform, name = "mx"}
-
 
 ui.createNode(400, 0, concat_0)
 ui.createNode(200, 300, mouse_xform)
