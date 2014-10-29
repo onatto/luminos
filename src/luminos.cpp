@@ -72,14 +72,15 @@ int main(int _argc, char** _argv)
 
     port_programInit("portProgramInit", stdout_msg);
 
-	//SDL_Event event;
-    //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
+	SDL_Event event;
     while (!quit)
     {
-		SDL_Event event;
         while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                quit = true;
         }
-        quit = ui_frameStart();
+        if (!quit)
+            quit = ui_frameStart();
 
 		int64_t now = bx::getHPCounter();
 		const double freq = double(bx::getHPFrequency() );
@@ -110,8 +111,8 @@ int main(int _argc, char** _argv)
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
-
         ui_frameEnd();
+        SDL_WaitEventTimeout(NULL, 16);
     }
 
     // Shutdown bgfx.

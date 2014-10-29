@@ -22,8 +22,6 @@ local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
 local ui_nodes = {}
 function ui.createNode(x, y, xform)
-    local marginx = 0.1 -- for port locations, in relative coordinates
-    local marginw = 1-2*marginx -- for port locations, in relative coordinates
     local node = {}
     node.x = x
     node.y = y
@@ -34,14 +32,15 @@ function ui.createNode(x, y, xform)
     node.inports = {}
 
     -- Calculate port locations
-    local i = 0
+    local i = 1
     local input_cnt = helpers.tableLength(node.xform.inputs)
     for input_name, input in pairs(node.xform.inputs) do
         local port = { name = input_name }
-        port.x = marginx + (marginw / input_cnt) * i
-        port.y = 0.94
+        port.x = (1/(input_cnt+1)) * i
+        port.y = 0.85
         port.bndWidgetState = BNDWidgetState.Default
         table.insert(node.inports, port)
+        i = i+1
     end
     table.insert(ui_nodes, node)
     return node
@@ -54,7 +53,7 @@ end
 local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
     for i, port in ipairs(node.inports) do
-        ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 100, 100, 100, 255)
+        ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 100, 255, 255)
     end
 end
 
@@ -77,7 +76,6 @@ local mouse_drag =
     anchory = nil,
     dragging = false
 }
-local selected_node = nil
 local function pt_aabb_test(minx, miny, w, h, px, py)
     if minx < px and px < minx + w and miny < py and py < miny + h then
         return true
@@ -89,26 +87,26 @@ local function pt_aabb_relative(minx, miny, w, h, px, py)
 end
 
 local function ports_pt_intersect(node, px, py)
-    local radius = 0.005
+    local isect = nil
+    local radius = 0.004
     for _k, port in pairs(node.inports) do
         local dist2 = pt_pt_dist2(px, py, port.x, port.y)
         if dist2 < radius then
             port.bndWidgetState = BNDWidgetState.Hover
+            isect = port
         else
             port.bndWidgetState = BNDWidgetState.Default
         end
     end
+    return isect
 end
+
 local function nodes_pt_intersect(px, py)
     local isect = nil
     for _k, node in pairs(ui_nodes) do
         insideAABB = pt_aabb_test(node.x, node.y, node.w, node.h, px, py)
         if insideAABB and not isect then
-            local relx, rely = pt_aabb_relative(node.x, node.y, node.w, node.h, px, py)
-            ui.dbgText(15, tostring(relx))
-            ui.dbgText(16, tostring(rely))
             node.bndWidgetState = BNDWidgetState.Hover
-            ports_pt_intersect(node, relx, rely)
             isect = node
         else
             node.bndWidgetState = BNDWidgetState.Default
@@ -116,14 +114,29 @@ local function nodes_pt_intersect(px, py)
     end
     return isect
 end
+
+local selected_node = nil
+local selected_port_from = nil
+local selected_port_to = nil
 function ui.dragNodes()
+    local mx, my = g_mouseState.mx, g_mouseState.my
+    debugger.mouseData(8)
     if (not mouse_drag.dragging) then
-        selected_node = nodes_pt_intersect(g_mouseState.mx, g_mouseState.my)
+        selected_node = nodes_pt_intersect(mx, my)
+        if selected_node then
+            local relx, rely = pt_aabb_relative(selected_node.x, selected_node.y, selected_node.w, selected_node.h, mx, my)
+            if not selected_port_from then
+                selected_port_from = ports_pt_intersect(selected_node, relx, rely)
+            else
+                selected_port_to = ports_pt_intersect(selected_node, relx, rely)
+            end
+        end
     end
+
     if (g_mouseState.left == KeyEvent.Press) then
         if (selected_node) then
-            mouse_drag.mx = g_mouseState.mx
-            mouse_drag.my = g_mouseState.my
+            mouse_drag.mx = mx
+            mouse_drag.my = my
             mouse_drag.nodex = selected_node.x
             mouse_drag.nodey = selected_node.y
             mouse_drag.dragging = true
@@ -131,8 +144,8 @@ function ui.dragNodes()
     end
 
     if (g_mouseState.left == KeyEvent.Hold and mouse_drag.dragging) then
-        selected_node.x = mouse_drag.nodex + g_mouseState.mx - mouse_drag.mx
-        selected_node.y = mouse_drag.nodey + g_mouseState.my - mouse_drag.my
+        selected_node.x = mouse_drag.nodex + mx - mouse_drag.mx
+        selected_node.y = mouse_drag.nodey + my - mouse_drag.my
         selected_node.bndWidgetState = BNDWidgetState.Active
     end
 
@@ -142,7 +155,7 @@ function ui.dragNodes()
 end
 
 
-selected_nodes = {}
+local selected_nodes = {}
 local function select_ui_nodes()
     local mouse_pos = { x = g_mouseState.mx, y = g_mouseState.my }
     local node = nodes_aabb_test(mouse_pos)
@@ -153,5 +166,4 @@ local function select_ui_nodes()
     table.insert(selected_nodes, node)
     return node
 end
-
 return ui

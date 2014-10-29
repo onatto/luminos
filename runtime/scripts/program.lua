@@ -1,5 +1,6 @@
 package.path = ";./scripts/?.lua"
 
+ffi =   require 'ffi'
 core =  require "core"
 ui =    require "ui"
 xform = require "xform_ops"
@@ -53,6 +54,8 @@ function portProgramShutdown()
     ui.shutdown()
 end
 
+local status = ffi.new("uint8_t[?]", 1024)
+local err = ffi.new("uint8_t[?]", 1024)
 function portProgramStart()
     for _k,transform in ipairs(transforms) do
         transform.visited = false
@@ -64,6 +67,11 @@ function portProgramStart()
         end
     end
 
+    if (ui.getKeyboardState(SDL.Key.F6) == KeyEvent.Press) then
+        commands.compile("scripts/ui.lua", status, err)
+        ui = require('ui')
+    end
+
     if (g_mouseState.left == KeyEvent.Release) then
         counter = counter+1
     end
@@ -71,10 +79,9 @@ function portProgramStart()
     ui.drawNodes()
     ui.dragNodes()
 
-    ui.dbgText(0, status_msg)
-    ui.dbgText(1, error_msg)
+    ui.dbgText(0, status)
+    ui.dbgText(1, err)
     ui.dbgText(2, stdout)
-    debugger.mouseData(4)
     ui.dbgText(9, tostring(counter))
 end
 
