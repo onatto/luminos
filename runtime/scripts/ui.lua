@@ -32,8 +32,9 @@ function ui.createNode(x, y, xform)
     node.bndWidgetState = BNDWidgetState.Default
     node.xform = xform
     node.inports = {}
+    node.outports = {}
 
-    -- Calculate port locations
+    -- Calculate input port locations
     local i = 1
     local input_cnt = helpers.tableLength(node.xform.inputs)
     for input_name, input in pairs(node.xform.inputs) do
@@ -44,6 +45,19 @@ function ui.createNode(x, y, xform)
         table.insert(node.inports, port)
         i = i+1
     end
+
+    -- Calculate output port locations
+    i = 1
+    local output_cnt = helpers.tableLength(node.xform.outputs)
+    for output_name, output in pairs(node.xform.outputs) do
+        local port = { name = output_name }
+        port.x = (1/(output_cnt+1)) * i
+        port.y = 0.2
+        port.bndWidgetState = BNDWidgetState.Default
+        table.insert(node.outports, port)
+        i = i+1
+    end
+
     table.insert(ui_nodes, node)
     return node
 end
@@ -56,6 +70,9 @@ local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
     for i, port in ipairs(node.inports) do
         ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 100, 255, 255)
+    end
+    for i, port in ipairs(node.outports) do
+        ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 255, 100, 255)
     end
 end
 
@@ -70,14 +87,6 @@ local function pt_pt_dist2(px, py, qx, qy)
     local dy = py-qy
     return dx*dx + dy*dy
 end
-local mouse_drag =
-{
-    mx = nil,
-    my = nil,
-    anchorx = nil,
-    anchory = nil,
-    dragging = false
-}
 local function pt_aabb_test(minx, miny, w, h, px, py)
     if minx < px and px < minx + w and miny < py and py < miny + h then
         return true
@@ -117,58 +126,93 @@ local function nodes_pt_intersect(px, py)
     return isect
 end
 
-local selected_node = nil
-local selected_port_from = nil
-local selected_port_to = nil
+-- Holds data for dragging
+local mouse_drag =
+{
+    mx = nil,       -- To calculate total delta vector
+    my = nil,
+    anchorx = nil,  -- Starting(Anchor) point of the node before dragging, new_pos = anchor + delta
+    anchory = nil,
+}
+local hovered_node = nil
+local node_from = nil
+local node_to = nil
+local port_from = nil
+local port_to = nil
+function ui.dragConnectors()
+    local mx, my = g_mouseState.mx, g_mouseState.my
+    if not mouse_drag.drag_node and hovered_node then
+        local relx, rely = pt_aabb_relative(hovered_node.x, hovered_node.y, hovered_node.w, hovered_node.h, mx, my)
+        port_from = ports_pt_intersect(hovered_node, relx, rely)
+        if not port_from then
+            node_from = hovered_node
+            port_from = ports_pt_intersect(hovered_node, relx, rely)
+        else
+            node_to = hovered_node
+            port_to = ports_pt_intersect(hovered_node, relx, rely)
+        end
+    end
+
+    if g_mouseState.left == KeyEvent.Press then
+        if port_from then
+            mouse_drag.mx = mx
+            mouse_drag.my = my
+            mouse_drag.anchorx = node_from.x + node_from.w * port_from.x
+            mouse_drag.anchory = node_from.y + node_from.h * port_from.y
+            mouse_drag.drag_connector = true
+        end
+    end
+
+    if g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_connector then
+        ui.drawWire(mouse_drag.anchorx, mouse_drag.anchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
+    end
+
+    if g_mouseState.left == KeyEvent.Release then
+        if mouse_drag.drag_connector then
+            if port_to and node_to then
+                -- Lets connect those ports = Make the xform input/output connections
+                local input_node = node_from
+                local output_node = node_to
+                if port_to.is_input then
+                    input_node = node_to
+                    output_node = node_from
+                end
+            end
+            mouse_drag.drag_connector = false
+        end
+        node_from = nil
+        port_from = nil
+        node_to = nil
+        port_to = nil
+    end
+end
+
 function ui.dragNodes()
     local mx, my = g_mouseState.mx, g_mouseState.my
     debugger.mouseData(8)
     if not mouse_drag.drag_node then
-        selected_node = nodes_pt_intersect(mx, my)
-        if selected_node then
-            local relx, rely = pt_aabb_relative(selected_node.x, selected_node.y, selected_node.w, selected_node.h, mx, my)
-            selected_port_from = ports_pt_intersect(selected_node, relx, rely)
-            if not selected_port_from then
-                selected_port_from = ports_pt_intersect(selected_node, relx, rely)
-            else
-                selected_port_to = ports_pt_intersect(selected_node, relx, rely)
-            end
-        end
+        hovered_node = nodes_pt_intersect(mx, my)
     end
 
-    if (g_mouseState.left == KeyEvent.Press) then
-        if selected_port_from then
+    if g_mouseState.left == KeyEvent.Press then
+        if hovered_node and not (port_from or port_to) then
             mouse_drag.mx = mx
             mouse_drag.my = my
-            mouse_drag.anchorx = selected_node.x + selected_node.w * selected_port_from.x
-            mouse_drag.anchory = selected_node.y + selected_node.h * selected_port_from.y
-            mouse_drag.drag_connector = true
-        elseif selected_node then
-            mouse_drag.mx = mx
-            mouse_drag.my = my
-            mouse_drag.anchorx = selected_node.x
-            mouse_drag.anchory = selected_node.y
+            mouse_drag.anchorx = hovered_node.x
+            mouse_drag.anchory = hovered_node.y
             mouse_drag.drag_node = true
         end
     end
 
     if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_node) then
-        selected_node.x = mouse_drag.anchorx + mx - mouse_drag.mx
-        selected_node.y = mouse_drag.anchory + my - mouse_drag.my
-        selected_node.bndWidgetState = BNDWidgetState.Active
+        hovered_node.x = mouse_drag.anchorx + mx - mouse_drag.mx
+        hovered_node.y = mouse_drag.anchory + my - mouse_drag.my
+        hovered_node.bndWidgetState = BNDWidgetState.Active
     end
 
-    if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_connector) then
-        ui.drawWire(mouse_drag.anchorx, mouse_drag.anchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
-    end
-
-    if (g_mouseState.left == KeyEvent.Release ) then
+    if g_mouseState.left == KeyEvent.Release then
         if mouse_drag.drag_node then
             mouse_drag.drag_node = false
-        end
-        if mouse_drag.drag_connector then
-            selected_port_from = nil
-            mouse_drag.drag_connector = false
         end
     end
 end

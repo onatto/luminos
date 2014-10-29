@@ -78,6 +78,7 @@ function portProgramStart()
 
     ui.drawNodes()
     ui.dragNodes()
+    ui.dragConnectors()
 
     ui.dbgText(0, status)
     ui.dbgText(1, err)
