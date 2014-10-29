@@ -70,6 +70,8 @@ int main(int _argc, char** _argv)
     core_initGlobals();
     cmd_compile("scripts/program.lua", s_statusMsg, s_errorMsg);
 
+    port_programInit("portProgramInit", stdout_msg);
+
 	//SDL_Event event;
     //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
     while (!quit)

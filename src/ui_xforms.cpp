@@ -60,7 +60,6 @@ bool ui_frameStart()
     mmask = SDL_BUTTON(SDL_BUTTON_MIDDLE);
     mmiddle = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
 
-    // Use debug font to print information about this example.
     bgfx::dbgTextClear();
     bgfx::dbgTextPrintf(0, 1, 0x4f, s_statusMsg);
     bgfx::dbgTextPrintf(0, 2, 0x6f, s_errorMsg);
@@ -86,7 +85,7 @@ bool ui_frameStart()
     lua_pushnumber(L, mright);
     lua_setfield(L, -2, "right");
     lua_pop(L, 1);
-
+	
     return false;
 }
 void ui_frameEnd()

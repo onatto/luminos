@@ -39,17 +39,22 @@ function ui.createNode(x, y, xform)
     for input_name, input in pairs(node.xform.inputs) do
         local port = { name = input_name }
         port.x = marginx + (marginw / input_cnt) * i
-        port.y = 0.9
+        port.y = 0.94
+        port.bndWidgetState = BNDWidgetState.Default
         table.insert(node.inports, port)
     end
     table.insert(ui_nodes, node)
     return node
 end
 
+function ui.shutdown()
+    ui_nodes = {}
+end
+
 local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
     for i, port in ipairs(node.inports) do
-        ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, 1, 255, 50, 100, 255)
+        ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 100, 100, 100, 255)
     end
 end
 
@@ -59,6 +64,11 @@ function ui.drawNodes()
     end
 end
 
+local function pt_pt_dist2(px, py, qx, qy)
+    local dx = px-qx
+    local dy = py-qy
+    return dx*dx + dy*dy
+end
 local mouse_drag =
 {
     mx = nil,
@@ -78,6 +88,17 @@ local function pt_aabb_relative(minx, miny, w, h, px, py)
     return (px - minx) / w, (py - miny) / h
 end
 
+local function ports_pt_intersect(node, px, py)
+    local radius = 0.005
+    for _k, port in pairs(node.inports) do
+        local dist2 = pt_pt_dist2(px, py, port.x, port.y)
+        if dist2 < radius then
+            port.bndWidgetState = BNDWidgetState.Hover
+        else
+            port.bndWidgetState = BNDWidgetState.Default
+        end
+    end
+end
 local function nodes_pt_intersect(px, py)
     local isect = nil
     for _k, node in pairs(ui_nodes) do
@@ -87,6 +108,7 @@ local function nodes_pt_intersect(px, py)
             ui.dbgText(15, tostring(relx))
             ui.dbgText(16, tostring(rely))
             node.bndWidgetState = BNDWidgetState.Hover
+            ports_pt_intersect(node, relx, rely)
             isect = node
         else
             node.bndWidgetState = BNDWidgetState.Default

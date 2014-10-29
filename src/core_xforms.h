@@ -12,6 +12,7 @@ int core_updateGlobals(float time);
 /* That is, different expectations for the inputs, different expectations for the outputs          */
 int port_programStart(const char* port_name, char* std_out);
 int port_debugInfo(const char* port_name, const char* stack_trace_table, int x, int y);
+int port_programInit(const char* port_name, char* error_msg);
 
 #define FFI_EXPORT __declspec(dllexport)
 

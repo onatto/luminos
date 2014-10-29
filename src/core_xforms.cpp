@@ -51,8 +51,8 @@ int core_execPort(const char* port_name, char* error_msg)
     // Top before the port function call - so the function can return multiple variables
     int top = lua_gettop(L);
     lua_getglobal(L, port_name);
-    //if (!lua_isfunction(L, -1))
-    //    return -1;
+    if (!lua_isfunction(L, -1))
+        return -1;
 
     /* Ask Lua to run our little script */
     int result = lua_pcall(L, 0, LUA_MULTRET, 0);
@@ -80,6 +80,15 @@ int port_programStart(const char* port_name, char* std_out)
 		memset(std_out, 0, strlen(std_out));
         strncpy(std_out, str, len);
     }
+    lua_settop(L, top);
+    return 0;
+}
+
+int port_programInit(const char* port_name, char* error_msg)
+{
+    lua_State* L = get_luaState();
+    int top = lua_gettop(L);
+    int numOutputs = core_execPort(port_name, error_msg);
     lua_settop(L, top);
     return 0;
 }
