@@ -76,6 +76,5 @@ function portProgramStart()
     ui.dbgText(2, stdout)
     debugger.mouseData(4)
     ui.dbgText(9, tostring(counter))
-    collectgarbage()
 end
 

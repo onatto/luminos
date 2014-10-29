@@ -76,7 +76,9 @@ int main(int _argc, char** _argv)
     //while (!entry::processEvents(width, height, debug, reset, &mouse_state) )
     while (!quit)
     {
-        SDL_PumpEvents();
+		SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+        }
         quit = ui_frameStart();
 
 		int64_t now = bx::getHPCounter();
