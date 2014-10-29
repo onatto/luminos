@@ -85,7 +85,7 @@ bool ui_frameStart()
     lua_pushnumber(L, mright);
     lua_setfield(L, -2, "right");
     lua_pop(L, 1);
-	
+
     return false;
 }
 void ui_frameEnd()
@@ -153,4 +153,9 @@ uint8_t ui_getKeyboardState(uint16_t key)
 void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a)
 {
     bndNodePort(nvg, x, y, (BNDwidgetState)widget_state, nvgRGBA(r,g,b,a));
+}
+
+void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state)
+{
+    bndNodeWire(nvg, px, py, qx, qy, (BNDwidgetState)start_state, (BNDwidgetState)end_state);
 }

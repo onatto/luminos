@@ -17,6 +17,7 @@ extern "C"
     FFI_EXPORT void ui_dbgTextPrintf(int y, const char* str);
 	FFI_EXPORT void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
 	FFI_EXPORT void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a);
+	FFI_EXPORT void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
     FFI_EXPORT uint8_t ui_getKeyboardState(uint16_t key);
 }
 

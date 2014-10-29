@@ -9,6 +9,7 @@ ffi.cdef
 [[
     void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
 	void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a);
+	void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
     void ui_dbgTextPrintf(int y, const char *str);
     uint8_t ui_getKeyboardState(uint16_t key);
 ]]
@@ -16,6 +17,7 @@ ffi.cdef
 ui.drawNode = ffi.C.ui_drawNode
 ui.drawPort = ffi.C.ui_drawPort
 ui.dbgText = ffi.C.ui_dbgTextPrintf
+ui.drawWire = ffi.C.ui_drawWire
 ui.getKeyboardState = ffi.C.ui_getKeyboardState
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
@@ -121,10 +123,11 @@ local selected_port_to = nil
 function ui.dragNodes()
     local mx, my = g_mouseState.mx, g_mouseState.my
     debugger.mouseData(8)
-    if (not mouse_drag.dragging) then
+    if not mouse_drag.drag_node then
         selected_node = nodes_pt_intersect(mx, my)
         if selected_node then
             local relx, rely = pt_aabb_relative(selected_node.x, selected_node.y, selected_node.w, selected_node.h, mx, my)
+            selected_port_from = ports_pt_intersect(selected_node, relx, rely)
             if not selected_port_from then
                 selected_port_from = ports_pt_intersect(selected_node, relx, rely)
             else
@@ -134,23 +137,39 @@ function ui.dragNodes()
     end
 
     if (g_mouseState.left == KeyEvent.Press) then
-        if (selected_node) then
+        if selected_port_from then
             mouse_drag.mx = mx
             mouse_drag.my = my
-            mouse_drag.nodex = selected_node.x
-            mouse_drag.nodey = selected_node.y
-            mouse_drag.dragging = true
+            mouse_drag.anchorx = selected_node.x + selected_node.w * selected_port_from.x
+            mouse_drag.anchory = selected_node.y + selected_node.h * selected_port_from.y
+            mouse_drag.drag_connector = true
+        elseif selected_node then
+            mouse_drag.mx = mx
+            mouse_drag.my = my
+            mouse_drag.anchorx = selected_node.x
+            mouse_drag.anchory = selected_node.y
+            mouse_drag.drag_node = true
         end
     end
 
-    if (g_mouseState.left == KeyEvent.Hold and mouse_drag.dragging) then
-        selected_node.x = mouse_drag.nodex + mx - mouse_drag.mx
-        selected_node.y = mouse_drag.nodey + my - mouse_drag.my
+    if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_node) then
+        selected_node.x = mouse_drag.anchorx + mx - mouse_drag.mx
+        selected_node.y = mouse_drag.anchory + my - mouse_drag.my
         selected_node.bndWidgetState = BNDWidgetState.Active
     end
 
-    if (g_mouseState.left == KeyEvent.Release and mouse_drag.dragging) then
-        mouse_drag.dragging = false
+    if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_connector) then
+        ui.drawWire(mouse_drag.anchorx, mouse_drag.anchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
+    end
+
+    if (g_mouseState.left == KeyEvent.Release ) then
+        if mouse_drag.drag_node then
+            mouse_drag.drag_node = false
+        end
+        if mouse_drag.drag_connector then
+            selected_port_from = nil
+            mouse_drag.drag_connector = false
+        end
     end
 end
 
