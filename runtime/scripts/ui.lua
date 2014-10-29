@@ -31,8 +31,7 @@ function ui.createNode(x, y, xform)
     node.h = 40
     node.bndWidgetState = BNDWidgetState.Default
     node.xform = xform
-    node.inports = {}
-    node.outports = {}
+    node.ports = {}
 
     -- Calculate input port locations
     local i = 1
@@ -42,7 +41,9 @@ function ui.createNode(x, y, xform)
         port.x = (1/(input_cnt+1)) * i
         port.y = 0.85
         port.bndWidgetState = BNDWidgetState.Default
-        table.insert(node.inports, port)
+        port.is_input = true
+        port.is_output = false
+        table.insert(node.ports, port)
         i = i+1
     end
 
@@ -54,7 +55,9 @@ function ui.createNode(x, y, xform)
         port.x = (1/(output_cnt+1)) * i
         port.y = 0.2
         port.bndWidgetState = BNDWidgetState.Default
-        table.insert(node.outports, port)
+        port.is_input = false
+        port.is_output = true
+        table.insert(node.ports, port)
         i = i+1
     end
 
@@ -68,11 +71,12 @@ end
 
 local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
-    for i, port in ipairs(node.inports) do
-        ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 100, 255, 255)
-    end
-    for i, port in ipairs(node.outports) do
-        ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 255, 100, 255)
+    for i, port in ipairs(node.ports) do
+        if port.is_input then
+            ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 100, 255, 255)
+        else
+            ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 255, 100, 255)
+        end
     end
 end
 
@@ -100,7 +104,7 @@ end
 local function ports_pt_intersect(node, px, py)
     local isect = nil
     local radius = 0.004
-    for _k, port in pairs(node.inports) do
+    for _k, port in pairs(node.ports) do
         local dist2 = pt_pt_dist2(px, py, port.x, port.y)
         if dist2 < radius then
             port.bndWidgetState = BNDWidgetState.Hover
