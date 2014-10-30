@@ -22,7 +22,8 @@ function debugger.print(str)
     file:close()
 end
 
-function debugger.printTable(table, depth, file)
+-- Do not give depth and file parameters
+function debugger.printTable(table, file, depth)
     if not depth then
         depth = 0
     end
@@ -38,13 +39,13 @@ function debugger.printTable(table, depth, file)
         if type(v) == "table" then
             str = str .. ": \n"
             file:write(str)
-            debugger.printTable(v, depth+1, file)
+            debugger.printTable(v, file, depth+1)
         else
             str = str .. " := " .. tostring(v) .. "\n"
             file:write(str)
         end
     end
-    if depth == 0 then
+    if depth == 0 and file then
         file:close()
     end
 end

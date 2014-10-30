@@ -145,18 +145,22 @@ local port_from = nil
 local port_to = nil
 function ui.dragConnectors()
     local mx, my = g_mouseState.mx, g_mouseState.my
+    -- If not dragging a node already and mouse is on a node, calculate relative position of the mouse in the nodes AABB
+    -- Use the relative position to see if we're intersecting any ports
     if not mouse_drag.drag_node and hovered_node then
         local relx, rely = pt_aabb_relative(hovered_node.x, hovered_node.y, hovered_node.w, hovered_node.h, mx, my)
-        port_from = ports_pt_intersect(hovered_node, relx, rely)
-        if not port_from then
+        -- not drag_connector ==> node_from == nil
+        -- drag_connector ==> node_from ~= nil
+        if not mouse_drag.drag_connector and hovered_node then
             node_from = hovered_node
             port_from = ports_pt_intersect(hovered_node, relx, rely)
-        else
+        elseif mouse_drag.drag_connector and hovered_node then
             node_to = hovered_node
             port_to = ports_pt_intersect(hovered_node, relx, rely)
         end
     end
 
+    -- On LMB Press, if mouse was on a port, start dragging that connector
     if g_mouseState.left == KeyEvent.Press then
         if port_from then
             mouse_drag.mx = mx
@@ -167,23 +171,29 @@ function ui.dragConnectors()
         end
     end
 
+    -- If dragging, draw the wire when holding LMB
     if g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_connector then
         ui.drawWire(mouse_drag.anchorx, mouse_drag.anchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
     end
 
+    -- On LMB release, check if
     if g_mouseState.left == KeyEvent.Release then
-        if mouse_drag.drag_connector then
-            if port_to and node_to then
-                -- Lets connect those ports = Make the xform input/output connections
-                local input_node = node_from
-                local output_node = node_to
-                if port_to.is_input then
-                    input_node = node_to
-                    output_node = node_from
-                end
+        if mouse_drag.drag_connector and port_to and node_to then
+            -- Lets connect those ports = Make the xform input/output connections
+            local input_node, output_node = node_from, node_to
+            local input_port, output_port = port_from, port_to
+            -- Swap inputs if port_to is an input
+            if port_to.is_input then
+                input_node, output_node = node_to, node_from
+                input_port, output_port = port_to, port_from
             end
-            mouse_drag.drag_connector = false
+            debugger.print("Connecting input " .. input_node.xform.name .. ":" .. input_port.name .. " to output " .. output_node.xform.name .. ":" .. output_port.name)
+            -- Connect the port that is an input of a node to the output port
+            input_node.xform.connections[input_port.name] = {transform = output_node.xform, name = output_port.name}
+            debugger.printTable(input_node)
+            -- At this point input_node and output_node is there
         end
+        mouse_drag.drag_connector = false
         node_from = nil
         port_from = nil
         node_to = nil
@@ -193,11 +203,13 @@ end
 
 function ui.dragNodes()
     local mx, my = g_mouseState.mx, g_mouseState.my
-    debugger.mouseData(8)
+
+    -- If not dragging a node already, find a node to drag
     if not mouse_drag.drag_node then
         hovered_node = nodes_pt_intersect(mx, my)
     end
 
+    -- On LMB Press and not intersecting any nodes, start dragging
     if g_mouseState.left == KeyEvent.Press then
         if hovered_node and not (port_from or port_to) then
             mouse_drag.mx = mx
@@ -208,12 +220,14 @@ function ui.dragNodes()
         end
     end
 
+    -- Dragging a node if holding left mouse and we're dragging nodes
     if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_node) then
         hovered_node.x = mouse_drag.anchorx + mx - mouse_drag.mx
         hovered_node.y = mouse_drag.anchory + my - mouse_drag.my
         hovered_node.bndWidgetState = BNDWidgetState.Active
     end
 
+    -- On LMB release, stop dragging nodes
     if g_mouseState.left == KeyEvent.Release then
         if mouse_drag.drag_node then
             mouse_drag.drag_node = false
