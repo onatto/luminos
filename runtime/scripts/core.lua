@@ -16,8 +16,8 @@ function core.execNode(node)
       local connection = rawget(connections, input_name)
       if connection then
       -- The input is non-constant
-          local result = core.execNode(connection.node)
-          input_def.value = result.outputs[connection.port.name].value
+          local result_node = core.execNode(connection.node)
+          input_def.value = result_node.xform.outputs[connection.port_name].value
       else
       -- The input is a constant, each node has its unique constants
         input_def.value = node.constants[input_name]

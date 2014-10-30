@@ -58,7 +58,7 @@ function ui.createNode(x, y, xform, constant_inputs)
         port.bndWidgetState = BNDWidgetState.Default
         port.is_input = true
         port.is_output = false
-        table.insert(node.ports, port)
+        node.ports[input_name] = port
         i = i+1
     end
 
@@ -72,7 +72,7 @@ function ui.createNode(x, y, xform, constant_inputs)
         port.bndWidgetState = BNDWidgetState.Default
         port.is_input = false
         port.is_output = true
-        table.insert(node.ports, port)
+        node.ports[output_name] = port
         i = i+1
     end
 
@@ -86,12 +86,24 @@ end
 
 local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
-    for i, port in ipairs(node.ports) do
+    for name, port in pairs(node.ports) do
         if port.is_input then
             ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 100, 255, 255)
         else
             ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 255, 100, 255)
         end
+    end
+    -- Draw the input connections
+    for inport_name, connection in pairs(node.connections) do
+        local node_in = node
+        local node_out = connection.node
+        local port_in = node.ports[inport_name]
+        local port_out = node_out.ports[connection.port_name]
+        ui.drawWire(node_in.x + port_in.x * node_in.w,
+                    node_in.y + port_in.y * node_in.h,
+                    node_out.x + port_out.x * node_out.w,
+                    node_out.y + port_out.y * node_out.h,
+                    BNDWidgetState.Active, BNDWidgetState.Active)
     end
 end
 
@@ -202,10 +214,8 @@ function ui.dragConnectors()
                 input_node, output_node = node_to, node_from
                 input_port, output_port = port_to, port_from
             end
-            debugger.print("Connecting input " .. input_node.xform.name .. ":" .. input_port.name .. " to output " .. output_node.xform.name .. ":" .. output_port.name)
             -- Connect the port that is an input of a node to the output port
-            input_node.xform.connections[input_port.name] = {transform = output_node.xform, name = output_port.name}
-            debugger.printTable(input_node)
+            input_node.connections[input_port.name] = {node = output_node, port_name = output_port.name}
             -- At this point input_node and output_node is there
         end
         mouse_drag.drag_connector = false
