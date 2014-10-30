@@ -4,6 +4,7 @@ local ui = {}
 local ffi = require "ffi"
 local debugger = require "debugger"
 local helpers = require "helpers"
+local core = require "core"
 
 ffi.cdef
 [[
@@ -23,15 +24,29 @@ ui.getKeyboardState = ffi.C.ui_getKeyboardState
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
 local ui_nodes = {}
-function ui.createNode(x, y, xform)
+function ui.getTransforms()
+    local transforms = {}
+    for _i, node in ipairs(ui_nodes) do
+        table.insert(transforms, node.xform)
+    end
+    return transforms
+end
+function ui.createNode(x, y, xform, constant_inputs)
     local node = {}
     node.x = x
     node.y = y
     node.w = 180
     node.h = 40
     node.bndWidgetState = BNDWidgetState.Default
-    node.xform = xform
+    node.constants = {}
+    node.connections = {}
     node.ports = {}
+    node.xform = core.cloneTransform(node, xform)
+    if constant_inputs then
+        for input_name, constant in pairs(constant_inputs) do
+            node.constants[input_name] = constant
+        end
+    end
 
     -- Calculate input port locations
     local i = 1
