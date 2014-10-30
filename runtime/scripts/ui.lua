@@ -170,6 +170,7 @@ local node_from = nil
 local node_to = nil
 local port_from = nil
 local port_to = nil
+-- Dragging: port_from -> port_to
 function ui.dragConnectors()
     local mx, my = g_mouseState.mx, g_mouseState.my
     -- If not dragging a node already and mouse is on a node, calculate relative position of the mouse in the nodes AABB
@@ -190,6 +191,18 @@ function ui.dragConnectors()
     -- On LMB Press, if mouse was on a port, start dragging that connector
     if g_mouseState.left == KeyEvent.Press then
         if port_from then
+            -- If it is an input port and a binding exists
+            if node_from.connections[port_from.name] then
+                -- Then, it is as if we're dragging from that output_node's output
+                local input_node = node_from
+                local input_port = port_from
+                local output_node = input_node.connections[input_port.name].node
+                local output_port = output_node.ports[input_node.connections[input_port.name].port_name]
+                -- New node_from is the input node_from's connection node
+                node_from = output_node
+                port_from = output_port
+                input_node.connections[input_port.name] = nil
+            end
             mouse_drag.mx = mx
             mouse_drag.my = my
             mouse_drag.anchorx = node_from.x + node_from.w * port_from.x
@@ -206,17 +219,19 @@ function ui.dragConnectors()
     -- On LMB release, check if
     if g_mouseState.left == KeyEvent.Release then
         if mouse_drag.drag_connector and port_to and node_to then
-            -- Lets connect those ports = Make the xform input/output connections
-            local input_node, output_node = node_from, node_to
-            local input_port, output_port = port_from, port_to
-            -- Swap inputs if port_to is an input
-            if port_to.is_input then
-                input_node, output_node = node_to, node_from
-                input_port, output_port = port_to, port_from
+            if not (node_from == node_to) and not (port_from.is_input == port_to.is_input) then
+                -- Lets connect those ports = Make the xform input/output connections
+                local input_node, output_node = node_from, node_to
+                local input_port, output_port = port_from, port_to
+                -- Swap inputs if port_to is an input
+                if port_to.is_input then
+                    input_node, output_node = node_to, node_from
+                    input_port, output_port = port_to, port_from
+                end
+                -- Connect the port that is an input of a node to the output port
+                input_node.connections[input_port.name] = {node = output_node, port_name = output_port.name}
+                -- At this point input_node and output_node is there
             end
-            -- Connect the port that is an input of a node to the output port
-            input_node.connections[input_port.name] = {node = output_node, port_name = output_port.name}
-            -- At this point input_node and output_node is there
         end
         mouse_drag.drag_connector = false
         node_from = nil
