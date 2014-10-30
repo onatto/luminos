@@ -7,7 +7,7 @@ function core.execNode(node)
 
   local transform = node.xform
   if transform.visited or transform.cached then
-    return transform
+    return node
   end
   -- This is the data binding stage for the transform
   local inputs = transform.inputs
