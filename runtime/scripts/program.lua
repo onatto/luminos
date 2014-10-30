@@ -30,9 +30,12 @@ function portProgramStart()
     end
 
     core.execNode(current_node)
-    ui.dbgText(3, "hey")
     if (ui.getKeyboardState(SDL.Key.F2) == KeyEvent.Press) then
         debugger.printTable(current_node)
+    end
+
+    if g_mouseState.middle == KeyEvent.Press then
+        ui.createNode(g_mouseState.mx, g_mouseState.my, core.concat_xform)
     end
 
     if (ui.getKeyboardState(SDL.Key.F6) == KeyEvent.Press) then

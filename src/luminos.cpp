@@ -30,7 +30,7 @@ int main(int _argc, char** _argv)
     uint32_t reset = BGFX_RESET_VSYNC;
 
 	SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* wnd = SDL_CreateWindow("luminos"
+    sdl_wnd = SDL_CreateWindow("luminos"
                     , SDL_WINDOWPOS_UNDEFINED
                     , SDL_WINDOWPOS_UNDEFINED
                     , width
@@ -39,7 +39,7 @@ int main(int _argc, char** _argv)
                     | SDL_WINDOW_RESIZABLE
                     );
 
-    bgfx::sdlSetWindow(wnd);
+    bgfx::sdlSetWindow(sdl_wnd);
 
     bgfx::init();
     bgfx::reset(width, height);
@@ -99,13 +99,6 @@ int main(int _argc, char** _argv)
         //bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
-        for (int i = 0; i < 3; i++)
-        {
-			float k  =(float)i;
-            bndNodePort(nvg, 640 + k * 50, 100 + k * 90, (BNDwidgetState)i, nvgRGBA(255, 50, 100, 255));
-            bndNodeWire(nvg, 640 + k * 50, 100 + k * 90, 800 + k * 50, 400 + k * 90, (BNDwidgetState)i, BNDwidgetState::BND_DEFAULT);
-            bndNodeBackground(nvg, 300 + k * 300, 400, 200, 100, (BNDwidgetState)i, BND_ICONID(5, 11), "Node Background", nvgRGBA(255, 50, 100, 255));
-        }
 		nvgEndFrame(nvg);
 
         // Advance to next frame. Rendering thread will be kicked to
@@ -119,7 +112,7 @@ int main(int _argc, char** _argv)
     bgfx::shutdown();
 	core_shutdown();
 
-    SDL_DestroyWindow(wnd);
+    SDL_DestroyWindow(sdl_wnd);
     SDL_Quit();
     return 0;
 }

@@ -13,6 +13,7 @@ ffi.cdef
 	void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
     void ui_dbgTextPrintf(int y, const char *str);
     uint8_t ui_getKeyboardState(uint16_t key);
+    void ui_warpMouseInWindow(int x, int y);
 ]]
 
 ui.drawNode = ffi.C.ui_drawNode
@@ -20,6 +21,7 @@ ui.drawPort = ffi.C.ui_drawPort
 ui.dbgText = ffi.C.ui_dbgTextPrintf
 ui.drawWire = ffi.C.ui_drawWire
 ui.getKeyboardState = ffi.C.ui_getKeyboardState
+ui.warpMouse = ffi.C.ui_warpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
@@ -130,7 +132,7 @@ end
 
 local function ports_pt_intersect(node, px, py)
     local isect = nil
-    local radius = 0.004
+    local radius = 0.006
     for _k, port in pairs(node.ports) do
         local dist2 = pt_pt_dist2(px, py, port.x, port.y)
         if dist2 < radius then

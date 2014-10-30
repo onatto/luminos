@@ -23,6 +23,7 @@ static const Uint8 *keyboard_state;
 
 static uint32_t mouse_state;
 static uint32_t mouse_state_prev;
+SDL_Window* sdl_wnd;
 
 int ui_init()
 {
@@ -158,4 +159,8 @@ void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, cha
 void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state)
 {
     bndNodeWire(nvg, px, py, qx, qy, (BNDwidgetState)start_state, (BNDwidgetState)end_state);
+}
+void ui_warpMouseInWindow(int x, int y)
+{
+    SDL_WarpMouseInWindow(sdl_wnd, x, y);
 }
