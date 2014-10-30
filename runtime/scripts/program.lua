@@ -3,7 +3,6 @@ package.path = ";./scripts/?.lua"
 ffi =   require 'ffi'
 core =  require "core"
 ui =    require "ui"
-xform = require "xform_ops"
 commands = require "commands"
 SDL =   require "sdlkeys"
 debugger = require "debugger"
@@ -14,25 +13,13 @@ debugger.init()
 -- This is stored in the core module
 
 function portProgramInit()
-    concat_0 = xform.clone(core.concat_xform, {str_a = "Time: "})
-    concat_1 = xform.clone(core.concat_xform, {str_a = "MouseX: " })
-
-    mouse_xform = xform.clone(core.mouse_xform, {})
-    time_xform = xform.clone(core.time_xform, {})
-
-    concat_0.connections.str_b = {transform = time_xform, name = "time"}
-    concat_1.connections.str_b = {transform = mouse_xform, name = "mx"}
-
-    ui.createNode(400, 0, concat_0)
-    ui.createNode(200, 300, mouse_xform)
+    ui.createNode(400, 0, core.concat_xform, {str_a = "Time is: "})
+    ui.createNode(200, 300, core.mouse_xform)
 
     top_transform = {
         name = "stdout",
         inputs = {
             input_str = {type = "string", default = ""},
-        },
-        connections = {
-            input_str = { transform = concat_0, name = "concat_str" }
         },
         outputs = {
             stdout = {type = "string"}
@@ -60,7 +47,7 @@ function portProgramStart()
     for _k,transform in ipairs(transforms) do
         transform.visited = false
     end
-    core.execTransform(top_transform)
+    core.execNode(top_transform)
     if (ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold) then
         if (ui.getKeyboardState(SDL.Key.A) == KeyEvent.Press) then
             counter = counter+1

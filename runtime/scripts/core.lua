@@ -1,22 +1,26 @@
 local core = {}
 local debugger = require "debugger"
-function core.execTransform(transform)
+function core.execNode(node)
   -- transform.visited means that the output table for that transform was calculated(cached) from an earlier transform
   -- that is, that this vertex has been visited in the DAG traversal before
 
+  local transform = node.xform
   if transform.visited or transform.cached then
     return transform
   end
-
+own
+  -- This is the data binding stage for the transform
   local inputs = transform.inputs
-  local connections = transform.connections
+  local connections = node.connections
   for input_name, input_def in pairs(inputs) do -- Iterate over each input
       local connection = rawget(connections, input_name)
       if connection then
-          local result = core.execTransform(connection.transform)
-          input_def.value = result.outputs[connection.name].value
+      -- The input is non-constant
+          local result = core.execTransform(connection.node)
+          input_def.value = result.outputs[connection.port.name].value
       else
-        input_def.value = input_def.default
+      -- The input is a constant, each node has its unique constants
+        input_def.value = node.constants[input_name]
       end
   end
 
@@ -24,15 +28,13 @@ function core.execTransform(transform)
   transform.eval(transform)
   transform.visited = true
   -- The outputs of this transform are ready, maybe they're there, maybe not
-  return transform
+  return node
 end
 
--- Here str_a and str_b are input names
--- Nodes should be evaluated only once
--- That means, the calculated outputs must be copied in the transform itself
--- to their connected nodes, outputs feed the inputs
--- Outputs have connection infos too
---
+function core.cloneTransform(xform)
+    local clone = helpers.shallowCopy(xform)
+    return clone
+end
 
 core.concat_xform = {
     name = "Concat",
@@ -41,7 +43,6 @@ core.concat_xform = {
         str_a = {type = "string", default = ""},
         str_b = {type = "string", default = ""}
     },
-    connections = {},
     outputs = {
         concat_str = {type = "string"}
     },
@@ -53,7 +54,6 @@ core.concat_xform = {
 core.mouse_xform = {
     name = "Mouse",
     inputs = {},
-    connections = {},
     outputs = {
         mx = {type = "number"},
         my = {type = "number"}
@@ -67,7 +67,6 @@ core.mouse_xform = {
 core.time_xform = {
     name = "Time",
     inputs = {},
-    connections = {},
     outputs = {
         time = {type = "number"}
     },

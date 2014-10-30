@@ -23,14 +23,14 @@ ui.getKeyboardState = ffi.C.ui_getKeyboardState
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
 local ui_nodes = {}
-function ui.createNode(x, y, xform)
+function ui.createNode(x, y, xform, constant_inputs)
     local node = {}
     node.x = x
     node.y = y
     node.w = 180
     node.h = 40
     node.bndWidgetState = BNDWidgetState.Default
-    node.xform = xform
+    node.xform = core.cloneTransform(xform)
     node.ports = {}
 
     -- Calculate input port locations
