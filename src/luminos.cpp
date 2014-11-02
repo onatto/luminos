@@ -45,6 +45,8 @@ int main(int _argc, char** _argv)
     bgfx::reset(width, height);
 
     NVGcontext* nvg = nvgCreate(512, 512, 1, 0);
+    ui_setNVGContext(nvg);
+
 	bgfx::setViewSeq(0, true);
 
 	bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
@@ -64,12 +66,9 @@ int main(int _argc, char** _argv)
 
     // Setup Lua
     core_init();
+
+    cmd_restart("scripts/program.lua", s_statusMsg, s_errorMsg);
     ui_init();
-    ui_setNVGContext(nvg);
-
-    core_initGlobals();
-    cmd_compile("scripts/program.lua", s_statusMsg, s_errorMsg);
-
     port_programInit("portProgramInit", stdout_msg);
 
 	SDL_Event event;
@@ -96,7 +95,7 @@ int main(int _argc, char** _argv)
 		core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
 
-        //bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
+        bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
 		nvgEndFrame(nvg);

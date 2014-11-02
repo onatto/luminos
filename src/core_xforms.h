@@ -1,7 +1,7 @@
 #pragma once
 
 int core_init();
-int core_compileLua(const char* filename, char* error_msg_out);
+int core_start(const char* program_lua, char* error_msg_out);
 int core_execPort(const char* port_name, char* error_msg_out);
 int core_shutdown();
 
@@ -19,7 +19,7 @@ int port_programInit(const char* port_name, char* error_msg);
 // For the FFI, export these as C functions
 extern "C"
 {
-    FFI_EXPORT void cmd_compile(const char* filename, char* status_msg_out, char* error_msg_out);
+    FFI_EXPORT void cmd_restart(const char* filename, char* status_msg_out, char* error_msg_out);
 }
 
 /* States by the core module */

@@ -1,6 +1,6 @@
 local core = {}
-local debugger = require "debugger"
-local helpers = require "helpers"
+local debugger = require 'debugger'
+local helpers = require 'helpers'
 function core.execNode(node)
   -- transform.visited means that the output table for that transform was calculated(cached) from an earlier transform
   -- that is, that this vertex has been visited in the DAG traversal before

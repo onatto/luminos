@@ -10,16 +10,27 @@ char s_errorMsg[2048] = {0};
 
 int core_init()
 {
-    s_luaState = luaL_newstate();
-    luaL_openlibs(s_luaState);
+    s_luaState = NULL;
     return 0;
 }
 
-int core_compileLua(const char* filename, char* error_msg)
+int core_start(const char* program_lua, char* error_msg)
 {
+    // Every program == workspace is retained within it's own lua_state, the remaining task is to just
+    // adjust a data exchange interface between different states and boom, you got modules inside the 
+    // program
+    // Combined with github, one can always keep in sync with own workspace
+    // Oh, this was also in Smalltalk and node.js
+    
+    if (s_luaState ) {
+        lua_close(s_luaState);
+    }
+    s_luaState = luaL_newstate();
     lua_State* L = get_luaState();
+
+    luaL_openlibs(L);
     /* Load the file containing the script we are going to run */
-    int result = luaL_loadfile(L, filename);
+    int result = luaL_loadfile(L, program_lua);
     if (result) {
         /* If something went wrong, error message is at the top of */
         /* the stack */
@@ -40,15 +51,17 @@ int core_compileLua(const char* filename, char* error_msg)
 int core_shutdown()
 {
     lua_State* L = get_luaState();
-    lua_close(L);
+    if (L != NULL) {
+        lua_close(L);
+    }
+    s_luaState = NULL;
     return 0;
 }
 
 int core_execPort(const char* port_name, char* error_msg)
 {
     lua_State* L = get_luaState();
-
-    // Top before the port function call - so the function can return multiple variables
+// Top before the port function call - so the function can return multiple variables
     int top = lua_gettop(L);
     lua_getglobal(L, port_name);
     if (!lua_isfunction(L, -1))
@@ -57,7 +70,6 @@ int core_execPort(const char* port_name, char* error_msg)
     /* Ask Lua to run our little script */
     int result = lua_pcall(L, 0, LUA_MULTRET, 0);
     if (result) {
-        strcpy(error_msg, lua_tostring(L, -1));
         return result;
     }
 
@@ -70,6 +82,7 @@ int port_programStart(const char* port_name, char* std_out)
 {
     lua_State* L = get_luaState();
     int top = lua_gettop(L);
+    memset(std_out, 0, strlen(std_out));
     int numOutputs = core_execPort(port_name, std_out);
     if (numOutputs > 0)
     {
@@ -93,9 +106,10 @@ int port_programInit(const char* port_name, char* error_msg)
     return 0;
 }
 
-void cmd_compile(const char* filename, char* status_msg, char* error_msg)
+void cmd_restart(const char* filename, char* status_msg, char* error_msg)
 {
-    int fail = core_compileLua(filename, error_msg);
+    int fail = core_start(filename, error_msg);
+    lua_State* L = get_luaState();
     if (fail)
     {
 		memset(status_msg, 0, strlen(status_msg));
@@ -104,10 +118,12 @@ void cmd_compile(const char* filename, char* status_msg, char* error_msg)
     else
     {
         memset(status_msg, 0, strlen(status_msg));
-        strcpy(status_msg, "Compiled Lua successfully!");
+        strcpy(status_msg, "luminos");
         memset(error_msg, 0, strlen(error_msg));
-        strcpy(error_msg, "Luminos");
+        strcpy(error_msg, "Compiled Lua successfully");
     }
+
+    core_initGlobals();
 }
 
 int core_initGlobals()

@@ -61,17 +61,20 @@ bool ui_frameStart()
     mmask = SDL_BUTTON(SDL_BUTTON_MIDDLE);
     mmiddle = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
 
-    bgfx::dbgTextClear();
-    bgfx::dbgTextPrintf(0, 1, 0x4f, s_statusMsg);
-    bgfx::dbgTextPrintf(0, 2, 0x6f, s_errorMsg);
-
     if (ui_getKeyboardState(SDL_SCANCODE_ESCAPE) == KeyEvent::Press)
         return true;
 
     if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent::Press)
     {
-        cmd_compile("scripts/program.lua", s_statusMsg, s_errorMsg);
+        core_shutdown();
+        cmd_restart("scripts/program.lua", get_statusMsg(), get_errorMsg());
+        ui_init();
+        port_programInit("portProgramInit", get_statusMsg());
     }
+
+    bgfx::dbgTextClear();
+    bgfx::dbgTextPrintf(0, 1, 0x4f, s_statusMsg);
+    bgfx::dbgTextPrintf(0, 2, 0x6f, s_errorMsg);
 
     lua_getglobal(L, "g_mouseState");
     lua_pushnumber(L, mx);

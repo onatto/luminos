@@ -1,10 +1,10 @@
 -- UI Module
 
 local ui = {}
-local ffi = require "ffi"
-local debugger = require "debugger"
-local helpers = require "helpers"
-local core = require "core"
+local ffi = require 'ffi'
+local debugger = require 'debugger'
+local helpers = require 'helpers'
+local core = require 'core'
 
 ffi.cdef
 [[
@@ -33,6 +33,7 @@ function ui.getTransforms()
     end
     return transforms
 end
+
 function ui.createNode(x, y, xform, constant_inputs)
     local node = {}
     node.x = x
@@ -192,7 +193,7 @@ function ui.dragConnectors()
 
     -- On LMB Press, if mouse was on a port, start dragging that connector
     if g_mouseState.left == KeyEvent.Press then
-        if port_from then
+        if port_from and not node_from.xform.is_hub then
             -- If it is an input port and a binding exists
             if node_from.connections[port_from.name] then
                 -- Then, it is as if we're dragging from that output_node's output
@@ -210,6 +211,31 @@ function ui.dragConnectors()
             mouse_drag.anchorx = node_from.x + node_from.w * port_from.x
             mouse_drag.anchory = node_from.y + node_from.h * port_from.y
             mouse_drag.drag_connector = true
+        elseif port_from and node_from.xform.is_hub then
+            node_from.connections[port_from.name] = nil
+            local input_cnt = helpers.tableLength(node_from.connections)
+            node_from.ports = {}
+            node_from.xform.inputs = {}
+            local i = 1
+            local new_connections = {}
+            for _i, input in pairs(node_from.connections) do
+                new_connections[tostring(i)] = input
+                i = i + 1
+            end
+            node_from.connections = helpers.shallowCopy(new_connections)
+            debugger.printTable(node_from.connections)
+            i = 1
+            for _i, connection in pairs(node_from.connections) do
+                node_from.xform.inputs[tostring(i)] = {default=nil}
+                local port = { name = tostring(i)}
+                port.x = (1/(input_cnt+1)) * i
+                port.y = 0.85
+                port.bndWidgetState = BNDWidgetState.Default
+                port.is_input = true
+                port.is_output = false
+                node_from.ports[tostring(i)] = port
+                i = i + 1
+            end
         end
     end
 
@@ -233,6 +259,24 @@ function ui.dragConnectors()
                 -- Connect the port that is an input of a node to the output port
                 input_node.connections[input_port.name] = {node = output_node, port_name = output_port.name}
                 -- At this point input_node and output_node is there
+            end
+        elseif mouse_drag.drag_connector and node_to and (not port_to) and node_to.xform.is_hub then
+            local input_node, output_node = node_to, node_from
+            local output_port = port_from
+            local input_cnt = helpers.tableLength(input_node.connections) + 1
+            input_node.connections[tostring(input_cnt)] = {node = output_node, port_name = output_port.name}
+
+            input_node.xform.inputs = {}
+            -- Calculate input port locations
+            for i, input in pairs(input_node.connections) do
+                input_node.xform.inputs[tostring(i)] = {default=nil, type = "nil"}
+                local port = { name = tostring(i)}
+                port.x = (1/(input_cnt+1)) * i
+                port.y = 0.85
+                port.bndWidgetState = BNDWidgetState.Default
+                port.is_input = true
+                port.is_output = false
+                input_node.ports[i] = port
             end
         end
         mouse_drag.drag_connector = false
