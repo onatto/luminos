@@ -362,5 +362,8 @@ function ui.dragNodes()
     end
 end
 
+function ui.getSelectedNodes()
+    return selected_nodes
+end
 
 return ui

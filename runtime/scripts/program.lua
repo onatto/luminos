@@ -33,6 +33,11 @@ function portProgramStart()
         transform.visited = false
     end
 
+    local selected_nodes = ui.getSelectedNodes()
+    if #selected_nodes > 0 then
+        current_node = selected_nodes[1]
+    end
+
     core.execNode(current_node)
     core.execNode(util_port_node)
 

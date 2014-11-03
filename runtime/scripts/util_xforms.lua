@@ -7,12 +7,12 @@ local debugger = require 'debugger'
 -- Basically a namespacing way, nothing more
 -- Same thing could be done with local inport = { ... } and
 -- returning exports_array = {inport, print_xform, ..., }
--- Oh, well, saving a lot of, I'm in util namespace lest I forget, since 
+-- Oh, well, saving a lot of, I'm in util namespace lest I forget, since
 -- I have to type in THE namespace(by typing variable name) when I require it locally too
 -- Well, what are the consequences of then
 --
--- The consequence is that this code is compiled to a function returns multiple variables 
-util.inport = { 
+-- The consequence is that this code is compiled to a function returns multiple variables
+util.inport = {
     name = "Util Port",
     is_hub = true,
     inputs = {},
@@ -28,7 +28,7 @@ util.print_xform = {
         y = {type = "number", default=6}
     },
     outputs = {
-        this = {type = "this", default=nil}
+        this = {type = "this", value="This transform prints" }
     },
     eval = function(self)
         ui.dbgText(self.inputs.y.value, tostring(self.inputs.str.value))
