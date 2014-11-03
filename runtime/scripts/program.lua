@@ -50,6 +50,7 @@ function portProgramStart()
     end
 
     ui.drawNodes()
+    ui.selectNodes()
     ui.dragNodes()
     ui.dragConnectors()
 

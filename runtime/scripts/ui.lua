@@ -5,6 +5,7 @@ local ffi = require 'ffi'
 local debugger = require 'debugger'
 local helpers = require 'helpers'
 local core = require 'core'
+local SDL =   require 'sdlkeys'
 
 ffi.cdef
 [[
@@ -165,10 +166,11 @@ local mouse_drag =
 {
     mx = nil,       -- To calculate total delta vector
     my = nil,
-    anchorx = nil,  -- Starting(Anchor) point of the node before dragging, new_pos = anchor + delta
-    anchory = nil,
+    anchorx = {},  -- Starting(Anchor) point of the node before dragging, new_pos = anchor + delta
+    anchory = {},
 }
 local hovered_node = nil
+local selected_nodes = {}
 local node_from = nil
 local node_to = nil
 local port_from = nil
@@ -208,8 +210,8 @@ function ui.dragConnectors()
             end
             mouse_drag.mx = mx
             mouse_drag.my = my
-            mouse_drag.anchorx = node_from.x + node_from.w * port_from.x
-            mouse_drag.anchory = node_from.y + node_from.h * port_from.y
+            mouse_drag.canchorx = node_from.x + node_from.w * port_from.x
+            mouse_drag.canchory = node_from.y + node_from.h * port_from.y
             mouse_drag.drag_connector = true
         elseif port_from and node_from.xform.is_hub then
             node_from.connections[port_from.name] = nil
@@ -241,7 +243,7 @@ function ui.dragConnectors()
 
     -- If dragging, draw the wire when holding LMB
     if g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_connector then
-        ui.drawWire(mouse_drag.anchorx, mouse_drag.anchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
+        ui.drawWire(mouse_drag.canchorx, mouse_drag.canchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
     end
 
     -- On LMB release, check if
@@ -287,7 +289,15 @@ function ui.dragConnectors()
     end
 end
 
-function ui.dragNodes()
+local function findNode(snode)
+    for i, node in ipairs(selected_nodes) do
+        if node == snode then
+            return i
+        end
+    end
+    return nil
+end
+function ui.selectNodes()
     local mx, my = g_mouseState.mx, g_mouseState.my
 
     -- If not dragging a node already, find a node to drag
@@ -295,22 +305,53 @@ function ui.dragNodes()
         hovered_node = nodes_pt_intersect(mx, my)
     end
 
-    -- On LMB Press and not intersecting any nodes, start dragging
     if g_mouseState.left == KeyEvent.Press then
-        if hovered_node and not (port_from or port_to) then
+        if hovered_node then
+            if ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold then
+                found_node = findNode(hovered_node)
+                if found_node then
+                    table.remove(selected_nodes, found_node)
+                else
+                    table.insert(selected_nodes, hovered_node)
+                end
+            end
+        else
+            selected_nodes = {}
+        end
+    end
+    if g_mouseState.left == KeyEvent.Press and #selected_nodes <= 1 then
+        if hovered_node then
+            selected_nodes = {hovered_node}
+        end
+    end
+
+    for i, node in ipairs(selected_nodes) do
+        node.bndWidgetState = BNDWidgetState.Active
+    end
+    return selected_nodes
+end
+
+function ui.dragNodes()
+    local mx, my = g_mouseState.mx, g_mouseState.my
+    if g_mouseState.left == KeyEvent.Press and findNode(hovered_node) then
+        if #selected_nodes > 0 and not (port_from or port_to) then
             mouse_drag.mx = mx
             mouse_drag.my = my
-            mouse_drag.anchorx = hovered_node.x
-            mouse_drag.anchory = hovered_node.y
             mouse_drag.drag_node = true
+            for i, node in ipairs(selected_nodes) do
+                mouse_drag.anchorx[i] = node.x
+                mouse_drag.anchory[i] = node.y
+            end
         end
     end
 
     -- Dragging a node if holding left mouse and we're dragging nodes
     if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_node) then
-        hovered_node.x = mouse_drag.anchorx + mx - mouse_drag.mx
-        hovered_node.y = mouse_drag.anchory + my - mouse_drag.my
-        hovered_node.bndWidgetState = BNDWidgetState.Active
+        for i, node in ipairs(selected_nodes) do
+            node.x = mouse_drag.anchorx[i] + mx - mouse_drag.mx
+            node.y = mouse_drag.anchory[i] + my - mouse_drag.my
+            node.bndWidgetState = BNDWidgetState.Active
+        end
     end
 
     -- On LMB release, stop dragging nodes
@@ -322,15 +363,4 @@ function ui.dragNodes()
 end
 
 
-local selected_nodes = {}
-local function select_ui_nodes()
-    local mouse_pos = { x = g_mouseState.mx, y = g_mouseState.my }
-    local node = nodes_aabb_test(mouse_pos)
-    if node == nil then
-        return
-    end
-
-    table.insert(selected_nodes, node)
-    return node
-end
 return ui
