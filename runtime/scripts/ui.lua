@@ -5,6 +5,7 @@ local ffi = require 'ffi'
 local debugger = require 'debugger'
 local helpers = require 'helpers'
 local core = require 'core'
+local helpers = require 'helpers'
 
 ffi.cdef
 [[
@@ -25,13 +26,44 @@ ui.warpMouse = ffi.C.ui_warpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
-local ui_nodes = {}
+ui.nodes = {}
 function ui.getTransforms()
     local transforms = {}
-    for _i, node in ipairs(ui_nodes) do
+    for _i, node in ipairs(ui.nodes) do
         table.insert(transforms, node.xform)
     end
     return transforms
+end
+
+local function calculateInputPorts(node)
+    local i = 1
+    local input_cnt = helpers.tableLength(node.xform.inputs)
+    for input_name, input in pairs(node.xform.inputs) do
+        local port = { name = input_name }
+        port.x = (1/(input_cnt+1)) * i
+        port.y = 0.85
+        port.bndWidgetState = BNDWidgetState.Default
+        port.is_input = true
+        port.is_output = false
+        node.ports[input_name] = port
+        i = i+1
+    end
+end
+
+local function calculateOutputPorts(node)
+    -- Calculate output port locations
+    i = 1
+    local output_cnt = helpers.tableLength(node.xform.outputs)
+    for output_name, output in pairs(node.xform.outputs) do
+        local port = { name = output_name }
+        port.x = (1/(output_cnt+1)) * i
+        port.y = 0.2
+        port.bndWidgetState = BNDWidgetState.Default
+        port.is_input = false
+        port.is_output = true
+        node.ports[output_name] = port
+        i = i+1
+    end
 end
 
 function ui.createNode(x, y, xform, constant_inputs)
@@ -51,40 +83,14 @@ function ui.createNode(x, y, xform, constant_inputs)
         end
     end
 
-    -- Calculate input port locations
-    local i = 1
-    local input_cnt = helpers.tableLength(node.xform.inputs)
-    for input_name, input in pairs(node.xform.inputs) do
-        local port = { name = input_name }
-        port.x = (1/(input_cnt+1)) * i
-        port.y = 0.85
-        port.bndWidgetState = BNDWidgetState.Default
-        port.is_input = true
-        port.is_output = false
-        node.ports[input_name] = port
-        i = i+1
-    end
-
-    -- Calculate output port locations
-    i = 1
-    local output_cnt = helpers.tableLength(node.xform.outputs)
-    for output_name, output in pairs(node.xform.outputs) do
-        local port = { name = output_name }
-        port.x = (1/(output_cnt+1)) * i
-        port.y = 0.2
-        port.bndWidgetState = BNDWidgetState.Default
-        port.is_input = false
-        port.is_output = true
-        node.ports[output_name] = port
-        i = i+1
-    end
-
-    table.insert(ui_nodes, node)
+    calculateInputPorts(node)
+    calculateOutputPorts(node)
+    table.insert(ui.nodes, node)
     return node
 end
 
 function ui.shutdown()
-    ui_nodes = {}
+    ui.nodes = {}
 end
 
 local function drawNode(node)
@@ -111,7 +117,7 @@ local function drawNode(node)
 end
 
 function ui.drawNodes()
-    for _k, node in pairs(ui_nodes) do
+    for _k, node in pairs(ui.nodes) do
         drawNode(node)
     end
 end
@@ -148,7 +154,7 @@ end
 
 local function nodes_pt_intersect(px, py)
     local isect = nil
-    for _k, node in pairs(ui_nodes) do
+    for _k, node in pairs(ui.nodes) do
         insideAABB = pt_aabb_test(node.x, node.y, node.w, node.h, px, py)
         if insideAABB and not isect then
             node.bndWidgetState = BNDWidgetState.Hover
@@ -192,8 +198,8 @@ function ui.dragConnectors()
     end
 
     -- On LMB Press, if mouse was on a port, start dragging that connector
-    if g_mouseState.left == KeyEvent.Press then
-        if port_from and not node_from.xform.is_hub then
+    if g_mouseState.left == KeyEvent.Press and port_from then
+        if not node_from.xform.is_hub then
             -- If it is an input port and a binding exists
             if node_from.connections[port_from.name] then
                 -- Then, it is as if we're dragging from that output_node's output
@@ -211,7 +217,7 @@ function ui.dragConnectors()
             mouse_drag.anchorx = node_from.x + node_from.w * port_from.x
             mouse_drag.anchory = node_from.y + node_from.h * port_from.y
             mouse_drag.drag_connector = true
-        elseif port_from and node_from.xform.is_hub then
+        else
             node_from.connections[port_from.name] = nil
             local input_cnt = helpers.tableLength(node_from.connections)
             node_from.ports = {}
