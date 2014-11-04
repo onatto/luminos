@@ -16,11 +16,11 @@ debugger.init()
 current_node = nil
 util_port_node = nil
 function portProgramInit()
-    current_node = ui.createNode(350, 100, core.concat_xform, {str_a = "Time is: "})
-    util_port_node = ui.createNode(400, 100, util.inport)
-    ui.createNode(200, 400, core.mouse_xform)
-    ui.createNode(400, 300, core.time_xform)
-    ui.createNode(100, 300, util.print_xform)
+    current_node = ui.createNode(350, 100, "core.concat_xform", {str_a = "Time is: "})
+    util_port_node = ui.createNode(400, 100, "util_xforms.inport")
+    ui.createNode(200, 400, "core.mouse_xform")
+    ui.createNode(400, 300, "core.time_xform")
+    ui.createNode(100, 300, "util_xforms.print_xform")
 end
 
 function portProgramShutdown()

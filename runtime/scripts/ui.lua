@@ -35,7 +35,15 @@ function ui.getTransforms()
     return transforms
 end
 
-function ui.createNode(x, y, xform, constant_inputs)
+local function getTransform(xform_name)
+    local start, ends = string.find(xform_name, '[.]')
+    local module_name, xform_name = string.sub(xform_name, 1, start-1), string.sub(xform_name, ends+1)
+    local module = require(module_name)
+    local xform = module[xform_name]
+    return xform
+end
+
+function ui.createNode(x, y, xform_name, constant_inputs)
     local node = {}
     node.x = x
     node.y = y
@@ -45,7 +53,8 @@ function ui.createNode(x, y, xform, constant_inputs)
     node.constants = {}
     node.connections = {}
     node.ports = {}
-    node.xform = core.cloneTransform(node, xform)
+    node.xform_name = xform_name
+    node.xform = core.cloneTransform(node, getTransform(xform_name))
     if constant_inputs then
         for input_name, constant in pairs(constant_inputs) do
             node.constants[input_name] = constant
@@ -225,7 +234,6 @@ function ui.dragConnectors()
                 i = i + 1
             end
             node_from.connections = helpers.shallowCopy(new_connections)
-            debugger.printTable(node_from.connections)
             i = 1
             for _i, connection in pairs(node_from.connections) do
                 node_from.xform.inputs[tostring(i)] = {default=nil}
