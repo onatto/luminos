@@ -314,13 +314,16 @@ function ui.selectNodes()
                 else
                     table.insert(selected_nodes, hovered_node)
                 end
+            elseif #selected_nodes <= 1 then
+                selected_nodes = {hovered_node}
             end
         else
             selected_nodes = {}
         end
     end
-    if g_mouseState.left == KeyEvent.Press and #selected_nodes <= 1 then
-        if hovered_node then
+    if g_mouseState.left == KeyEvent.Release and hovered_node then
+        found_node = findNode(hovered_node)
+        if not found_node then
             selected_nodes = {hovered_node}
         end
     end
