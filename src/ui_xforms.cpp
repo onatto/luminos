@@ -61,7 +61,7 @@ bool ui_frameStart()
     mmask = SDL_BUTTON(SDL_BUTTON_MIDDLE);
     mmiddle = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
 
-    if (ui_getKeyboardState(SDL_SCANCODE_ESCAPE) == KeyEvent::Press)
+    if (ui_getKeyboardState(SDL_SCANCODE_LCTRL) == KeyEvent::Hold && ui_getKeyboardState(SDL_SCANCODE_Q) == KeyEvent::Press)
         return true;
 
     if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent::Press)

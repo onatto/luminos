@@ -112,11 +112,23 @@ local function drawNode(node)
         local node_out = connection.node
         local port_in = node.ports[inport_name]
         local port_out = node_out.ports[connection.port_name]
-        ui.drawWire(node_in.x + port_in.x * node_in.w,
-                    node_in.y + port_in.y * node_in.h,
-                    node_out.x + port_out.x * node_out.w,
-                    node_out.y + port_out.y * node_out.h,
+        local node_inx = node_in.x + port_in.x * node_in.w
+        local node_iny = node_in.y + port_in.y * node_in.h
+        local node_outx = node_out.x + port_out.x * node_out.w
+        local node_outy = node_out.y + port_out.y * node_out.h
+        if node_inx < node_outx then
+        ui.drawWire(node_inx,
+                    node_iny,
+                    node_outx,
+                    node_outy,
                     BNDWidgetState.Active, BNDWidgetState.Active)
+        else
+        ui.drawWire(node_outx,
+                    node_outy,
+                    node_inx,
+                    node_iny,
+                    BNDWidgetState.Active, BNDWidgetState.Active)
+        end
     end
 end
 
