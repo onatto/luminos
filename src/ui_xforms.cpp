@@ -25,7 +25,22 @@ static uint32_t mouse_state;
 static uint32_t mouse_state_prev;
 SDL_Window* sdl_wnd;
 
+struct UIData
+{
+    int fontHeader;
+};
+
+static UIData data;
+
 int ui_init()
+{
+	data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
+    ui_initGlobals();
+
+    return 0;
+}
+
+int ui_initGlobals()
 {
     lua_State* L = get_luaState();
     lua_createtable(L, 0, TABLE_ENTRIES);
@@ -68,7 +83,7 @@ bool ui_frameStart()
     {
         core_shutdown();
         cmd_restart("scripts/program.lua", get_statusMsg(), get_errorMsg());
-        ui_init();
+        ui_initGlobals();
         port_programInit("portProgramInit", get_statusMsg());
     }
 
@@ -166,4 +181,28 @@ void ui_drawWire(float px, float py, float qx, float qy, int start_state, int en
 void ui_warpMouseInWindow(int x, int y)
 {
     SDL_WarpMouseInWindow(sdl_wnd, x, y);
+}
+
+void ui_saveNVGState()
+{
+    nvgSave(nvg);
+}
+
+void ui_restoreNVGState()
+{
+    nvgRestore(nvg);
+}
+void ui_setTextProperties(const char* font, float size, int align)
+{
+	nvgFontFace(nvg, font);
+	nvgFontSize(nvg, size);
+	nvgTextAlign(nvg, align);
+}
+void ui_setTextColor(int r, int g, int b, int a)
+{
+	nvgFillColor(nvg, nvgRGBA(r,g,b,a));
+}
+void ui_drawText(float x, float y, const char* str)
+{
+    nvgText(nvg, x, y, str, NULL);
 }

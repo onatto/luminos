@@ -28,10 +28,10 @@ util.print_xform = {
         y = {type = "number", default=6}
     },
     outputs = {
-        this = {type = "this", value="This transform prints" }
+        this = {type = "this", value="" }
     },
     eval = function(self)
-        ui.dbgText(self.inputs.y.value, tostring(self.inputs.str.value))
+        --ui.dbgText(self.inputs.y.value, tostring(self.inputs.str.value))
     end
 }
 

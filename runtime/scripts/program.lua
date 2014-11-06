@@ -59,10 +59,6 @@ function portProgramStart()
     ui.dragNodes()
     ui.dragConnectors()
 
-    local idx = 0
-    for name, out in pairs(current_node.xform.outputs) do
-        ui.dbgText(4 + idx, name .. " : " .. out.value)
-        idx = idx + 1
-    end
+    ui.drawNodeInfo(current_node)
 end
 

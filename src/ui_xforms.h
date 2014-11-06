@@ -8,6 +8,7 @@ struct SDL_Window;
 #define FFI_EXPORT __declspec(dllexport)
 
 int ui_init();
+int ui_initGlobals();
 int ui_uploadMouseGlobals(void*);
 int ui_debugPrintfStack(int base_y);
 int ui_setNVGContext(void* ctx);
@@ -21,6 +22,11 @@ extern "C"
 	FFI_EXPORT void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
     FFI_EXPORT uint8_t ui_getKeyboardState(uint16_t key);
     FFI_EXPORT void ui_warpMouseInWindow(int x, int y);
+    FFI_EXPORT void ui_saveNVGState();
+    FFI_EXPORT void ui_restoreNVG();
+    FFI_EXPORT void ui_setTextProperties(const char* font, float size, int align);
+    FFI_EXPORT void ui_setTextColor(int r, int g, int b, int a);
+    FFI_EXPORT void ui_drawText(float x, float y, const char* str);
 }
 
 bool ui_frameStart();

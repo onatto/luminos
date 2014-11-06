@@ -15,7 +15,14 @@ ffi.cdef
     void ui_dbgTextPrintf(int y, const char *str);
     uint8_t ui_getKeyboardState(uint16_t key);
     void ui_warpMouseInWindow(int x, int y);
+    void ui_saveNVGState();
+    void ui_restoreNVG();
+    void ui_setTextProperties(const char* font, float size, int align);
+    void ui_setTextColor(int r, int g, int b, int a);
+    void ui_drawText(float x, float y, const char* str);
 ]]
+
+local C = ffi.C
 
 ui.drawNode = ffi.C.ui_drawNode
 ui.drawPort = ffi.C.ui_drawPort
@@ -97,6 +104,14 @@ function ui.shutdown()
     ui_nodes = {}
 end
 
+local zooming = {
+    -- Center x,y
+    cx = 0,
+    cy = 0,
+    zoom = 1,
+    aspect = 1600 / 900
+}
+
 local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
     for name, port in pairs(node.ports) do
@@ -133,6 +148,12 @@ local function drawNode(node)
 end
 
 function ui.drawNodes()
+    -- Wiggle
+    -- for _k, node in pairs(ui_nodes) do
+        -- node.w = (math.sin(g_time * 2) + 1.0) * zooming.aspect * 40 + 160
+        -- node.h = (math.sin(g_time * 2) + 1.0) / zooming.aspect * 10 + 60
+    -- end
+    zooming.zoom = math.sin(g_time) + 2.0 -- [1,2]
     for _k, node in pairs(ui_nodes) do
         drawNode(node)
     end
@@ -387,6 +408,48 @@ end
 
 function ui.getSelectedNodes()
     return selected_nodes
+end
+
+function ui.drawNodeInfo(node, y)
+    local w, h= 1600, 900
+    local x, y = 0, 120
+    local header_size = 30
+    local param_size = 22
+    local align = 1
+    local input_cnt = helpers.tableLength(current_node.xform.inputs)
+    local output_cnt = helpers.tableLength(current_node.xform.outputs)
+    C.ui_setTextProperties("header", header_size, align)
+    C.ui_setTextColor(255, 255, 255, 50)
+    C.ui_drawText(x, y, "Inputs")
+    y = y + header_size
+
+    C.ui_setTextProperties("header", param_size, align)
+    C.ui_setTextColor(255, 255, 255, 255)
+    for name, input in pairs(node.xform.inputs) do
+        connection = node.connections[name]
+        C.ui_drawText(x, y, name)
+        y = y + param_size
+        if not connection then
+            C.ui_drawText(x, y, tostring(node.constants[name]))
+        else
+            C.ui_drawText(x, y, tostring(connection.node.xform.outputs[connection.port_name].value))
+        end
+        y = y + param_size
+    end
+
+    C.ui_setTextProperties("header", header_size, align)
+    C.ui_setTextColor(255, 255, 255, 50)
+    C.ui_drawText(x, y, "Outputs")
+    y = y + header_size
+
+    C.ui_setTextProperties("header", param_size, align)
+    C.ui_setTextColor(255, 255, 255, 255)
+    for name, input in pairs(node.xform.outputs) do
+        C.ui_drawText(x, y, name)
+        y = y + param_size
+        C.ui_drawText(x, y, tostring(input.value))
+        y = y + param_size
+    end
 end
 
 return ui

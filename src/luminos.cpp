@@ -24,8 +24,8 @@ static bool quit = false;
 
 int main(int _argc, char** _argv)
 {
-    uint32_t width = 1280;
-    uint32_t height = 720;
+    uint32_t width = 1600;
+    uint32_t height = 900;
     uint32_t debug = BGFX_DEBUG_TEXT;
     uint32_t reset = BGFX_RESET_VSYNC;
 
