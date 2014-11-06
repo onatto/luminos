@@ -45,10 +45,6 @@ function portProgramStart()
         debugger.printTable(current_node)
     end
 
-    if g_mouseState.middle == KeyEvent.Press then
-        ui.createNode(g_mouseState.mx, g_mouseState.my, core.concat_xform)
-    end
-
     if (ui.getKeyboardState(SDL.Key.F6) == KeyEvent.Press) then
         commands.compile("scripts/ui.lua", status, err)
         ui = require('ui')
@@ -58,6 +54,7 @@ function portProgramStart()
     ui.selectNodes()
     ui.dragNodes()
     ui.dragConnectors()
+    ui.dragWorkspace()
 
     ui.drawNodeInfo(current_node)
 end

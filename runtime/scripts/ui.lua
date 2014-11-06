@@ -52,6 +52,8 @@ end
 
 function ui.createNode(x, y, xform_name, constant_inputs)
     local node = {}
+    node.sx = x
+    node.sy = y
     node.x = x
     node.y = y
     node.w = 180
@@ -104,14 +106,6 @@ function ui.shutdown()
     ui_nodes = {}
 end
 
-local zooming = {
-    -- Center x,y
-    cx = 0,
-    cy = 0,
-    zoom = 1,
-    aspect = 1600 / 900
-}
-
 local function drawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
     for name, port in pairs(node.ports) do
@@ -147,13 +141,36 @@ local function drawNode(node)
     end
 end
 
+local function max(a,b)
+    if a > b then
+        return a
+    end
+    return b
+end
+
+local zooming = {
+    -- Center x,y
+    cx = 0,
+    cy = 0,
+    zoom = 1,
+    aspect = 1600 / 900
+}
 function ui.drawNodes()
     -- Wiggle
     -- for _k, node in pairs(ui_nodes) do
         -- node.w = (math.sin(g_time * 2) + 1.0) * zooming.aspect * 40 + 160
         -- node.h = (math.sin(g_time * 2) + 1.0) / zooming.aspect * 10 + 60
     -- end
-    zooming.zoom = math.sin(g_time) + 2.0 -- [1,2]
+    local cx = zooming.cx
+    local cy = zooming.cy
+    local zoom = zooming.zoom -- [1,2]
+
+    for _k, node in pairs(ui_nodes) do
+        node.x = (-cx + node.sx) * zoom
+        node.y = (-cy + node.sy) * zoom
+        node.w = 180 * zoom
+        node.h = 40 * zoom
+    end
     for _k, node in pairs(ui_nodes) do
         drawNode(node)
     end
@@ -383,8 +400,8 @@ function ui.dragNodes()
             mouse_drag.my = my
             mouse_drag.drag_node = true
             for i, node in ipairs(selected_nodes) do
-                mouse_drag.anchorx[i] = node.x
-                mouse_drag.anchory[i] = node.y
+                mouse_drag.anchorx[i] = node.sx
+                mouse_drag.anchory[i] = node.sy
             end
         end
     end
@@ -392,8 +409,8 @@ function ui.dragNodes()
     -- Dragging a node if holding left mouse and we're dragging nodes
     if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_node) then
         for i, node in ipairs(selected_nodes) do
-            node.x = mouse_drag.anchorx[i] + mx - mouse_drag.mx
-            node.y = mouse_drag.anchory[i] + my - mouse_drag.my
+            node.sx = mouse_drag.anchorx[i] + (mx - mouse_drag.mx) / zooming.zoom
+            node.sy = mouse_drag.anchory[i] + (my - mouse_drag.my) / zooming.zoom
             node.bndWidgetState = BNDWidgetState.Active
         end
     end
@@ -450,6 +467,35 @@ function ui.drawNodeInfo(node, y)
         C.ui_drawText(x, y, tostring(input.value))
         y = y + param_size
     end
+end
+
+function ui.dragWorkspace()
+    if ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Press then
+        zooming.zoom = zooming.zoom + 0.2
+    elseif ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Press then
+        zooming.zoom = zooming.zoom - 0.2
+    end
+
+    if g_mouseState.right == KeyEvent.Press and not (mouse_drag.drag_node or mouse_drag.drag_connector) then
+        mouse_drag.drag_workspace = true
+        mouse_drag.mx = g_mouseState.mx
+        mouse_drag.my = g_mouseState.my
+        mouse_drag.wanchorx = zooming.cx
+        mouse_drag.wanchory = zooming.cy
+    end
+
+    if g_mouseState.right == KeyEvent.Hold and mouse_drag.drag_workspace then
+        zooming.cx = mouse_drag.wanchorx + (mouse_drag.mx - g_mouseState.mx) / zooming.zoom
+        zooming.cy = mouse_drag.wanchory + (mouse_drag.my - g_mouseState.my) / zooming.zoom
+    end
+
+    if g_mouseState.right == KeyEvent.Release then
+        mouse_drag.drag_workspace = false
+    end
+
+    ui.dbgText(4, tostring(zooming.cx))
+    ui.dbgText(5, tostring(zooming.cy))
+    ui.dbgText(6, tostring(zooming.zoom))
 end
 
 return ui
