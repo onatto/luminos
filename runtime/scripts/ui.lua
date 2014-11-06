@@ -54,8 +54,6 @@ function ui.createNode(x, y, xform_name, constant_inputs)
     local node = {}
     node.sx = x
     node.sy = y
-    node.x = x
-    node.y = y
     node.w = 180
     node.h = 40
     node.bndWidgetState = BNDWidgetState.Default
@@ -161,16 +159,6 @@ function ui.drawNodes()
         -- node.w = (math.sin(g_time * 2) + 1.0) * zooming.aspect * 40 + 160
         -- node.h = (math.sin(g_time * 2) + 1.0) / zooming.aspect * 10 + 60
     -- end
-    local cx = zooming.cx
-    local cy = zooming.cy
-    local zoom = zooming.zoom -- [1,2]
-
-    for _k, node in pairs(ui_nodes) do
-        node.x = (-cx + node.sx) * zoom
-        node.y = (-cy + node.sy) * zoom
-        node.w = 180 * zoom
-        node.h = 40 * zoom
-    end
     for _k, node in pairs(ui_nodes) do
         drawNode(node)
     end
@@ -236,7 +224,7 @@ local port_from = nil
 local port_to = nil
 -- Dragging: port_from -> port_to
 function ui.dragConnectors()
-    local mx, my = g_mouseState.mx, g_mouseState.my
+    local mouse, mx, my = g_mouseState, g_mouseState.mx, g_mouseState.my
     -- If not dragging a node already and mouse is on a node, calculate relative position of the mouse in the nodes AABB
     -- Use the relative position to see if we're intersecting any ports
     if not mouse_drag.drag_node and hovered_node then
@@ -252,9 +240,10 @@ function ui.dragConnectors()
         end
     end
 
-    -- On LMB Press, if mouse was on a port, start dragging that connector
-    if g_mouseState.left == KeyEvent.Press then
-        if port_from and not node_from.xform.is_hub then
+    -- On LMB Press, if mouse was on a port, start dragging a new connector from that port
+    -- If port is a hub
+    if mouse.left == KeyEvent.Press and port_from then
+        if not node_from.xform.is_hub then
             -- If it is an input port and a binding exists
             if node_from.connections[port_from.name] then
                 -- Then, it is as if we're dragging from that output_node's output
@@ -272,7 +261,7 @@ function ui.dragConnectors()
             mouse_drag.canchorx = node_from.x + node_from.w * port_from.x
             mouse_drag.canchory = node_from.y + node_from.h * port_from.y
             mouse_drag.drag_connector = true
-        elseif port_from and node_from.xform.is_hub then
+        else
             node_from.connections[port_from.name] = nil
             local input_cnt = helpers.tableLength(node_from.connections)
             node_from.ports = {}
@@ -300,12 +289,12 @@ function ui.dragConnectors()
     end
 
     -- If dragging, draw the wire when holding LMB
-    if g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_connector then
+    if mouse.left == KeyEvent.Hold and mouse_drag.drag_connector then
         ui.drawWire(mouse_drag.canchorx, mouse_drag.canchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
     end
 
     -- On LMB release, check if
-    if g_mouseState.left == KeyEvent.Release then
+    if mouse.left == KeyEvent.Release then
         if mouse_drag.drag_connector and port_to and node_to then
             if not (node_from == node_to) and not (port_from.is_input == port_to.is_input) then
                 -- Lets connect those ports = Make the xform input/output connections
@@ -470,18 +459,29 @@ function ui.drawNodeInfo(node, y)
 end
 
 function ui.dragWorkspace()
-    if ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Press then
-        zooming.zoom = zooming.zoom + 0.2
-    elseif ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Press then
-        zooming.zoom = zooming.zoom - 0.2
+    if ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Hold then
+        zooming.zoom = zooming.zoom + 0.01
+    elseif ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Hold then
+        zooming.zoom = zooming.zoom - 0.01
+    end
+
+    local cx = zooming.cx
+    local cy = zooming.cy
+    local zoom = zooming.zoom -- [1,2]
+
+    for _k, node in pairs(ui_nodes) do
+        node.x = (-cx + node.sx) * zoom
+        node.y = (-cy + node.sy) * zoom
+        node.w = 180 * zoom
+        node.h = 40 * zoom
     end
 
     if g_mouseState.right == KeyEvent.Press and not (mouse_drag.drag_node or mouse_drag.drag_connector) then
         mouse_drag.drag_workspace = true
         mouse_drag.mx = g_mouseState.mx
         mouse_drag.my = g_mouseState.my
-        mouse_drag.wanchorx = zooming.cx
-        mouse_drag.wanchory = zooming.cy
+        mouse_drag.wanchorx = cx
+        mouse_drag.wanchory = cy
     end
 
     if g_mouseState.right == KeyEvent.Hold and mouse_drag.drag_workspace then
@@ -493,8 +493,8 @@ function ui.dragWorkspace()
         mouse_drag.drag_workspace = false
     end
 
-    ui.dbgText(4, tostring(zooming.cx))
-    ui.dbgText(5, tostring(zooming.cy))
+    ui.dbgText(4, tostring(cx))
+    ui.dbgText(5, tostring(cy))
     ui.dbgText(6, tostring(zooming.zoom))
 end
 

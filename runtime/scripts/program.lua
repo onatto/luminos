@@ -50,11 +50,11 @@ function portProgramStart()
         ui = require('ui')
     end
 
-    ui.drawNodes()
+    ui.dragWorkspace()
     ui.selectNodes()
     ui.dragNodes()
     ui.dragConnectors()
-    ui.dragWorkspace()
+    ui.drawNodes()
 
     ui.drawNodeInfo(current_node)
 end
