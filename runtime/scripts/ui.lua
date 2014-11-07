@@ -508,4 +508,59 @@ function ui.dragWorkspace()
     end
 end
 
+local enter_cmd = false,
+local browse_inputs = false,
+local EnteringCommands = false
+
+local StartEnteringCommands = function ()
+    EnteringCommands = true
+end
+
+local ToggleEnteringCommands = function ()
+    EnteringCommands = not EnteringCommands
+end
+
+local ToggleTransformList = function ()
+    ShowTransformList = not ShowTransformList
+end
+
+local ProcessCommand = function(CommandName, CommandParameters)
+    if     CommandName == 'c' then
+        ui.createNode(MouseX, MouseY, CommandParameters[1], CommandParameters[2])
+    elseif CommandName == 'h' or CommandName == 'help' then
+        ToggleTransformList()
+    end
+end
+
+local DrawTheModuleName = function ()
+end
+
+local LetsDrawTheTransformList = function(x, y)
+    -- TODO: Code later
+    
+    DrawTheModuleName()
+    DrawTheTransformNames()
+end
+
+function ui.Proceed()
+    local IPressEnter = ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Pressed
+    local IPressHome = ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Pressed
+
+    if IPressEnter and not EnteringCommands then
+        StartEnteringCommands()
+    end
+
+    if IPressEnter and EnteringCommands then
+        ProcessCommand(CommandName, CommandParameters)
+    end
+
+    if IPressHome then
+        ToggleTransformList()
+    end
+
+    if ShowTransformList then
+        LetsDrawTheTransformList(1400, 0)
+    end
+end
+
 return ui
