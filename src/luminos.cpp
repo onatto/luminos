@@ -67,7 +67,7 @@ int main(int _argc, char** _argv)
     // Setup Lua
     core_init();
 
-    cmd_restart("scripts/program.lua", s_statusMsg, s_errorMsg);
+    cmd_restart("scripts/program.lua");
     ui_init();
     port_programInit("portProgramInit", stdout_msg);
 
@@ -94,8 +94,6 @@ int main(int _argc, char** _argv)
 
 		core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
-
-        bgfx::dbgTextPrintf(0, 3, 0x6f, stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
 		nvgEndFrame(nvg);

@@ -28,6 +28,7 @@ SDL_Window* sdl_wnd;
 struct UIData
 {
     int fontHeader;
+    int fontHeaderBold;
 };
 
 static UIData data;
@@ -35,6 +36,7 @@ static UIData data;
 int ui_init()
 {
 	data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
+	data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
     ui_initGlobals();
 
     return 0;
@@ -82,14 +84,12 @@ bool ui_frameStart()
     if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent::Press)
     {
         core_shutdown();
-        cmd_restart("scripts/program.lua", get_statusMsg(), get_errorMsg());
+        cmd_restart("scripts/program.lua");
         ui_initGlobals();
         port_programInit("portProgramInit", get_statusMsg());
     }
 
     bgfx::dbgTextClear();
-    bgfx::dbgTextPrintf(0, 1, 0x4f, s_statusMsg);
-    bgfx::dbgTextPrintf(0, 2, 0x6f, s_errorMsg);
 
     lua_getglobal(L, "g_mouseState");
     lua_pushnumber(L, mx);

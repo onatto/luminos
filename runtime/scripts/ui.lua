@@ -6,6 +6,7 @@ local debugger = require 'debugger'
 local helpers = require 'helpers'
 local core = require 'core'
 local SDL =   require 'sdlkeys'
+local bit = require 'bit'
 
 ffi.cdef
 [[
@@ -416,25 +417,37 @@ function ui.getSelectedNodes()
     return selected_nodes
 end
 
+function ui.drawWorkspace()
+    local x, y = 2, 0
+
+    C.ui_setTextProperties("header-bold", 25, 9)
+    C.ui_setTextColor(255, 255, 255, 200)
+    C.ui_drawText(x, y, g_statusMsg)
+    C.ui_setTextProperties("header", 25, 9)
+    y = y + 25
+    C.ui_drawText(x, y, g_errorMsg)
+end
+
 function ui.drawNodeInfo(node, y)
     local w, h= 1600, 900
-    local x, y = 0, 120
+    local x, y = 2, 80
     local header_size = 30
     local param_size = 22
     local align = 1
     local input_cnt = helpers.tableLength(current_node.xform.inputs)
     local output_cnt = helpers.tableLength(current_node.xform.outputs)
-    C.ui_setTextProperties("header", header_size, align)
+    C.ui_setTextProperties("header-bold", header_size, align)
     C.ui_setTextColor(255, 255, 255, 50)
     C.ui_drawText(x, y, "Inputs")
     y = y + header_size
 
-    C.ui_setTextProperties("header", param_size, align)
     C.ui_setTextColor(255, 255, 255, 255)
     for name, input in pairs(node.xform.inputs) do
         connection = node.connections[name]
+        C.ui_setTextProperties("header-bold", param_size, align)
         C.ui_drawText(x, y, name)
         y = y + param_size
+        C.ui_setTextProperties("header", param_size - 2, align)
         if not connection then
             C.ui_drawText(x, y, tostring(node.constants[name]))
         else
@@ -443,16 +456,17 @@ function ui.drawNodeInfo(node, y)
         y = y + param_size
     end
 
-    C.ui_setTextProperties("header", header_size, align)
+    C.ui_setTextProperties("header-bold", header_size, align)
     C.ui_setTextColor(255, 255, 255, 50)
     C.ui_drawText(x, y, "Outputs")
     y = y + header_size
 
-    C.ui_setTextProperties("header", param_size, align)
     C.ui_setTextColor(255, 255, 255, 255)
     for name, input in pairs(node.xform.outputs) do
+        C.ui_setTextProperties("header-bold", param_size, align)
         C.ui_drawText(x, y, name)
         y = y + param_size
+        C.ui_setTextProperties("header", param_size - 2, align)
         C.ui_drawText(x, y, tostring(input.value))
         y = y + param_size
     end
@@ -492,10 +506,6 @@ function ui.dragWorkspace()
     if g_mouseState.right == KeyEvent.Release then
         mouse_drag.drag_workspace = false
     end
-
-    ui.dbgText(4, tostring(cx))
-    ui.dbgText(5, tostring(cy))
-    ui.dbgText(6, tostring(zooming.zoom))
 end
 
 return ui

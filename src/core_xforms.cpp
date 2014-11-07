@@ -106,32 +106,26 @@ int port_programInit(const char* port_name, char* error_msg)
     return 0;
 }
 
-void cmd_restart(const char* filename, char* status_msg, char* error_msg)
+void cmd_restart(const char* filename)
 {
-    int fail = core_start(filename, error_msg);
-    lua_State* L = get_luaState();
+    int fail = core_start(filename, s_errorMsg);
+	lua_State* L = get_luaState();
     if (fail)
     {
-		memset(status_msg, 0, strlen(status_msg));
-        strcpy(status_msg, "Couldn't load file:");
+        lua_pushstring(L, "Couldn't load file:");
+        lua_setglobal(L, "g_statusMsg");
+        lua_pushstring(L, s_errorMsg);
+        lua_setglobal(L, "g_errorMsg");
     }
     else
     {
-        memset(status_msg, 0, strlen(status_msg));
-        strcpy(status_msg, "luminos");
-        memset(error_msg, 0, strlen(error_msg));
-        strcpy(error_msg, "Compiled Lua successfully");
+        lua_pushnumber(L, 0.0);
+        lua_setglobal(L, "g_time");
+        lua_pushstring(L, "Luminos");
+        lua_setglobal(L, "g_statusMsg");
+        lua_pushstring(L, "think xform");
+        lua_setglobal(L, "g_errorMsg");
     }
-
-    core_initGlobals();
-}
-
-int core_initGlobals()
-{
-	lua_State* L = get_luaState();
-	lua_pushnumber(L, 0.0);
-	lua_setglobal(L, "g_time");
-	return 0;
 }
 
 int core_updateGlobals(float time)

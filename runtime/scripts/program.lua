@@ -9,6 +9,8 @@ local debugger = require 'debugger'
 local util = require 'util_xforms'
 debugger.init()
 
+local C = ffi.C
+
 -- We needn't even pass tables around, if we are storing those tables(xforms) in an array
 -- We just pass that transforms index in that array
 -- This is stored in the core module
@@ -55,7 +57,7 @@ function portProgramStart()
     ui.dragNodes()
     ui.dragConnectors()
     ui.drawNodes()
+    ui.drawWorkspace()
 
     ui.drawNodeInfo(current_node)
 end
-
