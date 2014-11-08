@@ -428,6 +428,7 @@ function ui.drawWorkspace()
     C.ui_drawText(x, y, g_errorMsg)
 end
 
+local SelectedInput = 1
 function ui.drawNodeInfo(node, y)
     local w, h= 1600, 900
     local x, y = 2, 80
@@ -442,8 +443,14 @@ function ui.drawNodeInfo(node, y)
     y = y + header_size
 
     C.ui_setTextColor(255, 255, 255, 255)
+    local _i = 1
     for name, input in pairs(node.xform.inputs) do
         connection = node.connections[name]
+        if _i == SelectedInput then
+            C.ui_setTextColor(255, 150, 100, 255)
+        else
+            C.ui_setTextColor(255, 255, 255, 255)
+        end
         C.ui_setTextProperties("header-bold", param_size, align)
         C.ui_drawText(x, y, name)
         y = y + param_size
@@ -454,6 +461,7 @@ function ui.drawNodeInfo(node, y)
             C.ui_drawText(x, y, tostring(connection.node.xform.outputs[connection.port_name].value))
         end
         y = y + param_size
+        _i = _i + 1
     end
 
     C.ui_setTextProperties("header-bold", header_size, align)
@@ -508,8 +516,6 @@ function ui.dragWorkspace()
     end
 end
 
-local enter_cmd = false,
-local browse_inputs = false,
 local EnteringCommands = false
 
 local StartEnteringCommands = function ()
@@ -538,19 +544,30 @@ end
 local LetsDrawTheTransformList = function(x, y)
     -- TODO: Code later
     
-    DrawTheModuleName()
-    DrawTheTransformNames()
+    --DrawTheModuleName()
+    --DrawTheTransformNames()
 end
 
-function ui.Proceed()
-    local IPressEnter = ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Pressed
-    local IPressHome = ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Pressed
+local SelectNextInput = function (CurrentNode)
+    SelectedInput = ((SelectedInput) % helpers.tableLength(CurrentNode.xform.inputs)) + 1
+end
+local SelectPrevInput = function (CurrentNode)
+    if SelectedInput == 1 then
+        SelectedInput = helpers.tableLength(CurrentNode.xform.inputs)
+    else
+        SelectedInput = SelectedInput - 1
+    end
+end
+
+function ui.Proceed(CurrentNode)
+    local IPressEnter = ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press
+    local IPressHome = ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Press
+    local IPressTab  = ui.getKeyboardState(SDL.Key.TAB) == KeyEvent.Press
+    local IAlsoHoldShift  = ui.getKeyboardState(SDL.Key.LSHIFT) == KeyEvent.Hold
 
     if IPressEnter and not EnteringCommands then
         StartEnteringCommands()
-    end
-
-    if IPressEnter and EnteringCommands then
+    elseif IPressEnter and EnteringCommands then
         ProcessCommand(CommandName, CommandParameters)
     end
 
@@ -560,6 +577,14 @@ function ui.Proceed()
 
     if ShowTransformList then
         LetsDrawTheTransformList(1400, 0)
+    end
+
+    if IPressTab then
+        if IAlsoHoldShift then
+            SelectPrevInput(CurrentNode)
+        else
+            SelectNextInput(CurrentNode)
+        end
     end
 end
 

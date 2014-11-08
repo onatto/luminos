@@ -58,6 +58,7 @@ function portProgramStart()
     ui.dragConnectors()
     ui.drawNodes()
     ui.drawWorkspace()
+    ui.Proceed(current_node)
 
     ui.drawNodeInfo(current_node)
 end
