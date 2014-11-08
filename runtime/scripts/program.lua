@@ -26,7 +26,19 @@ function portProgramInit()
 end
 
 function portProgramShutdown()
-    ui.shutdown()
+end
+
+function portDisplayRuntimeError(error_msg)
+    if not error_msg then
+        return
+    end
+    local x, y = 2, 0
+    C.ui_setTextProperties("header-bold", 25, 9)
+    C.ui_setTextColor(255, 255, 255, 200)
+    C.ui_drawText(x, y, g_statusMsg)
+    C.ui_setTextProperties("header", 25, 9)
+    y = y + 25
+    C.ui_drawText(x, y, error_msg)
 end
 
 function portProgramStart()
@@ -54,7 +66,7 @@ function portProgramStart()
 
     ui.dragWorkspace()
     ui.selectNodes()
-    ui.dragNodes()
+    ui.DragNodes()
     ui.dragConnectors()
     ui.drawNodes()
     ui.drawWorkspace()

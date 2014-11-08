@@ -63,18 +63,18 @@ int core_execPort(const char* port_name, char* error_msg)
     lua_State* L = get_luaState();
 // Top before the port function call - so the function can return multiple variables
     int top = lua_gettop(L);
+    lua_getglobal(L, "portDisplayRuntimeError");
     lua_getglobal(L, port_name);
     if (!lua_isfunction(L, -1))
         return -1;
 
     /* Ask Lua to run our little script */
-    int result = lua_pcall(L, 0, LUA_MULTRET, 0);
+    int result = lua_pcall(L, 0, LUA_MULTRET, -2);
     if (result) {
-        return result;
+        return -result;
     }
 
     int nresults = lua_gettop(L) - top;
-
     return nresults;
 }
 
@@ -84,15 +84,6 @@ int port_programStart(const char* port_name, char* std_out)
     int top = lua_gettop(L);
     memset(std_out, 0, strlen(std_out));
     int numOutputs = core_execPort(port_name, std_out);
-    if (numOutputs > 0)
-    {
-        size_t len = 0;
-        if (!lua_isstring(L, -1))
-            return -1;
-        char* str = (char*)lua_tolstring(L, -1, &len);
-		memset(std_out, 0, strlen(std_out));
-        strncpy(std_out, str, len);
-    }
     lua_settop(L, top);
     return 0;
 }
@@ -106,7 +97,7 @@ int port_programInit(const char* port_name, char* error_msg)
     return 0;
 }
 
-void cmd_restart(const char* filename)
+int cmd_restart(const char* filename)
 {
     int fail = core_start(filename, s_errorMsg);
 	lua_State* L = get_luaState();
@@ -116,16 +107,15 @@ void cmd_restart(const char* filename)
         lua_setglobal(L, "g_statusMsg");
         lua_pushstring(L, s_errorMsg);
         lua_setglobal(L, "g_errorMsg");
+        return -1;
     }
-    else
-    {
-        lua_pushnumber(L, 0.0);
-        lua_setglobal(L, "g_time");
-        lua_pushstring(L, "Luminos");
-        lua_setglobal(L, "g_statusMsg");
-        lua_pushstring(L, "think xform");
-        lua_setglobal(L, "g_errorMsg");
-    }
+
+    lua_pushnumber(L, 0.0);
+    lua_setglobal(L, "g_time");
+    lua_pushstring(L, "Luminos");
+    lua_setglobal(L, "g_statusMsg");
+    lua_pushstring(L, "think xform");
+    return 0;
 }
 
 int core_updateGlobals(float time)

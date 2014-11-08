@@ -25,6 +25,8 @@ static uint32_t mouse_state;
 static uint32_t mouse_state_prev;
 SDL_Window* sdl_wnd;
 
+static bool show_errorMsg = false;
+
 struct UIData
 {
     int fontHeader;
@@ -81,15 +83,24 @@ bool ui_frameStart()
     if (ui_getKeyboardState(SDL_SCANCODE_LCTRL) == KeyEvent::Hold && ui_getKeyboardState(SDL_SCANCODE_Q) == KeyEvent::Press)
         return true;
 
+    if (ui_getKeyboardState(SDL_SCANCODE_F4) == KeyEvent::Press)
+    {
+        show_errorMsg = !show_errorMsg;
+    }
+
     if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent::Press)
     {
         core_shutdown();
-        cmd_restart("scripts/program.lua");
+        int res = cmd_restart("scripts/program.lua");
         ui_initGlobals();
         port_programInit("portProgramInit", get_statusMsg());
     }
 
     bgfx::dbgTextClear();
+
+    if (show_errorMsg) {
+        bgfx::dbgTextPrintf(0, 4, 0x4f, s_errorMsg);
+    }
 
     lua_getglobal(L, "g_mouseState");
     lua_pushnumber(L, mx);

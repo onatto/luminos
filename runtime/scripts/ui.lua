@@ -218,7 +218,7 @@ local mouse_drag =
     anchory = {},
 }
 local hovered_node = nil
-local selected_nodes = {}
+local SelectedNodes = {}
 local node_from = nil
 local node_to = nil
 local port_from = nil
@@ -338,7 +338,7 @@ function ui.dragConnectors()
 end
 
 local function findNode(snode)
-    for i, node in ipairs(selected_nodes) do
+    for i, node in ipairs(SelectedNodes) do
         if node == snode then
             return i
         end
@@ -358,38 +358,84 @@ function ui.selectNodes()
             if ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold then
                 found_node = findNode(hovered_node)
                 if found_node then
-                    table.remove(selected_nodes, found_node)
+                    table.remove(SelectedNodes, found_node)
                 else
-                    table.insert(selected_nodes, hovered_node)
+                    table.insert(SelectedNodes, hovered_node)
                 end
-            elseif #selected_nodes <= 1 then
-                selected_nodes = {hovered_node}
+            elseif #SelectedNodes <= 1 then
+                SelectedNodes = {hovered_node}
             end
         else
-            selected_nodes = {}
+            SelectedNodes = {}
         end
     end
     if g_mouseState.left == KeyEvent.Release and hovered_node then
         found_node = findNode(hovered_node)
         if not found_node then
-            selected_nodes = {hovered_node}
+            SelectedNodes = {hovered_node}
         end
     end
 
-    for i, node in ipairs(selected_nodes) do
+    for i, node in ipairs(SelectedNodes) do
         node.bndWidgetState = BNDWidgetState.Active
     end
-    return selected_nodes
+    return SelectedNodes
 end
 
+function ui.DragNodes()
+    -- States
+    local MouseX, MouseY = g_mouseState.mx, g_mouseState.my
+    local IPressLMB = g_mouseState.left == KeyEvent.Press
+    local IHoldLMB = g_mouseState.left == KeyEvent.Hold
+    local IReleaseLMB = g_mouseState.left == KeyEvent.Release
+    local HoveredNodeAlreadySelected = findNode(hovered_node)
+    local HoveringAPort = not not(port_from or port_to)
+    local DraggingNodes = mouse_drag.drag_node
+
+    -- Functional blocks
+    local StartDraggingNodes = function ()
+        mouse_drag.mx = MouseX
+        mouse_drag.my = MouseY
+        mouse_drag.drag_node = true
+        for i, node in ipairs(SelectedNodes) do
+            mouse_drag.anchorx[i] = node.sx
+            mouse_drag.anchory[i] = node.sy
+        end
+    end
+
+    local DragDaNodes = function ()
+        for i, node in ipairs(SelectedNodes) do
+            node.sx = mouse_drag.anchorx[i] + (MouseX - mouse_drag.mx) / zooming.zoom
+            node.sy = mouse_drag.anchory[i] + (MouseY - mouse_drag.my) / zooming.zoom
+            node.bndWidgetState = BNDWidgetState.Active
+        end
+    end
+
+    local StopDraggingNodes = function ()
+        mouse_drag.drag_node = false
+    end
+    
+    -- Behavior description
+    if IPressLMB and HoveredNodeAlreadySelected and not HoveringAPort then
+        StartDraggingNodes()
+    end
+
+    if IHoldLMB and DraggingNodes then
+        DragDaNodes()
+    end
+
+    if IReleaseLMB then
+        StopDraggingNodes()
+    end
+end
 function ui.dragNodes()
     local mx, my = g_mouseState.mx, g_mouseState.my
     if g_mouseState.left == KeyEvent.Press and findNode(hovered_node) then
-        if #selected_nodes > 0 and not (port_from or port_to) then
+        if #SelectedNodes > 0 and not (port_from or port_to) then
             mouse_drag.mx = mx
             mouse_drag.my = my
             mouse_drag.drag_node = true
-            for i, node in ipairs(selected_nodes) do
+            for i, node in ipairs(SelectedNodes) do
                 mouse_drag.anchorx[i] = node.sx
                 mouse_drag.anchory[i] = node.sy
             end
@@ -398,7 +444,7 @@ function ui.dragNodes()
 
     -- Dragging a node if holding left mouse and we're dragging nodes
     if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_node) then
-        for i, node in ipairs(selected_nodes) do
+        for i, node in ipairs(SelectedNodes) do
             node.sx = mouse_drag.anchorx[i] + (mx - mouse_drag.mx) / zooming.zoom
             node.sy = mouse_drag.anchory[i] + (my - mouse_drag.my) / zooming.zoom
             node.bndWidgetState = BNDWidgetState.Active
@@ -414,7 +460,7 @@ function ui.dragNodes()
 end
 
 function ui.getSelectedNodes()
-    return selected_nodes
+    return SelectedNodes
 end
 
 function ui.drawWorkspace()
@@ -424,8 +470,11 @@ function ui.drawWorkspace()
     C.ui_setTextColor(255, 255, 255, 200)
     C.ui_drawText(x, y, g_statusMsg)
     C.ui_setTextProperties("header", 25, 9)
-    y = y + 25
-    C.ui_drawText(x, y, g_errorMsg)
+    y = y + 28
+
+    if g_errorMsg then
+        C.ui_drawText(x, y, g_errorMsg)
+    end
 end
 
 local SelectedInput = 1
@@ -440,7 +489,7 @@ function ui.drawNodeInfo(node, y)
     C.ui_setTextProperties("header-bold", header_size, align)
     C.ui_setTextColor(255, 255, 255, 50)
     C.ui_drawText(x, y, "Inputs")
-    y = y + header_size
+    y = y + param_size
 
     C.ui_setTextColor(255, 255, 255, 255)
     local _i = 1
@@ -467,7 +516,7 @@ function ui.drawNodeInfo(node, y)
     C.ui_setTextProperties("header-bold", header_size, align)
     C.ui_setTextColor(255, 255, 255, 50)
     C.ui_drawText(x, y, "Outputs")
-    y = y + header_size
+    y = y + param_size
 
     C.ui_setTextColor(255, 255, 255, 255)
     for name, input in pairs(node.xform.outputs) do
@@ -481,85 +530,127 @@ function ui.drawNodeInfo(node, y)
 end
 
 function ui.dragWorkspace()
-    if ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Hold then
+    local ZoomIn = function ()
         zooming.zoom = zooming.zoom + 0.01
-    elseif ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Hold then
+    end
+
+    local ZoomOut = function ()
         zooming.zoom = zooming.zoom - 0.01
     end
 
-    local cx = zooming.cx
-    local cy = zooming.cy
-    local zoom = zooming.zoom -- [1,2]
-
-    for _k, node in pairs(ui_nodes) do
-        node.x = (-cx + node.sx) * zoom
-        node.y = (-cy + node.sy) * zoom
-        node.w = 180 * zoom
-        node.h = 40 * zoom
-    end
-
-    if g_mouseState.right == KeyEvent.Press and not (mouse_drag.drag_node or mouse_drag.drag_connector) then
+    local StartDraggingWorkspace = function (CenterX, CenterY)
         mouse_drag.drag_workspace = true
         mouse_drag.mx = g_mouseState.mx
         mouse_drag.my = g_mouseState.my
-        mouse_drag.wanchorx = cx
-        mouse_drag.wanchory = cy
+        mouse_drag.wanchorx = CenterX
+        mouse_drag.wanchory = CenterY
     end
 
-    if g_mouseState.right == KeyEvent.Hold and mouse_drag.drag_workspace then
+    local DragWorkspace = function ()
         zooming.cx = mouse_drag.wanchorx + (mouse_drag.mx - g_mouseState.mx) / zooming.zoom
         zooming.cy = mouse_drag.wanchory + (mouse_drag.my - g_mouseState.my) / zooming.zoom
     end
 
-    if g_mouseState.right == KeyEvent.Release then
+    local StopDraggingWorkspace = function ()
         mouse_drag.drag_workspace = false
+    end
+
+    local UpdateNodePositions = function (CenterX, CenterY, ZoomAmount)
+        for _k, node in pairs(ui_nodes) do
+            node.x = (-CenterX + node.sx) * ZoomAmount
+            node.y = (-CenterY + node.sy) * ZoomAmount
+            node.w = 180 * ZoomAmount
+            node.h = 40 * ZoomAmount
+        end
+    end
+
+    local IHoldPageUp = ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Hold 
+    local IHoldPageDown = ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Hold 
+    local IPressRMB = g_mouseState.right == KeyEvent.Press
+    local IHoldRMB = g_mouseState.right == KeyEvent.Hold
+    local IReleaseRMB = g_mouseState.right == KeyEvent.Release
+    local DraggingNodes = mouse_drag.drag_node
+    local DraggingWorkspace = mouse_drag.drag_workspace
+    local DraggingConnector = mouse_drag.drag_connector
+
+    if IHoldPageUp then
+        ZoomIn()
+    elseif IHoldPageDown then
+        ZoomOut()
+    end
+
+    local CenterX = zooming.cx
+    local CenterY = zooming.cy
+    local ZoomAmount = zooming.zoom -- [1,2]
+
+    UpdateNodePositions(CenterX, CenterY, ZoomAmount)
+
+    if IPressRMB and not (DraggingNodes or DraggingConnector) then
+        StartDraggingWorkspace(CenterX, CenterY)
+    end
+
+    if IHoldRMB and DraggingWorkspace then
+        DragWorkspace()
+    end
+
+    if IReleaseRMB then
+        StopDraggingWorkspace()
     end
 end
 
 local EnteringCommands = false
 
-local StartEnteringCommands = function ()
-    EnteringCommands = true
-end
-
-local ToggleEnteringCommands = function ()
-    EnteringCommands = not EnteringCommands
-end
-
-local ToggleTransformList = function ()
-    ShowTransformList = not ShowTransformList
-end
-
-local ProcessCommand = function(CommandName, CommandParameters)
-    if     CommandName == 'c' then
-        ui.createNode(MouseX, MouseY, CommandParameters[1], CommandParameters[2])
-    elseif CommandName == 'h' or CommandName == 'help' then
-        ToggleTransformList()
-    end
-end
-
-local DrawTheModuleName = function ()
-end
-
-local LetsDrawTheTransformList = function(x, y)
-    -- TODO: Code later
-    
-    --DrawTheModuleName()
-    --DrawTheTransformNames()
-end
-
-local SelectNextInput = function (CurrentNode)
-    SelectedInput = ((SelectedInput) % helpers.tableLength(CurrentNode.xform.inputs)) + 1
-end
-local SelectPrevInput = function (CurrentNode)
-    if SelectedInput == 1 then
-        SelectedInput = helpers.tableLength(CurrentNode.xform.inputs)
-    else
-        SelectedInput = SelectedInput - 1
-    end
-end
-
 function ui.Proceed(CurrentNode)
+    local StartEnteringCommands = function ()
+        EnteringCommands = true
+    end
+    local ToggleEnteringCommands = function ()
+        EnteringCommands = not EnteringCommands
+    end
+    local ToggleTransformList = function ()
+        ShowTransformList = not ShowTransformList
+    end
+    local ProcessCommand = function(CommandName, CommandParameters)
+        if     CommandName == 'c' then
+            ui.createNode(MouseX, MouseY, CommandParameters[1], CommandParameters[2])
+        elseif CommandName == 'h' or CommandName == 'help' then
+            ToggleTransformList()
+        end
+    end
+    local DrawTheModuleName = function (x, y)
+        C.ui_setTextProperties("header-bold", 25, 9)
+        C.ui_setTextColor(255, 255, 255, 200)
+        C.ui_drawText(x, y, "Core")
+    end
+    local DrawTheTransformNames = function (x, y, module)
+        C.ui_setTextProperties("header", 20, 9)
+        C.ui_setTextColor(255, 255, 255, 150)
+        for name, xform in pairs(module) do
+            local head, tail = string.find(name, "_xform")
+            if head then
+                C.ui_drawText(x, y, name)
+                y = y + 20
+            end
+        end
+    end
+    local LetsDrawTheTransformList = function(x, y)
+        -- TODO: Code later
+        
+        DrawTheModuleName(x, y)
+        y = y + 20
+        DrawTheTransformNames(x, y, core)
+    end
+    local SelectNextInput = function (CurrentNode)
+        SelectedInput = ((SelectedInput) % helpers.tableLength(CurrentNode.xform.inputs)) + 1
+    end
+    local SelectPrevInput = function (CurrentNode)
+        if SelectedInput == 1 then
+            SelectedInput = helpers.tableLength(CurrentNode.xform.inputs)
+        else
+            SelectedInput = SelectedInput - 1
+        end
+    end
+
     local IPressEnter = ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press
     local IPressHome = ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Press
     local IPressTab  = ui.getKeyboardState(SDL.Key.TAB) == KeyEvent.Press

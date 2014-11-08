@@ -19,7 +19,7 @@ int port_programInit(const char* port_name, char* error_msg);
 // For the FFI, export these as C functions
 extern "C"
 {
-    FFI_EXPORT void cmd_restart(const char* filename);
+    FFI_EXPORT int cmd_restart(const char* filename);
 }
 
 /* States by the core module */

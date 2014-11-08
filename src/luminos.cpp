@@ -69,7 +69,7 @@ int main(int _argc, char** _argv)
 
     cmd_restart("scripts/program.lua");
     ui_init();
-    port_programInit("portProgramInit", stdout_msg);
+    port_programInit("portProgramInit", s_errorMsg);
 
 	SDL_Event event;
     while (!quit)
