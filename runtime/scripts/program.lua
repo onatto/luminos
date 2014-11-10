@@ -59,16 +59,11 @@ function portProgramStart()
         debugger.printTable(current_node)
     end
 
-    if (ui.getKeyboardState(SDL.Key.F6) == KeyEvent.Press) then
-        commands.compile("scripts/ui.lua", status, err)
-        ui = require('ui')
-    end
-
     ui.start()
     ui.dragWorkspace()
     ui.SelectNodes()
     ui.DragNodes()
-    ui.dragConnectors()
+    ui.DragConnectors()
     ui.drawNodes()
     ui.drawWorkspace()
     ui.Proceed(current_node)
