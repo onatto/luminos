@@ -210,130 +210,152 @@ local function nodes_pt_intersect(px, py)
 end
 
 -- Holds data for dragging
-local mouse_drag =
+local MouseDrag =
 {
     mx = nil,       -- To calculate total delta vector
     my = nil,
     anchorx = {},  -- Starting(Anchor) point of the node before dragging, new_pos = anchor + delta
     anchory = {},
 }
-local hovered_node = nil
+local HoveredNode = nil
 local SelectedNodes = {}
 local node_from = nil
 local node_to = nil
 local port_from = nil
 local port_to = nil
 -- Dragging: port_from -> port_to
+
+-- States
+local MouseX, MouseY
+local IHoldLCTRL
+local IPressLMB, IHoldLMB, IReleaseLMB
+local IPressRMB, IHoldRMB, IReleaseRMB
+local DraggingNodes, DraggingConnectors, DraggingWorkspace
+local IPressEnter
+local IPressHome
+local IPressTab
+local IHoldLShift
+local HoveredNode
+
+function ui.start()
+    MouseX, MouseY = g_mouseState.mx, g_mouseState.my
+    IPressLMB = g_mouseState.left == KeyEvent.Press
+    IPressRMB = g_mouseState.right == KeyEvent.Press
+    IReleaseRMB = g_mouseState.right == KeyEvent.Release
+    IReleaseLMB = g_mouseState.left == KeyEvent.Release
+    IHoldLMB = g_mouseState.left == KeyEvent.Hold
+    IHoldRMB = g_mouseState.right == KeyEvent.Hold
+    IPressEnter = ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press
+    IPressHome = ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Press
+    IPressTab  = ui.getKeyboardState(SDL.Key.TAB) == KeyEvent.Press
+    IHoldLCTRL = ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold
+    IHoldLShift  = ui.getKeyboardState(SDL.Key.LSHIFT) == KeyEvent.Hold
+end
+
+function ui.DragConnectors()
+end
+
+local InputNode, OutputNode, InputPort, OutputPort
+local PortStart, PortEnd, NodeStart, NodeEnd
 function ui.dragConnectors()
-    local mouse, mx, my = g_mouseState, g_mouseState.mx, g_mouseState.my
     -- If not dragging a node already and mouse is on a node, calculate relative position of the mouse in the nodes AABB
     -- Use the relative position to see if we're intersecting any ports
-    if not mouse_drag.drag_node and hovered_node then
-        local relx, rely = pt_aabb_relative(hovered_node.x, hovered_node.y, hovered_node.w, hovered_node.h, mx, my)
+    
+    local FindConnection = function ()
+        local relx, rely = pt_aabb_relative(HoveredNode.x, HoveredNode.y, HoveredNode.w, HoveredNode.h, MouseX, MouseY)
         -- not drag_connector ==> node_from == nil
         -- drag_connector ==> node_from ~= nil
-        if not mouse_drag.drag_connector and hovered_node then
-            node_from = hovered_node
-            port_from = ports_pt_intersect(hovered_node, relx, rely)
-        elseif mouse_drag.drag_connector and hovered_node then
-            node_to = hovered_node
-            port_to = ports_pt_intersect(hovered_node, relx, rely)
+        if not DraggingConnectors and HoveredNode then
+            NodeStart = HoveredNode
+            PortStart = ports_pt_intersect(HoveredNode, relx, rely)
+            if PortStart and PortStart.is_input then
+                InputNode = NodeStart
+                InputPort = PortStart
+            end
+        elseif DraggingConnectors and HoveredNode then
+            NodeEnd = HoveredNode
+            PortEnd = ports_pt_intersect(HoveredNode, relx, rely)
+            if InputPort then
+                OutputNode = NodeEnd
+                OutputPort = PortEnd
+            else
+                OutputNode = NodeStart
+                OutputPort = PortStart
+                InputNode = NodeEnd
+                InputPort = PortEnd
+            end
         end
+    end
+    if not DraggingNodes and HoveredNode then
+        FindConnection()
     end
 
     -- On LMB Press, if mouse was on a port, start dragging a new connector from that port
     -- If port is a hub
-    if mouse.left == KeyEvent.Press and port_from then
-        if not node_from.xform.is_hub then
-            -- If it is an input port and a binding exists
-            if node_from.connections[port_from.name] then
-                -- Then, it is as if we're dragging from that output_node's output
-                local input_node = node_from
-                local input_port = port_from
-                local output_node = input_node.connections[input_port.name].node
-                local output_port = output_node.ports[input_node.connections[input_port.name].port_name]
-                -- New node_from is the input node_from's connection node
-                node_from = output_node
-                port_from = output_port
-                input_node.connections[input_port.name] = nil
-            end
-            mouse_drag.mx = mx
-            mouse_drag.my = my
-            mouse_drag.canchorx = node_from.x + node_from.w * port_from.x
-            mouse_drag.canchory = node_from.y + node_from.h * port_from.y
-            mouse_drag.drag_connector = true
-        else
-            node_from.connections[port_from.name] = nil
-            local input_cnt = helpers.tableLength(node_from.connections)
-            node_from.ports = {}
-            node_from.xform.inputs = {}
-            local i = 1
-            local new_connections = {}
-            for _i, input in pairs(node_from.connections) do
-                new_connections[tostring(i)] = input
-                i = i + 1
-            end
-            node_from.connections = helpers.shallowCopy(new_connections)
-            i = 1
-            for _i, connection in pairs(node_from.connections) do
-                node_from.xform.inputs[tostring(i)] = {default=nil}
-                local port = { name = tostring(i)}
-                port.x = (1/(input_cnt+1)) * i
-                port.y = 0.85
-                port.bndWidgetState = BNDWidgetState.Default
-                port.is_input = true
-                port.is_output = false
-                node_from.ports[tostring(i)] = port
-                i = i + 1
-            end
+    if IPressLMB and PortStart then
+        -- If it is an input port and a binding exists
+        if NodeStart.connections[PortStart.name] then
+            -- Then, it is as if we're dragging from that OutputNode's output
+            OutputNode = InputNode.connections[InputPort.name].node
+            OutputPort = OutputNode.ports[InputNode.connections[InputPort.name].port_name]
+            -- New NodeStart is the input NodeStart's connection node
+            NodeStart = OutputNode
+            PortStart = OutputPort
+            InputNode.connections[InputPort.name] = nil
         end
+
+        MouseDrag.mx = MouseX
+        MouseDrag.my = MouseY
+        MouseDrag.canchorx = NodeStart.x + NodeStart.w * PortStart.x
+        MouseDrag.canchory = NodeStart.y + NodeStart.h * PortStart.y
+        DraggingConnectors = true
     end
 
     -- If dragging, draw the wire when holding LMB
-    if mouse.left == KeyEvent.Hold and mouse_drag.drag_connector then
-        ui.drawWire(mouse_drag.canchorx, mouse_drag.canchory, mx, my, BNDWidgetState.Active, BNDWidgetState.Active)
+    if IHoldLMB and DraggingConnectors then
+        ui.drawWire(MouseDrag.canchorx, MouseDrag.canchory, MouseX, MouseY, BNDWidgetState.Active, BNDWidgetState.Active)
     end
 
     -- On LMB release, check if
-    if mouse.left == KeyEvent.Release then
-        if mouse_drag.drag_connector and port_to and node_to then
-            if not (node_from == node_to) and not (port_from.is_input == port_to.is_input) then
+    if IReleaseLMB then
+        if DraggingConnectors and PortEnd and NodeEnd then
+            if not (NodeStart == NodeEnd) and not (PortStart.is_input == PortEnd.is_input) then
                 -- Lets connect those ports = Make the xform input/output connections
-                local input_node, output_node = node_from, node_to
-                local input_port, output_port = port_from, port_to
-                -- Swap inputs if port_to is an input
-                if port_to.is_input then
-                    input_node, output_node = node_to, node_from
-                    input_port, output_port = port_to, port_from
+                InputNode, OutputNode = NodeStart, NodeEnd
+                InputPort, OutputPort = PortStart, PortEnd
+                -- Swap inputs if PortEnd is an input
+                if PortEnd.is_input then
+                    InputNode, OutputNode = NodeEnd, NodeStart
+                    InputPort, OutputPort = PortEnd, PortStart
                 end
                 -- Connect the port that is an input of a node to the output port
-                input_node.connections[input_port.name] = {node = output_node, port_name = output_port.name}
-                -- At this point input_node and output_node is there
+                InputNode.connections[InputPort.name] = {node = OutputNode, port_name = OutputPort.name}
+                -- At this point InputNode and OutputNode is there
             end
-        elseif mouse_drag.drag_connector and node_to and (not port_to) and node_to.xform.is_hub then
-            local input_node, output_node = node_to, node_from
-            local output_port = port_from
-            local input_cnt = helpers.tableLength(input_node.connections) + 1
-            input_node.connections[tostring(input_cnt)] = {node = output_node, port_name = output_port.name}
+        elseif DraggingConnectors and NodeEnd and (not PortEnd) and NodeEnd.xform.is_hub then
+            local InputNode, OutputNode = NodeEnd, NodeStart
+            local OutputPort = PortStart
+            local input_cnt = helpers.tableLength(InputNode.connections) + 1
+            InputNode.connections[tostring(input_cnt)] = {node = OutputNode, port_name = OutputPort.name}
 
-            input_node.xform.inputs = {}
+            InputNode.xform.inputs = {}
             -- Calculate input port locations
-            for i, input in pairs(input_node.connections) do
-                input_node.xform.inputs[tostring(i)] = {default=nil, type = "nil"}
+            for i, input in pairs(InputNode.connections) do
+                InputNode.xform.inputs[tostring(i)] = {default=nil, type = "nil"}
                 local port = { name = tostring(i)}
                 port.x = (1/(input_cnt+1)) * i
                 port.y = 0.85
                 port.bndWidgetState = BNDWidgetState.Default
                 port.is_input = true
                 port.is_output = false
-                input_node.ports[i] = port
+                InputNode.ports[i] = port
             end
         end
-        mouse_drag.drag_connector = false
-        node_from = nil
-        port_from = nil
-        node_to = nil
-        port_to = nil
+        DraggingConnectors = false
+        NodeStart = nil
+        PortStart = nil
+        NodeEnd = nil
+        PortEnd = nil
     end
 end
 
@@ -345,35 +367,48 @@ local function findNode(snode)
     end
     return nil
 end
-function ui.selectNodes()
-    local mx, my = g_mouseState.mx, g_mouseState.my
 
-    -- If not dragging a node already, find a node to drag
-    if not mouse_drag.drag_node then
-        hovered_node = nodes_pt_intersect(mx, my)
-    end
+local function FindHoveredNode(MouseX, MouseY)
+    return nodes_pt_intersect(MouseX, MouseY)
+end
 
-    if g_mouseState.left == KeyEvent.Press then
-        if hovered_node then
-            if ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold then
-                found_node = findNode(hovered_node)
-                if found_node then
-                    table.remove(SelectedNodes, found_node)
-                else
-                    table.insert(SelectedNodes, hovered_node)
-                end
-            elseif #SelectedNodes <= 1 then
-                SelectedNodes = {hovered_node}
-            end
+function ui.SelectNodes()
+    -- This is the behaviour expected for holding CTRL, can override
+    local SelectNodeCTRL = function ()
+        FoundNode = findNode(HoveredNode)
+        if FoundNode then
+            table.remove(SelectedNodes, FoundNode)
         else
-            SelectedNodes = {}
+            table.insert(SelectedNodes, HoveredNode)
         end
     end
-    if g_mouseState.left == KeyEvent.Release and hovered_node then
-        found_node = findNode(hovered_node)
-        if not found_node then
-            SelectedNodes = {hovered_node}
+
+    local SelectNodeWithoutCTRL = function ()
+        FoundNode = findNode(HoveredNode)
+        if not FoundNode then
+            SelectedNodes = {HoveredNode}
         end
+    end
+
+    if not DraggingNodes then
+        HoveredNode = FindHoveredNode(MouseX, MouseY)
+    end
+
+    if IPressLMB and HoveredNode then
+        if IHoldLCTRL then
+            SelectNodeCTRL()
+        elseif #SelectedNodes <= 1 then
+            SelectNodeWithoutCTRL()
+        end
+    end
+
+    if IPressLMB and not HoveredNode then
+        SelectedNodes = {}
+    end
+
+    -- This behavior is for handling the CTRL
+    if IReleaseLMB and HoveredNode then
+        SelectNodeWithoutCTRL()
     end
 
     for i, node in ipairs(SelectedNodes) do
@@ -384,35 +419,30 @@ end
 
 function ui.DragNodes()
     -- States
-    local MouseX, MouseY = g_mouseState.mx, g_mouseState.my
-    local IPressLMB = g_mouseState.left == KeyEvent.Press
-    local IHoldLMB = g_mouseState.left == KeyEvent.Hold
-    local IReleaseLMB = g_mouseState.left == KeyEvent.Release
-    local HoveredNodeAlreadySelected = findNode(hovered_node)
-    local HoveringAPort = not not(port_from or port_to)
-    local DraggingNodes = mouse_drag.drag_node
+    local HoveredNodeAlreadySelected = findNode(HoveredNode)
+    local HoveringAPort = not not(PortStart or PortEnd)
 
     -- Functional blocks
     local StartDraggingNodes = function ()
-        mouse_drag.mx = MouseX
-        mouse_drag.my = MouseY
-        mouse_drag.drag_node = true
+        MouseDrag.mx = MouseX
+        MouseDrag.my = MouseY
+        DraggingNodes = true
         for i, node in ipairs(SelectedNodes) do
-            mouse_drag.anchorx[i] = node.sx
-            mouse_drag.anchory[i] = node.sy
+            MouseDrag.anchorx[i] = node.sx
+            MouseDrag.anchory[i] = node.sy
         end
     end
 
     local DragDaNodes = function ()
         for i, node in ipairs(SelectedNodes) do
-            node.sx = mouse_drag.anchorx[i] + (MouseX - mouse_drag.mx) / zooming.zoom
-            node.sy = mouse_drag.anchory[i] + (MouseY - mouse_drag.my) / zooming.zoom
+            node.sx = MouseDrag.anchorx[i] + (MouseX - MouseDrag.mx) / zooming.zoom
+            node.sy = MouseDrag.anchory[i] + (MouseY - MouseDrag.my) / zooming.zoom
             node.bndWidgetState = BNDWidgetState.Active
         end
     end
 
     local StopDraggingNodes = function ()
-        mouse_drag.drag_node = false
+        DraggingNodes = false
     end
     
     -- Behavior description
@@ -426,36 +456,6 @@ function ui.DragNodes()
 
     if IReleaseLMB then
         StopDraggingNodes()
-    end
-end
-function ui.dragNodes()
-    local mx, my = g_mouseState.mx, g_mouseState.my
-    if g_mouseState.left == KeyEvent.Press and findNode(hovered_node) then
-        if #SelectedNodes > 0 and not (port_from or port_to) then
-            mouse_drag.mx = mx
-            mouse_drag.my = my
-            mouse_drag.drag_node = true
-            for i, node in ipairs(SelectedNodes) do
-                mouse_drag.anchorx[i] = node.sx
-                mouse_drag.anchory[i] = node.sy
-            end
-        end
-    end
-
-    -- Dragging a node if holding left mouse and we're dragging nodes
-    if (g_mouseState.left == KeyEvent.Hold and mouse_drag.drag_node) then
-        for i, node in ipairs(SelectedNodes) do
-            node.sx = mouse_drag.anchorx[i] + (mx - mouse_drag.mx) / zooming.zoom
-            node.sy = mouse_drag.anchory[i] + (my - mouse_drag.my) / zooming.zoom
-            node.bndWidgetState = BNDWidgetState.Active
-        end
-    end
-
-    -- On LMB release, stop dragging nodes
-    if g_mouseState.left == KeyEvent.Release then
-        if mouse_drag.drag_node then
-            mouse_drag.drag_node = false
-        end
     end
 end
 
@@ -478,6 +478,7 @@ function ui.drawWorkspace()
 end
 
 local SelectedInput = 1
+
 function ui.drawNodeInfo(node, y)
     local w, h= 1600, 900
     local x, y = 2, 80
@@ -519,12 +520,12 @@ function ui.drawNodeInfo(node, y)
     y = y + param_size
 
     C.ui_setTextColor(255, 255, 255, 255)
-    for name, input in pairs(node.xform.outputs) do
+    for name, output in pairs(node.xform.outputs) do
         C.ui_setTextProperties("header-bold", param_size, align)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-        C.ui_drawText(x, y, tostring(input.value))
+        C.ui_drawText(x, y, tostring(output.value))
         y = y + param_size
     end
 end
@@ -539,20 +540,20 @@ function ui.dragWorkspace()
     end
 
     local StartDraggingWorkspace = function (CenterX, CenterY)
-        mouse_drag.drag_workspace = true
-        mouse_drag.mx = g_mouseState.mx
-        mouse_drag.my = g_mouseState.my
-        mouse_drag.wanchorx = CenterX
-        mouse_drag.wanchory = CenterY
+        DragWorkspace = true
+        MouseDrag.mx = g_mouseState.mx
+        MouseDrag.my = g_mouseState.my
+        MouseDrag.wanchorx = CenterX
+        MouseDrag.wanchory = CenterY
     end
 
     local DragWorkspace = function ()
-        zooming.cx = mouse_drag.wanchorx + (mouse_drag.mx - g_mouseState.mx) / zooming.zoom
-        zooming.cy = mouse_drag.wanchory + (mouse_drag.my - g_mouseState.my) / zooming.zoom
+        zooming.cx = MouseDrag.wanchorx + (MouseDrag.mx - g_mouseState.mx) / zooming.zoom
+        zooming.cy = MouseDrag.wanchory + (MouseDrag.my - g_mouseState.my) / zooming.zoom
     end
 
     local StopDraggingWorkspace = function ()
-        mouse_drag.drag_workspace = false
+        DraggingWorkspace = false
     end
 
     local UpdateNodePositions = function (CenterX, CenterY, ZoomAmount)
@@ -566,12 +567,6 @@ function ui.dragWorkspace()
 
     local IHoldPageUp = ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Hold 
     local IHoldPageDown = ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Hold 
-    local IPressRMB = g_mouseState.right == KeyEvent.Press
-    local IHoldRMB = g_mouseState.right == KeyEvent.Hold
-    local IReleaseRMB = g_mouseState.right == KeyEvent.Release
-    local DraggingNodes = mouse_drag.drag_node
-    local DraggingWorkspace = mouse_drag.drag_workspace
-    local DraggingConnector = mouse_drag.drag_connector
 
     if IHoldPageUp then
         ZoomIn()
@@ -634,8 +629,6 @@ function ui.Proceed(CurrentNode)
         end
     end
     local LetsDrawTheTransformList = function(x, y)
-        -- TODO: Code later
-        
         DrawTheModuleName(x, y)
         y = y + 20
         DrawTheTransformNames(x, y, core)
@@ -650,11 +643,6 @@ function ui.Proceed(CurrentNode)
             SelectedInput = SelectedInput - 1
         end
     end
-
-    local IPressEnter = ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press
-    local IPressHome = ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Press
-    local IPressTab  = ui.getKeyboardState(SDL.Key.TAB) == KeyEvent.Press
-    local IAlsoHoldShift  = ui.getKeyboardState(SDL.Key.LSHIFT) == KeyEvent.Hold
 
     if IPressEnter and not EnteringCommands then
         StartEnteringCommands()
@@ -671,7 +659,7 @@ function ui.Proceed(CurrentNode)
     end
 
     if IPressTab then
-        if IAlsoHoldShift then
+        if IHoldLShift then
             SelectPrevInput(CurrentNode)
         else
             SelectNextInput(CurrentNode)
