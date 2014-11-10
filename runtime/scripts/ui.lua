@@ -540,7 +540,7 @@ function ui.dragWorkspace()
     end
 
     local StartDraggingWorkspace = function (CenterX, CenterY)
-        DragWorkspace = true
+        DraggingWorkspace = true
         MouseDrag.mx = g_mouseState.mx
         MouseDrag.my = g_mouseState.my
         MouseDrag.wanchorx = CenterX
