@@ -8,6 +8,7 @@ LUMINOS_DIR = path.getabsolute("./../") .. "/"
 BGFX_DIR = LUMINOS_DIR .. "../bgfx/"
 BX_DIR = LUMINOS_DIR .. "../bx/"
 LUA_DIR = LUMINOS_DIR .. "../luajit-2.0/"
+LIBUV_DIR = LUMINOS_DIR .. "../libuv/"
 -- SDL2_DIR = LUMINOS_DIR .. "
 
 solution "luminos"
@@ -48,6 +49,7 @@ function luminosProject()
         BX_DIR .. "include",
         BGFX_DIR .. "include",
         LUA_DIR .. "src",
+        LIBUV_DIR .. "include",
     }
 
     files {
@@ -59,7 +61,8 @@ function luminosProject()
 
     links {
         "lua51",
-        "SDL2"
+        "SDL2",
+        "libuv",
     }
 
     libdirs {
@@ -76,10 +79,12 @@ function luminosProject()
         }
 
     configuration { "Debug" }
+        libdirs { LIBUV_DIR .. "Debug/lib" }
         links {
             "bgfxDebug",
         }
     configuration { "Release" }
+        libdirs { LIBUV_DIR .. "Release/lib" }
         links {
             "bgfxRelease",
         }
