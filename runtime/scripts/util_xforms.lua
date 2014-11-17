@@ -2,36 +2,21 @@ local util = {}
 local ui = require 'ui'
 local core = require 'core'
 local debugger = require 'debugger'
+local ffi = require 'ffi'
 
--- So, this is a module inside a 'lua module'
--- Basically a namespacing way, nothing more
--- Same thing could be done with local inport = { ... } and
--- returning exports_array = {inport, print_xform, ..., }
--- Oh, well, saving a lot of, I'm in util namespace lest I forget, since
--- I have to type in THE namespace(by typing variable name) when I require it locally too
--- Well, what are the consequences of then
---
--- The consequence is that this code is compiled to a function returns multiple variables
-util.inport = {
-    name = "Util Port",
-    is_hub = true,
-    inputs = {},
-    outputs = {},
-    eval = function(self)
-    end
-}
+local C = ffi.C
 
 util.print_xform = {
-    name = "Print",
+    name = "Print Text",
     inputs = {
         str = {type = "string", default=""},
-        y = {type = "number", default=6}
+        x = {type = "number", default=0},
+        y = {type = "number", default=600},
     },
     outputs = {
-        this = {type = "this", value="" }
     },
     eval = function(self)
-        --ui.dbgText(self.inputs.y.value, tostring(self.inputs.str.value))
+       C.ui_drawText(self.inputs.x.value, self.inputs.y.value, self.inputs.str.value)
     end
 }
 
