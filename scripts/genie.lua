@@ -8,7 +8,7 @@ LUMINOS_DIR = path.getabsolute("./../") .. "/"
 BGFX_DIR = LUMINOS_DIR .. "../bgfx/"
 BX_DIR = LUMINOS_DIR .. "../bx/"
 LUA_DIR = LUMINOS_DIR .. "../luajit-2.0/"
--- SDL2_DIR = LUMINOS_DIR .. "
+SDL2_DIR = LUMINOS_DIR .. "../SDL"
 
 solution "luminos"
 	configurations {
@@ -58,7 +58,7 @@ function luminosProject()
     }
 
     links {
-        "lua51",
+        "luajit-5.1",
         "SDL2"
     }
 
@@ -75,6 +75,11 @@ function luminosProject()
             BGFX_DIR .. ".build/win64_" .. _ACTION .. "/bin"
         }
 
+	configuration { "x32", "linux" }
+        libdirs {
+            BGFX_DIR .. ".build/linux32_gcc" .. "/bin"
+        }
+
     configuration { "Debug" }
         links {
             "bgfxDebug",
@@ -85,10 +90,10 @@ function luminosProject()
         }
 
     configuration { "x32", "windows" }
-        libdirs { "$(SDL2_DIR)/lib/x86" }
+        libdirs { SDL2_DIR .. "lib/x86" }
 
     configuration { "x64", "windows" }
-        libdirs { "$(SDL2_DIR)/lib/x64" }
+        libdirs { SDL2_DIR .. "lib/x64" }
 
     configuration { "vs*" }
         linkoptions {

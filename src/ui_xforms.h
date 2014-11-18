@@ -5,7 +5,11 @@
 struct SDL_KeyboardEvent;
 struct SDL_Window;
 
+#ifdef MSVC
 #define FFI_EXPORT __declspec(dllexport)
+#else
+#define FFI_EXPORT __attribute__ ((dllexport))
+#endif
 
 int ui_init();
 int ui_initGlobals();

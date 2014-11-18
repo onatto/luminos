@@ -14,7 +14,11 @@ int port_programStart(const char* port_name, char* std_out);
 int port_debugInfo(const char* port_name, const char* stack_trace_table, int x, int y);
 int port_programInit(const char* port_name, char* error_msg);
 
+#ifdef MSVC
 #define FFI_EXPORT __declspec(dllexport)
+#else
+#define FFI_EXPORT __attribute__ ((dllexport))
+#endif
 
 // For the FFI, export these as C functions
 extern "C"

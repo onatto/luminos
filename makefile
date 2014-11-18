@@ -18,5 +18,6 @@ endif
 GENIE=../bx/tools/bin/$(OS)/genie
 
 all:
+	$(GENIE) --gcc=linux-gcc gmake
 	$(GENIE) vs2012
 	$(GENIE) vs2013

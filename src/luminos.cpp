@@ -6,6 +6,8 @@
 #include <bx/timer.h>
 
 #include <SDL2/SDL.h>
+#define SDL_VIDEO_DRIVER_X11
+#undef SDL_VIDEO_DRIVER_WINDOWS
 #undef main
 
 #include <bgfx.h>
