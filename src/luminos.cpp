@@ -94,7 +94,7 @@ int main(int _argc, char** _argv)
         // if no other draw calls are submitted to view 0.
         bgfx::submit(0);
 
-		core_updateGlobals(time);
+	core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);

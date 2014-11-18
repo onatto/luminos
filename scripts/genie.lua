@@ -79,6 +79,7 @@ function luminosProject()
         libdirs {
             BGFX_DIR .. ".build/linux32_gcc" .. "/bin"
         }
+        linkoptions { "-rdynamic" }
 
     configuration { "Debug" }
         links {

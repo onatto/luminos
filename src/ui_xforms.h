@@ -8,7 +8,7 @@ struct SDL_Window;
 #ifdef MSVC
 #define FFI_EXPORT __declspec(dllexport)
 #else
-#define FFI_EXPORT __attribute__ ((dllexport))
+#define FFI_EXPORT
 #endif
 
 int ui_init();

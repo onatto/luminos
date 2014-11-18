@@ -17,7 +17,7 @@ int port_programInit(const char* port_name, char* error_msg);
 #ifdef MSVC
 #define FFI_EXPORT __declspec(dllexport)
 #else
-#define FFI_EXPORT __attribute__ ((dllexport))
+#define FFI_EXPORT
 #endif
 
 // For the FFI, export these as C functions
