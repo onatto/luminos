@@ -21,3 +21,9 @@ all:
 	$(GENIE) --gcc=linux-gcc gmake
 	$(GENIE) vs2012
 	$(GENIE) vs2013
+
+run:
+	make -C .build/projects/gmake-linux
+	cp .build/linux32_gcc/bin/luminosDebug runtime
+	cd runtime ; ./luminosDebug
+

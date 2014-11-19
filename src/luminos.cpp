@@ -33,12 +33,13 @@ int main(int _argc, char** _argv)
 
 	SDL_Init(SDL_INIT_VIDEO);
     sdl_wnd = SDL_CreateWindow("luminos"
-                    , SDL_WINDOWPOS_UNDEFINED
-                    , SDL_WINDOWPOS_UNDEFINED
+                    , 0
+                    , 0
                     , width
                     , height
                     , SDL_WINDOW_SHOWN
                     | SDL_WINDOW_RESIZABLE
+                    | SDL_WINDOW_MAXIMIZED
                     );
 
     bgfx::sdlSetWindow(sdl_wnd);
@@ -79,6 +80,16 @@ int main(int _argc, char** _argv)
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
                 quit = true;
+            else if (event.type == SDL_WINDOWEVENT)
+            {
+                switch (event.window.event) {
+                    case SDL_WINDOWEVENT_RESIZED:
+                    width = event.window.data1;
+                    height = event.window.data2;
+                    bgfx::reset(width, height);
+                    break;
+                }
+            }
         }
         if (!quit)
             quit = ui_frameStart();
@@ -94,7 +105,7 @@ int main(int _argc, char** _argv)
         // if no other draw calls are submitted to view 0.
         bgfx::submit(0);
 
-	core_updateGlobals(time);
+        core_updateGlobals(time);
         port_programStart("portProgramStart", stdout_msg);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
