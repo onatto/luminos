@@ -32,4 +32,4 @@ end
 
 exec ("make config=" .. config .. " -C .build/projects/gmake-linux")
 exec ("cp .build/" .. builddir .. "/bin/" .. prgname .. " runtime")
-exec ("cd runtime ; ./" .. prgname)
+exec ("cd runtime ; ./" .. prgname .. " &")

@@ -19,6 +19,7 @@ function portProgramInit()
     ui.createNode(200, 400, "core.mouse_xform")
     ui.createNode(400, 300, "core.time_xform")
     ui.createNode(100, 300, "util_xforms.print_xform")
+    ui.createNode(100, 400, "math_xforms.sine_xform")
 end
 
 function portProgramShutdown()
