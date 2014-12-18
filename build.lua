@@ -1,3 +1,4 @@
+#!/bin/lua
 local os = require 'os'
 
 function exec(str)
@@ -9,7 +10,7 @@ local config
 local builddir
 
 if not arg[1] then
-    arg[1] = 'D32'
+    arg[1] = 'D64'
 end
 
 if arg[1] == 'D32' then
@@ -30,6 +31,7 @@ elseif arg[1] == 'R64' then
     builddir = 'linux64_gcc'
 end
 
+exec ("cd /home/onat/code/luminos/")
 exec ("make config=" .. config .. " -C .build/projects/gmake-linux")
 exec ("cp .build/" .. builddir .. "/bin/" .. prgname .. " runtime")
 exec ("cd runtime ; ./" .. prgname .. " &")
