@@ -58,17 +58,18 @@ int core_shutdown()
     return 0;
 }
 
-int core_execPort(const char* port_name, char* error_msg)
+int core_execPort(const char* port_name)
 {
     lua_State* L = get_luaState();
-// Top before the port function call - so the function can return multiple variables
+    // Top index before the port function call - so the function can return multiple variables
     int top = lua_gettop(L);
     lua_getglobal(L, "portDisplayRuntimeError");
     lua_getglobal(L, port_name);
     if (!lua_isfunction(L, -1))
         return -1;
 
-    /* Ask Lua to run our little script */
+    /* Ask Lua to run the global function with name 'port_name' */
+    /* portDisplayRuntimeError is the error handler, see lua_pcall doc for details */
     int result = lua_pcall(L, 0, LUA_MULTRET, -2);
     if (result) {
         return -result;
@@ -76,25 +77,6 @@ int core_execPort(const char* port_name, char* error_msg)
 
     int nresults = lua_gettop(L) - top;
     return nresults;
-}
-
-int port_programStart(const char* port_name, char* std_out)
-{
-    lua_State* L = get_luaState();
-    int top = lua_gettop(L);
-    memset(std_out, 0, strlen(std_out));
-    int numOutputs = core_execPort(port_name, std_out);
-    lua_settop(L, top);
-    return 0;
-}
-
-int port_programInit(const char* port_name, char* error_msg)
-{
-    lua_State* L = get_luaState();
-    int top = lua_gettop(L);
-    int numOutputs = core_execPort(port_name, error_msg);
-    lua_settop(L, top);
-    return 0;
 }
 
 int cmd_restart(const char* filename)

@@ -21,17 +21,15 @@
 #include "blendish.h"
 #include "ui_xforms.h"
 
-static char stdout_msg[2048] = {0};
 static bool quit = false;
 
-int main(int _argc, char** _argv)
+int main(int /*_argc*/, char** /*_argv*/)
 {
-    uint32_t width = 1600;
-    uint32_t height = 900;
+    uint32_t width = 1920;
+    uint32_t height = 1080;
     uint32_t debug = BGFX_DEBUG_TEXT;
-    uint32_t reset = BGFX_RESET_VSYNC;
 
-	SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO);
     sdl_wnd = SDL_CreateWindow("luminos"
                     , 0
                     , 0
@@ -39,7 +37,6 @@ int main(int _argc, char** _argv)
                     , height
                     , SDL_WINDOW_SHOWN
                     | SDL_WINDOW_RESIZABLE
-                    | SDL_WINDOW_MAXIMIZED
                     );
 
     bgfx::sdlSetWindow(sdl_wnd);
@@ -72,7 +69,7 @@ int main(int _argc, char** _argv)
 
     cmd_restart("scripts/program.lua");
     ui_init();
-    port_programInit("portProgramInit", s_errorMsg);
+    core_execPort("portProgramInit");
 
 	SDL_Event event;
     while (!quit)
@@ -106,7 +103,7 @@ int main(int _argc, char** _argv)
         bgfx::submit(0);
 
         core_updateGlobals(time);
-        port_programStart("portProgramStart", stdout_msg);
+        core_execPort("portProgramStart");
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
 		nvgEndFrame(nvg);

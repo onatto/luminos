@@ -2,17 +2,13 @@
 
 int core_init();
 int core_start(const char* program_lua, char* error_msg_out);
-int core_execPort(const char* port_name, char* error_msg_out);
+/* Ports are C-Lua interfaces, every port has different expectations from the Lua function it runs */
+/* That is, different expectations for the inputs, different expectations for the outputs          */
+int core_execPort(const char* port_name);
 int core_shutdown();
 
 int core_initGlobals();
 int core_updateGlobals(float time);
-
-/* Ports are C-Lua interfaces, every port has different expectations from the Lua function it runs */
-/* That is, different expectations for the inputs, different expectations for the outputs          */
-int port_programStart(const char* port_name, char* std_out);
-int port_debugInfo(const char* port_name, const char* stack_trace_table, int x, int y);
-int port_programInit(const char* port_name, char* error_msg);
 
 #ifdef MSVC
 #define FFI_EXPORT __declspec(dllexport)

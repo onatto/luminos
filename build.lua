@@ -1,4 +1,4 @@
-#!/bin/lua
+#!/usr/bin/lua
 local os = require 'os'
 
 function exec(str)

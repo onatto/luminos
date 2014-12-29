@@ -59,40 +59,39 @@ function luminosProject()
 
     links {
         "luajit-5.1",
-        "SDL2"
+        "SDL2",
     }
+
+    configuration { "Debug" }
+        -- Need to include libbgfxDebug.a before ldl on Ubuntu
+        -- for undefined reference to symbol dlclose error
+        linkoptions { "-lbgfxDebug" }
+    configuration { "Release" }
+        linkoptions { "-lbgfxRelease" }
 
     libdirs {
         LUA_DIR .. "/src",
     }
 
-	configuration { "x32", "windows*" }
-        libdirs {
-            BGFX_DIR .. ".build/win32_" .. _ACTION .. "/bin"
-        }
-	configuration { "x64", "windows*" }
-        libdirs {
-            BGFX_DIR .. ".build/win64_" .. _ACTION .. "/bin"
-        }
+    configuration { "x32", "windows*" }
+    libdirs {
+        BGFX_DIR .. ".build/win32_" .. _ACTION .. "/bin"
+    }
+    configuration { "x64", "windows*" }
+    libdirs {
+        BGFX_DIR .. ".build/win64_" .. _ACTION .. "/bin"
+    }
 
-	configuration { "x32", "linux" }
-        libdirs {
-            BGFX_DIR .. ".build/linux32_gcc" .. "/bin"
-        }
-	configuration { "x64", "linux" }
-        libdirs {
-            BGFX_DIR .. ".build/linux64_gcc" .. "/bin"
-        }
-        linkoptions { "-rdynamic" }
+    configuration { "x32", "linux" }
+    libdirs {
+        BGFX_DIR .. ".build/linux32_gcc" .. "/bin"
+    }
+    configuration { "x64", "linux" }
+    libdirs {
+        BGFX_DIR .. ".build/linux64_gcc" .. "/bin"
+    }
+    linkoptions { "-rdynamic" }
 
-    configuration { "Debug" }
-        links {
-            "bgfxDebug",
-        }
-    configuration { "Release" }
-        links {
-            "bgfxRelease",
-        }
 
     configuration { "x32", "windows" }
         libdirs { SDL2_DIR .. "lib/x86" }

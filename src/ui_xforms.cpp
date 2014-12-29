@@ -91,9 +91,9 @@ bool ui_frameStart()
     if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent::Press)
     {
         core_shutdown();
-        int res = cmd_restart("scripts/program.lua");
+        cmd_restart("scripts/program.lua");
         ui_initGlobals();
-        port_programInit("portProgramInit", get_statusMsg());
+        core_execPort("portProgramInit");
     }
 
     bgfx::dbgTextClear();
