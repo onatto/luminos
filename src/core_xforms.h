@@ -28,6 +28,7 @@ struct lua_State;
 extern lua_State* s_luaState;
 extern char s_statusMsg[256];
 extern char s_errorMsg[2048];
+extern const char* s_errorPort;
 
 inline lua_State* get_luaState() { return s_luaState; }
 inline char* get_statusMsg() { return s_statusMsg; }

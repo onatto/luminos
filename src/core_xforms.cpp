@@ -7,6 +7,7 @@
 lua_State* s_luaState;
 char s_statusMsg[256] = {0};
 char s_errorMsg[2048] = {0};
+const char* s_errorPort = NULL;
 
 int core_init()
 {
@@ -72,7 +73,11 @@ int core_execPort(const char* port_name)
     /* portDisplayRuntimeError is the error handler, see lua_pcall doc for details */
     int result = lua_pcall(L, 0, LUA_MULTRET, -2);
     if (result) {
+        s_errorPort = port_name;
         return -result;
+    }
+    else {
+        s_errorPort = NULL;
     }
 
     int nresults = lua_gettop(L) - top;

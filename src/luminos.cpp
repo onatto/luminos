@@ -103,7 +103,10 @@ int main(int /*_argc*/, char** /*_argv*/)
         bgfx::submit(0);
 
         core_updateGlobals(time);
-        core_execPort("portProgramStart");
+        if (!s_errorPort)
+            core_execPort("portProgramStart");
+        else
+            core_execPort(s_errorPort);
 
         nvgBeginFrame(nvg, width, height, 1.0f, NVG_STRAIGHT_ALPHA);
 		nvgEndFrame(nvg);
