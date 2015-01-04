@@ -94,6 +94,7 @@ bool ui_frameStart()
         cmd_restart("scripts/program.lua");
         ui_initGlobals();
         core_execPort("portProgramInit");
+        return false;
     }
 
     bgfx::dbgTextClear();
