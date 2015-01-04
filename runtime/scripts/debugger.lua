@@ -16,8 +16,13 @@ function debugger.dumpStack()
     file:close()
 end
 
-function debugger.print(str)
-    local file = io.open('stdout.txt', 'a+')
+function debugger.print(str, path)
+   local file
+    if not path then
+       file = io.open('stdout.txt', 'a+')
+    else
+       file = io.open(path, 'a+')
+    end
     file:write(tostring(str) .. "\n")
     file:close()
 end

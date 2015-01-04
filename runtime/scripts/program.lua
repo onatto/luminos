@@ -5,6 +5,8 @@ local core =  require "core"
 local ui =    require 'ui'
 local SDL =   require 'sdlkeys'
 local debugger = require 'debugger'
+local lexer = require 'lexer'
+
 debugger.init()
 
 local C = ffi.C
@@ -13,13 +15,22 @@ local C = ffi.C
 -- We just pass that transforms index in that array
 -- This is stored in the core module
 
+core_xforms, math_xforms, util_xforms = {}, {}, {}
 current_node = nil
+
+lexer.lex("core", "mouse")
+lexer.lex("core", "concat")
+lexer.lex("core", "time")
+lexer.lex("math", "sin")
+lexer.lex("util", "print")
+
 function portProgramInit()
-    current_node = ui.createNode(350, 100, "core.concat_xform", {str_a = "Time is: "})
-    ui.createNode(200, 400, "core.mouse_xform")
-    ui.createNode(400, 300, "core.time_xform")
-    ui.createNode(100, 300, "util_xforms.print_xform")
-    ui.createNode(100, 400, "math_xforms.sine_xform")
+    debugger.printTable(core_xforms.concat_transform)
+    current_node = ui.createNode(350, 100, core_xforms.concat_transform, {str_a = "Time is: "})
+    ui.createNode(200, 400, core_xforms.mouse_transform)
+    ui.createNode(400, 300, core_xforms.time_transform)
+    ui.createNode(100, 300, util_xforms.print_transform)
+    ui.createNode(100, 400, math_xforms.sin_transform)
 end
 
 function portProgramShutdown()
@@ -36,6 +47,8 @@ function portDisplayRuntimeError(error_msg)
     C.ui_setTextProperties("header", 25, 9)
     y = y + 25
     C.ui_drawText(x, y, error_msg)
+    y = y + 25
+    C.ui_drawText(x, y, debug.traceback())
 end
 
 function portProgramStart()

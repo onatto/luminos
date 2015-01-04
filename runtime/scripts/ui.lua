@@ -62,7 +62,7 @@ function ui.createNode(x, y, xform_name, constant_inputs)
     node.connections = {}
     node.ports = {}
     node.xform_name = xform_name
-    node.xform = core.cloneTransform(node, getTransform(xform_name))
+    node.xform = core.cloneTransform(node, xform_name)
     if constant_inputs then
         for input_name, constant in pairs(constant_inputs) do
             node.constants[input_name] = constant
