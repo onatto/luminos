@@ -6,5 +6,5 @@ in f32 amplitude = 1.0
 
 out f32 sin
 
-xform sin
+xform Sin
 out.sin = math.sin(inp.rad * inp.frequency) * inp.amplitude

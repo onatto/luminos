@@ -31,7 +31,7 @@ local function ParseTransform(def)
         elseif tokens[1] == 'viz' then
             xform.viz = tokens[2]
         elseif tokens[1] == 'dispname' then
-            xform.dispname = tokens[2]
+            xform.dispname = string.sub(line, 9)
         elseif tokens[1] == 'xform' then
             xform.name = tokens[2]
             break
@@ -40,6 +40,10 @@ local function ParseTransform(def)
 
     local s, e = string.find(def, 'xform[%s+]' .. xform.name)
     xform.func_str = string.sub(def, e+1)
+
+    if not xform.dispname then
+        xform.dispname = xform.name
+    end
     return xform
 end
 

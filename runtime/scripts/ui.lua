@@ -11,8 +11,8 @@ local bit = require 'bit'
 ffi.cdef
 [[
     void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
-	void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a);
-	void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
+    void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a);
+    void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
     void ui_dbgTextPrintf(int y, const char *str);
     uint8_t ui_getKeyboardState(uint16_t key);
     void ui_warpMouseInWindow(int x, int y);
@@ -106,7 +106,7 @@ function ui.shutdown()
 end
 
 local function drawNode(node)
-    ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.name, 255, 50, 100, 255)
+    ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.dispname, 255, 50, 100, 255)
     for name, port in pairs(node.ports) do
         if port.is_input then
             ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 100, 255, 255)
@@ -321,7 +321,6 @@ function ui.DragConnectors()
             end
             -- Connect the port that is an input of a node to the output port
             InputNode.connections[InputPort.name] = {node = OutputNode, port_name = OutputPort.name}
-            -- At this point InputNode and OutputNode is there
         end
     end
 

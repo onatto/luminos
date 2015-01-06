@@ -5,5 +5,5 @@ in str str_right = "goodbye"
 
 out str str_concat
 
-xform concat
+xform Concat
 out.str_concat = inp.str_left .. inp.str_right

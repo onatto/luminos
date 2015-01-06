@@ -25,12 +25,12 @@ lexer.lex("math", "sin")
 lexer.lex("util", "print")
 
 function portProgramInit()
-    debugger.printTable(core_xforms.concat_transform)
-    current_node = ui.createNode(350, 100, core_xforms.concat_transform, {str_a = "Time is: "})
-    ui.createNode(200, 400, core_xforms.mouse_transform)
-    ui.createNode(400, 300, core_xforms.time_transform)
-    ui.createNode(100, 300, util_xforms.print_transform)
-    ui.createNode(100, 400, math_xforms.sin_transform)
+    debugger.printTable(core_xforms.Concat_transform)
+    current_node = ui.createNode(350, 100, core_xforms.Concat_transform, {str_left = "Time is: "})
+    ui.createNode(200, 400, core_xforms.Mouse_transform)
+    ui.createNode(400, 300, core_xforms.Time_transform)
+    ui.createNode(100, 300, util_xforms.Print_transform)
+    ui.createNode(100, 400, math_xforms.Sin_transform)
 end
 
 function portProgramShutdown()
