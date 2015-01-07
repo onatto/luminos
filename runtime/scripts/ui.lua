@@ -73,7 +73,7 @@ function ui.createNode(x, y, xform_name, constant_inputs)
     local i = 1
     local input_cnt = helpers.tableLength(node.xform.inputs)
     for input_name, input in pairs(node.xform.inputs) do
-        local port = { name = input_name }
+        local port = { name = input_name, type = input.type }
         port.x = (1/(input_cnt+1)) * i
         port.y = 0.85
         port.bndWidgetState = BNDWidgetState.Default
@@ -87,7 +87,7 @@ function ui.createNode(x, y, xform_name, constant_inputs)
     i = 1
     local output_cnt = helpers.tableLength(node.xform.outputs)
     for output_name, output in pairs(node.xform.outputs) do
-        local port = { name = output_name }
+        local port = { name = output_name, type = output.type}
         port.x = (1/(output_cnt+1)) * i
         port.y = 0.2
         port.bndWidgetState = BNDWidgetState.Default
@@ -252,6 +252,32 @@ local PortStart, PortEnd, NodeStart, NodeEnd
 function ui.DragConnectors()
     local MouseOnPort = PortStart
 
+    local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Other = 4}
+    local GeneraliseType = function(Type)
+        if Type == 'f16' or Type == 'f32' or Type == 'f64' then
+            return Types.Float
+        elseif Type == 'i8' or Type == 'i16' or Type == 'i32' or Type == 'i64' or  Type == 'u8' or Type == 'u16' or Type == 'u32' or Type == 'u64' then
+            return Types.Float
+        elseif Type == 'str' then
+            return Types.String
+        elseif Type == 'vec2' or Type == 'vec3' or Type == 'vec4' then
+            return Types.VecN
+        else
+            return Types.Other
+        end
+    end
+    local PortTypesMatch = function (TypeA, TypeB)
+        local GenA = GeneraliseType(TypeA)
+        local GenB = GeneraliseType(TypeB)
+        if GenA == Types.Other or GenB == Types.Other then
+            return TypeA == TypeB
+        elseif GenA == GenB then
+            return true
+        else
+            return false
+        end
+    end
+
     local FindConnection = function ()
         local relx, rely = pt_aabb_relative(HoveredNode.x, HoveredNode.y, HoveredNode.w, HoveredNode.h, MouseX, MouseY)
         -- not drag_connector ==> node_from == nil
@@ -319,8 +345,10 @@ function ui.DragConnectors()
                 InputNode, OutputNode = NodeEnd, NodeStart
                 InputPort, OutputPort = PortEnd, PortStart
             end
-            -- Connect the port that is an input of a node to the output port
-            InputNode.connections[InputPort.name] = {node = OutputNode, port_name = OutputPort.name}
+            if PortTypesMatch(InputPort.type, OutputPort.type) then
+                -- Connect the port that is an input of a node to the output port
+                InputNode.connections[InputPort.name] = {node = OutputNode, port_name = OutputPort.name}
+            end
         end
     end
 
