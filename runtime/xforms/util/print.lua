@@ -6,4 +6,4 @@ in f32 y = 0
 
 dispname Print String
 xform Print
-C.ui_drawText(inp.x, inp.y, inp.text)
+C.ui_drawText(inp.x, inp.y, tostring(inp.text))

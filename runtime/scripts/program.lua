@@ -18,11 +18,15 @@ local C = ffi.C
 core_xforms, math_xforms, util_xforms = {}, {}, {}
 current_node = nil
 
-lexer.lex("core", "mouse")
-lexer.lex("core", "concat")
-lexer.lex("core", "time")
-lexer.lex("math", "sin")
-lexer.lex("util", "print")
+local function loadTransforms()
+    lexer.lex("core", "mouse")
+    lexer.lex("core", "concat")
+    lexer.lex("core", "time")
+    lexer.lex("math", "sin")
+    lexer.lex("util", "print")
+end
+
+loadTransforms()
 
 function portProgramInit()
     debugger.printTable(core_xforms.Concat_transform)
@@ -66,6 +70,10 @@ function portProgramStart()
 
     if (ui.getKeyboardState(SDL.Key.F2) == KeyEvent.Press) then
         debugger.printTable(current_node)
+    end
+
+    if (ui.getKeyboardState(SDL.Key.F3) == KeyEvent.Press) then
+        loadTransforms()
     end
 
     ui.start()

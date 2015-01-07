@@ -345,10 +345,10 @@ function ui.DragConnectors()
                 InputNode, OutputNode = NodeEnd, NodeStart
                 InputPort, OutputPort = PortEnd, PortStart
             end
-            if PortTypesMatch(InputPort.type, OutputPort.type) then
+            --if PortTypesMatch(InputPort.type, OutputPort.type) then
                 -- Connect the port that is an input of a node to the output port
                 InputNode.connections[InputPort.name] = {node = OutputNode, port_name = OutputPort.name}
-            end
+            --end
         end
     end
 

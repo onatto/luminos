@@ -5,6 +5,10 @@ function debugger.init()
     file:close()
     file = io.open('stdout.txt', 'w+')
     file:close()
+    file = io.open('transform_tables.txt', 'w+')
+    file:close()
+    file = io.open('functions.txt', 'w+')
+    file:close()
 end
 
 function debugger.dumpStack()

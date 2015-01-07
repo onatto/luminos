@@ -47,11 +47,11 @@ local function ParseTransform(def)
     return xform
 end
 
+lexer.xformTable = {}
 local function CreateTransformTable(xform)
     local def = ""
+    local xformDef = ""
     -- FFI
-    def = def .. "local ffi = require 'ffi'\n"
-    def = def .. "local C = ffi.C\n"
     -- Transform module and name
     def = def .. string.format("%s_xforms.%s_transform = {\n", xform.module, xform.name)
     -- Transform name
@@ -74,10 +74,14 @@ local function CreateTransformTable(xform)
     for _, output in pairs(xform.outputs) do
         def = def .. string.format("%s = {type = '%s'},\n", output.vname, output.vtype)
     end
-    def = def .. "},\n"
+    def = def .. "}}\nreturn "
+    def = def .. string.format("%s_xforms.%s_transform", xform.module, xform.name)
     -- Eval Function
-    def = def ..  [[
-    eval = function(self)
+    
+    xformDef = "local ffi = require 'ffi'\n"
+    xformDef = xformDef .. "local C = ffi.C\n"
+    xformDef = xformDef .. "return function(self)\n" 
+    xformDef = xformDef .. [[
     local function ExpandInputFunc(table, key)
         return self.inputs[key].value
     end
@@ -86,10 +90,8 @@ local function CreateTransformTable(xform)
     end
         local inp = setmetatable({},{__index = ExpandInputFunc})
         local out = setmetatable({}, {__newindex = ExpandOutFunc})
-    ]]
-    def = def .. xform.func_str
-    def = def .. "\nend\n}\n"
-    return def
+    ]] .. xform.func_str .. "\nend"
+    return def, xformDef
 end
 
 local function ReadFile(path)
@@ -100,17 +102,27 @@ local function ReadFile(path)
 end
 
 lexer.lex = function(module, xform)
-    local def = ReadFile("xforms/" .. module .. "/" .. xform .. ".lua")
+    local path = "xforms/" .. module .. "/" .. xform .. ".lua"
+    local def = ReadFile(path)
     local parsed_xform  = ParseTransform(def)
-    local code = CreateTransformTable(parsed_xform)
-    debugger.print(code, "transform_tables.txt")
+    local tableCode, funcCode = CreateTransformTable(parsed_xform)
+    debugger.print(tableCode, "transform_tables.txt")
+    debugger.print(funcCode, "functions.txt")
 
-    local func, err= loadstring(code)
+    local tableFunc, err= loadstring(tableCode)
 
-    if not func then
+    if not tableFunc then
         debugger.print(err)
     else
-        func()
+        local transform = tableFunc()
+        transform.eval = path
+    end
+
+    local xformFunc, err = loadstring(funcCode)
+    if not xformFunc then
+        debugger.print(err)
+    else
+        lexer.xformTable[path] = xformFunc()
     end
 end
 

@@ -1,6 +1,7 @@
 local core = {}
 local debugger = require 'debugger'
 local helpers = require 'helpers'
+local lexer = require 'lexer'
 
 function core.execNode(node)
   -- transform.visited means that the output table for that transform was calculated(cached) from an earlier transform
@@ -26,7 +27,7 @@ function core.execNode(node)
   end
 
   -- All inputs are ready at this point, evaluate the transform which sets up any outputs it can too
-  transform.eval(transform)
+  lexer.xformTable[transform.eval](transform)
   transform.visited = true
   -- The outputs of this transform are ready, maybe they're there, maybe not
   return node
