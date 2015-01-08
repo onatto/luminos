@@ -14,6 +14,7 @@
 #include <bgfxplatform.h>
 
 #include "core_xforms.h"
+#include "network.h"
 
 #include "nanovg/nanovg.h"
 
@@ -71,7 +72,9 @@ int main(int /*_argc*/, char** /*_argv*/)
     ui_init();
     core_execPort("portProgramInit");
 
-	SDL_Event event;
+    network_init(get_luaState(), "ws://localhost:8126/luminos");
+
+    SDL_Event event;
     while (!quit)
     {
         while (SDL_PollEvent(&event)) {
@@ -115,12 +118,14 @@ int main(int /*_argc*/, char** /*_argv*/)
         // process submitted rendering primitives.
         bgfx::frame();
         ui_frameEnd();
+        network_update();
         SDL_WaitEventTimeout(NULL, 16);
     }
 
     // Shutdown bgfx.
     bgfx::shutdown();
-	core_shutdown();
+    core_shutdown();
+    network_close();
 
     SDL_DestroyWindow(sdl_wnd);
     SDL_Quit();

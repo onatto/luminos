@@ -6,6 +6,7 @@ local ui =    require 'ui'
 local SDL =   require 'sdlkeys'
 local debugger = require 'debugger'
 local lexer = require 'lexer'
+local network = require 'network'
 
 debugger.init()
 
@@ -76,6 +77,23 @@ function portProgramStart()
         loadTransforms()
     end
 
+    --sendText(ws, "CreateNode 100 200 150 90 sin Sin");
+    --sendText(ws, "CreateNode 400 100 1 2 cos Cos");
+    --sendText(ws, "UpdateNodePos 1 10 50");
+    --sendText(ws, "UpdateNodeSize 2 15 30");
+    --sendText(ws, "CreateNode 400 100 1 2 Hell Club");
+    --sendText(ws, "UpdateNodeOp 3 Lucy Proteus");
+    --sendText(ws, "LockNode 1 onat 5");
+    --sendText(ws, "LockNode 1 onat 20");
+    --sendText(ws, "UnlockNode 1 memati");
+    --sendText(ws, "UnlockNode 1 onat");
+
+    if (ui.getKeyboardState(SDL.Key.C) == KeyEvent.Press) then
+        C.nw_send("CreateNode 100 200 150 90 sin Sin")
+        C.nw_send("LockNode 1 onat 5")
+        C.nw_send("UnlockNode 1 onat")
+    end
+    
     ui.start()
     ui.dragWorkspace()
     ui.SelectNodes()
