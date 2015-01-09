@@ -466,6 +466,9 @@ function ui.DragNodes()
     end
 
     local StopDraggingNodes = function ()
+        for i, node in ipairs(SelectedNodes) do
+            C.nw_send("UpdateNodePos " .. tostring(node.id) .. " " .. tostring(node.sx) .. " " .. tostring(node.sy))
+        end
         DraggingNodes = false
     end
 
