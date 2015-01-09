@@ -319,6 +319,7 @@ function ui.DragConnectors()
     end
     local StopDraggingConnector = function ()
         DraggingConnectors = false
+        DraggingExistingConnection = false
         NodeStart = nil
         PortStart = nil
         NodeEnd = nil
@@ -327,6 +328,8 @@ function ui.DragConnectors()
     local DragExistingConnection = function ()
         -- If it is an input port and a binding exists
         if NodeStart.connections[PortStart.name] then
+            debugger.print("Dragging existing conn")
+            DraggingExistingConnection = true
             -- Then, it is as if we're dragging from that OutputNode's output
             OutputNode = core.nodes[InputNode.connections[InputPort.name].out_node_id]
             OutputPort = OutputNode.ports[InputNode.connections[InputPort.name].port_name]
@@ -334,7 +337,6 @@ function ui.DragConnectors()
             NodeStart = OutputNode
             PortStart = OutputPort
             InputNode.connections[InputPort.name] = nil
-            C.nw_send("DeleteConn " .. tostring(InputNode.id) .. " " .. InputPort.name)
         end
     end
     local CreateConnection = function ()
@@ -358,7 +360,7 @@ function ui.DragConnectors()
     if not DraggingNodes and HoveredNode then
         FindConnection()
     end
-    if IPressLMB and MouseOnPort then
+    if IPressLMB and MouseOnPort and HoveredNode then
         DragExistingConnection()
         StartDraggingConnector()
     end
@@ -374,6 +376,8 @@ function ui.DragConnectors()
     if IReleaseLMB and DraggingConnectors then
         if NodeEnd and PortEnd then
             CreateConnection()
+        elseif DraggingExistingConnection then
+            C.nw_send("DeleteConn " .. tostring(InputNode.id) .. " " .. InputPort.name)
         end
         StopDraggingConnector()
     end
