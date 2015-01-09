@@ -3,6 +3,7 @@ local debugger = require 'debugger'
 local helpers = require 'helpers'
 local lexer = require 'lexer'
 
+core.nodes = {}
 function core.execNode(node)
   -- transform.visited means that the output table for that transform was calculated(cached) from an earlier transform
   -- that is, that this vertex has been visited in the DAG traversal before
@@ -18,7 +19,7 @@ function core.execNode(node)
       local connection = rawget(connections, input_name)
       if connection then
       -- The input is non-constant
-          local result_node = core.execNode(connection.node)
+          local result_node = core.execNode(core.nodes[connection.out_node_id])
           input_def.value = result_node.xform.outputs[connection.port_name].value
       else
       -- The input is a constant, each node has its unique constants

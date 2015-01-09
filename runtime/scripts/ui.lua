@@ -35,10 +35,9 @@ ui.warpMouse = ffi.C.ui_warpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
-local ui_nodes = {}
 function ui.getTransforms()
     local transforms = {}
-    for _i, node in ipairs(ui_nodes) do
+    for _i, node in ipairs(core.nodes) do
         table.insert(transforms, node.xform)
     end
     return transforms
@@ -52,12 +51,13 @@ local function getTransform(xform_name)
     return xform
 end
 
-function ui.createNode(x, y, w, h, module, submodule, constant_inputs)
+function ui.createNode(id, x, y, w, h, module, submodule, constant_inputs)
     local node = {}
     node.sx = x
     node.sy = y
     node.w = w
     node.h = h
+    node.id = id
     node.bndWidgetState = BNDWidgetState.Default
     node.constants = {}
     node.connections = {}
@@ -98,12 +98,12 @@ function ui.createNode(x, y, w, h, module, submodule, constant_inputs)
         i = i+1
     end
 
-    table.insert(ui_nodes, node)
+    core.nodes[id] = node
+    --table.insert(core.nodes, node)
     return node
 end
 
 function ui.shutdown()
-    ui_nodes = {}
 end
 
 local function drawNode(node)
@@ -118,7 +118,7 @@ local function drawNode(node)
     -- Draw the input connections
     for inport_name, connection in pairs(node.connections) do
         local node_in = node
-        local node_out = connection.node
+        local node_out = core.nodes[connection.out_node_id]
         local port_in = node.ports[inport_name]
         local port_out = node_out.ports[connection.port_name]
         local node_inx = node_in.x + port_in.x * node_in.w
@@ -157,11 +157,11 @@ local zooming = {
 }
 function ui.drawNodes()
     -- Wiggle
-    -- for _k, node in pairs(ui_nodes) do
+    -- for _k, node in pairs(core.nodes) do
         -- node.w = (math.sin(g_time * 2) + 1.0) * zooming.aspect * 40 + 160
         -- node.h = (math.sin(g_time * 2) + 1.0) / zooming.aspect * 10 + 60
     -- end
-    for _k, node in pairs(ui_nodes) do
+    for _k, node in pairs(core.nodes) do
         drawNode(node)
     end
 end
@@ -198,7 +198,7 @@ end
 
 local function nodes_pt_intersect(px, py)
     local isect = nil
-    for _k, node in pairs(ui_nodes) do
+    for _k, node in pairs(core.nodes) do
         insideAABB = pt_aabb_test(node.x, node.y, node.w, node.h, px, py)
         if insideAABB and not isect then
             node.bndWidgetState = BNDWidgetState.Hover
@@ -328,7 +328,7 @@ function ui.DragConnectors()
         -- If it is an input port and a binding exists
         if NodeStart.connections[PortStart.name] then
             -- Then, it is as if we're dragging from that OutputNode's output
-            OutputNode = InputNode.connections[InputPort.name].node
+            OutputNode = core.nodes[InputNode.connections[InputPort.name].out_node_id]
             OutputPort = OutputNode.ports[InputNode.connections[InputPort.name].port_name]
             -- New NodeStart is the input NodeStart's connection node
             NodeStart = OutputNode
@@ -348,7 +348,8 @@ function ui.DragConnectors()
             end
             --if PortTypesMatch(InputPort.type, OutputPort.type) then
                 -- Connect the port that is an input of a node to the output port
-                InputNode.connections[InputPort.name] = {node = OutputNode, port_name = OutputPort.name}
+                InputNode.connections[InputPort.name] = {out_node_id = OutputNode.id, port_name = OutputPort.name}
+                C.nw_send("UpdateConn " .. InputNode.id .. " " .. InputPort.name .. " " .. tostring(OutputNode.id) .. " " .. OutputPort.name)
             --end
         end
     end
@@ -498,6 +499,9 @@ end
 local SelectedInput = 1
 
 function ui.drawNodeInfo(node, y)
+    if not current_node then
+        return
+    end
     local w, h= 1600, 900
     local x, y = 2, 80
     local header_size = 30
@@ -526,7 +530,7 @@ function ui.drawNodeInfo(node, y)
         if not connection then
             C.ui_drawText(x, y, tostring(node.constants[name]))
         else
-            C.ui_drawText(x, y, tostring(connection.node.xform.outputs[connection.port_name].value))
+            C.ui_drawText(x, y, tostring(core.nodes[connection.out_node_id].xform.outputs[connection.port_name].value))
         end
         y = y + param_size
         _i = _i + 1
@@ -575,7 +579,7 @@ function ui.dragWorkspace()
     end
 
     local UpdateNodePositions = function (CenterX, CenterY, ZoomAmount)
-        for _k, node in pairs(ui_nodes) do
+        for _k, node in pairs(core.nodes) do
             node.x = (-CenterX + node.sx) * ZoomAmount
             node.y = (-CenterY + node.sy) * ZoomAmount
             node.w = 180 * ZoomAmount
