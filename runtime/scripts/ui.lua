@@ -334,6 +334,7 @@ function ui.DragConnectors()
             NodeStart = OutputNode
             PortStart = OutputPort
             InputNode.connections[InputPort.name] = nil
+            C.nw_send("DeleteConn " .. tostring(InputNode.id) .. " " .. InputPort.name)
         end
     end
     local CreateConnection = function ()
