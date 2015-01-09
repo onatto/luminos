@@ -16,3 +16,4 @@ extern "C"
 void network_init(lua_State* l, const char* url);
 void network_update();
 void network_close();
+void network_setlua(lua_State* l);

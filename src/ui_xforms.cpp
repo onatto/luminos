@@ -1,5 +1,6 @@
 #include "ui_xforms.h"
 #include "core_xforms.h"
+#include "network.h"
 #include "lua.hpp"
 #include "lauxlib.h"
 
@@ -93,6 +94,7 @@ bool ui_frameStart()
         core_shutdown();
         cmd_restart("scripts/program.lua");
         ui_initGlobals();
+        network_setlua(get_luaState());
         core_execPort("portProgramInit");
         return false;
     }

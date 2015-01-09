@@ -42,3 +42,9 @@ void network_close()
     closeconn(ws);
     wsconn_shutdown(ws);
 }
+
+void network_setlua(lua_State* l)
+{
+    L = l;
+}
+
