@@ -27,7 +27,7 @@ function core.execNode(node)
   end
 
   -- All inputs are ready at this point, evaluate the transform which sets up any outputs it can too
-  lexer.xformTable[transform.eval](transform)
+  lexer.xformFunc[transform.module][transform.submodule](transform)
   transform.visited = true
   -- The outputs of this transform are ready, maybe they're there, maybe not
   return node

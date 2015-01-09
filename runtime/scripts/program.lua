@@ -31,11 +31,11 @@ loadTransforms()
 
 function portProgramInit()
     debugger.printTable(core_xforms.Concat_transform)
-    current_node = ui.createNode(350, 100, core_xforms.Concat_transform, {str_left = "Time is: "})
-    ui.createNode(200, 400, core_xforms.Mouse_transform)
-    ui.createNode(400, 300, core_xforms.Time_transform)
-    ui.createNode(100, 300, util_xforms.Print_transform)
-    ui.createNode(100, 400, math_xforms.Sin_transform)
+    current_node = ui.createNode(350, 100, 180, 40, "core", "concat", {str_left = "Time is: "})
+    ui.createNode(200, 400, 180, 40, "core", "mouse")
+    ui.createNode(400, 300, 180, 40, "core", "time")
+    ui.createNode(100, 300, 180, 40, "util", "print")
+    ui.createNode(100, 400, 180, 40, "math", "sin")
 end
 
 function portProgramShutdown()
@@ -56,6 +56,7 @@ function portDisplayRuntimeError(error_msg)
     C.ui_drawText(x, y, debug.traceback())
 end
 
+--C.nw_send("Workspace")
 function portProgramStart()
     local transforms = ui.getTransforms()
     for _k,transform in ipairs(transforms) do
@@ -89,9 +90,9 @@ function portProgramStart()
     --sendText(ws, "UnlockNode 1 onat");
 
     if (ui.getKeyboardState(SDL.Key.C) == KeyEvent.Press) then
-        C.nw_send("CreateNode 100 200 150 90 sin Sin")
-        C.nw_send("LockNode 1 onat 5")
-        C.nw_send("UnlockNode 1 onat")
+        --C.nw_send("CreateNode 100 200 150 90 sin Sin")
+        --C.nw_send("LockNode 1 onat 5")
+        --C.nw_send("UnlockNode 1 onat")
     end
     
     ui.start()

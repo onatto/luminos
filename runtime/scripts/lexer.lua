@@ -1,3 +1,6 @@
+-- May the programming gods forgive me for the sins committed in this unholy lexer
+-- I'll get to fixing this soon
+--
 local lexer = {}
 local debugger = require 'debugger'
 
@@ -47,6 +50,7 @@ local function ParseTransform(def)
     return xform
 end
 
+lexer.xformFunc = {}
 lexer.xformTable = {}
 local function CreateTransformTable(xform)
     local def = ""
@@ -96,14 +100,20 @@ end
 
 local function ReadFile(path)
     local f = io.open(path, "r")
+    if not f then
+        return nil
+    end
     local content = f:read("*all")
     f:close()
     return content
 end
 
-lexer.lex = function(module, xform)
-    local path = "xforms/" .. module .. "/" .. xform .. ".lua"
+lexer.lex = function(module, submodule)
+    local path = "xforms/" .. module .. "/" .. submodule .. ".lua"
     local def = ReadFile(path)
+    if not def then
+        return nil
+    end
     local parsed_xform  = ParseTransform(def)
     local tableCode, funcCode = CreateTransformTable(parsed_xform)
     debugger.print(tableCode, "transform_tables.txt")
@@ -115,14 +125,40 @@ lexer.lex = function(module, xform)
         debugger.print(err)
     else
         local transform = tableFunc()
-        transform.eval = path
+        transform.module = module
+        transform.submodule = submodule
+        if not lexer.xformTable[module] then
+            lexer.xformTable[module] = {}
+        end
+        lexer.xformTable[module][submodule] = transform
     end
 
     local xformFunc, err = loadstring(funcCode)
     if not xformFunc then
         debugger.print(err)
     else
-        lexer.xformTable[path] = xformFunc()
+        if not lexer.xformFunc[module] then
+            lexer.xformFunc[module] = {}
+        end
+        lexer.xformFunc[module][submodule] = xformFunc()
+    end
+
+    if xformTable and xformFunc then
+        return xformTable
+    else
+        return nil
+    end
+end
+
+lexer.getTransform = function(module, submodule)
+    if not lexer.xformFunc[module] then
+        return nil
+    end
+    if not lexer.xformFunc[module][submodule] then
+        local xformTable = lexer.lex(module,submodule)
+        return xformTable
+    else
+        return lexer.xformTable[module][submodule]
     end
 end
 

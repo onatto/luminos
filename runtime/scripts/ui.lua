@@ -7,6 +7,7 @@ local helpers = require 'helpers'
 local core = require 'core'
 local SDL =   require 'sdlkeys'
 local bit = require 'bit'
+local lexer = require 'lexer'
 
 ffi.cdef
 [[
@@ -51,18 +52,18 @@ local function getTransform(xform_name)
     return xform
 end
 
-function ui.createNode(x, y, xform_name, constant_inputs)
+function ui.createNode(x, y, w, h, module, submodule, constant_inputs)
     local node = {}
     node.sx = x
     node.sy = y
-    node.w = 180
-    node.h = 40
+    node.w = w
+    node.h = h
     node.bndWidgetState = BNDWidgetState.Default
     node.constants = {}
     node.connections = {}
     node.ports = {}
-    node.xform_name = xform_name
-    node.xform = core.cloneTransform(node, xform_name)
+    node.xform_name = module .. "/" .. submodule
+    node.xform = core.cloneTransform(node, lexer.getTransform(module,submodule))
     if constant_inputs then
         for input_name, constant in pairs(constant_inputs) do
             node.constants[input_name] = constant
