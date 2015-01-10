@@ -67,6 +67,8 @@ function portProgramStart()
         current_node = selected_nodes[1]
     end
 
+    ui.KeyboardControls(selected_nodes)
+
     if current_node then
         core.execNode(current_node)
     end

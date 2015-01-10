@@ -45,12 +45,13 @@ func UpdateConnection(args []string, rc *redis.Client) {
     errHndlr(r.Err)
 }
 
-func DeleteNode(args []string, rc *redis.Client) {
+func DeleteNode(args []string, rc *redis.Client) string {
     nodeID      := args[0]
     r := rc.Cmd("DEL", "nodes:" + nodeID)
     errHndlr(r.Err)
-    r := rc.Cmd("DEL", "connections:" + nodeID)
+    r = rc.Cmd("DEL", "connections:" + nodeID)
     errHndlr(r.Err)
+    return "deletenode " + nodeID
 }
 func DeleteConnection(args []string, rc *redis.Client) {
     nodeID      := args[0]
@@ -240,7 +241,7 @@ func CmdHandler(cmd string, rc *redis.Client, conn *websocket.Conn) string {
         case "DeleteConn":
             DeleteConnection(args[1:], rc)
         case "DeleteNode":
-            DeleteNode(args[1:], rc)
+            return DeleteNode(args[1:], rc)
     }
     return ""
 }

@@ -45,15 +45,24 @@ local function CreateConnCmd(args)
   end
 end
 
+local function DeleteNodeCmd(args)
+  local id = tonumber(args[1])
+  core.nodes[id] = nil
+end
+
 local CmdMap = {
   createnode = CreateNodeCmd,
   connections = CreateConnCmd,
+  deletenode = DeleteNodeCmd,
 }
 
 function portReceiveMessage(msg)
   debugger.print("Received msg: >>> " .. msg)
   args = SplitWhitespace(msg)
   cmd = args[1]
+  debugger.print("cmd is: " .. cmd)
   table.remove(args, 1)
-  CmdMap[cmd](args)
+  if CmdMap[cmd] then
+    CmdMap[cmd](args)
+  end
 end

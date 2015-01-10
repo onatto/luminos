@@ -162,7 +162,9 @@ function ui.drawNodes()
         -- node.h = (math.sin(g_time * 2) + 1.0) / zooming.aspect * 10 + 60
     -- end
     for _k, node in pairs(core.nodes) do
-        drawNode(node)
+         if node then
+           drawNode(node)
+        end
     end
 end
 
@@ -716,7 +718,9 @@ function ui.EditText()
     if (ui.getKeyboardState(SDL.Key.BACKSPACE) == KeyEvent.Press) and ui.EditingText then
         ui.ForwardedText = string.sub(ui.ForwardedText, 1, -2)
     end
-    C.ui_drawText(400, 40, ">>> cmd: " .. ui.ForwardedText)
+    if ui.EditingText then
+        C.ui_drawText(0, 30, "!cmd: " .. ui.ForwardedText)
+    end
 end
 
 local function CreateNodeReq(args)
@@ -740,6 +744,14 @@ end
 local CmdMap = {
     cn = CreateNodeReq
 }
+
+function ui.KeyboardControls(selected_nodes)
+    if (ui.getKeyboardState(SDL.Key.DELETE) == KeyEvent.Press) and selected_nodes then
+        for idx, node in ipairs(selected_nodes) do
+            C.nw_send("DeleteNode " .. tostring(node.id))
+        end
+    end
+end
 
 function ui.EnterText()
    args = helpers.SplitWhitespace(ui.ForwardedText)
