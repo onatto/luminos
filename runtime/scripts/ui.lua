@@ -697,4 +697,64 @@ function ui.Proceed(CurrentNode)
     end
 end
 
+ui.EditingText = false
+ui.ForwardedText = ""
+ui.EnteredText = ""
+local function StopEditing()
+    ui.EditingText = false
+    ui.ForwardedText = ""
+end
+function ui.EditText()
+    if (ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press) and ui.EditingText then
+        ui.EnterText()
+    elseif (ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press) and not ui.EditingText then
+        ui.EditingText = true
+    end
+    if (ui.getKeyboardState(SDL.Key.ESCAPE) == KeyEvent.Press) and ui.EditingText then
+        StopEditing()
+    end
+    if (ui.getKeyboardState(SDL.Key.BACKSPACE) == KeyEvent.Press) and ui.EditingText then
+        ui.ForwardedText = string.sub(ui.ForwardedText, 1, -2)
+    end
+    C.ui_drawText(400, 40, ">>> cmd: " .. ui.ForwardedText)
+end
+
+local function CreateNodeReq(args)
+    if not args or #args < 1 then
+        return
+    end
+    local xform = args[1]
+    cmp = helpers.split(xform, '/')
+    local module, submodule = cmp[1], cmp[2]
+    local xformTable = lexer.getTransform(module, submodule)
+    if not xformTable then
+        return
+    end
+    req = "CreateNode " .. table.concat({g_mouseState.mx, g_mouseState.my, 180, 90,  xform, xformTable.name}, " ")
+    if #args > 1 then
+        req = req .. " " .. table.concat(args, " ")
+    end
+    C.nw_send(req)
+end
+
+local CmdMap = {
+    cn = CreateNodeReq
+}
+
+function ui.EnterText()
+   args = helpers.SplitWhitespace(ui.ForwardedText)
+   cmd = args[1]
+   table.remove(args, 1)
+   if CmdMap[cmd] then
+       CmdMap[cmd](args)
+   end
+   StopEditing()
+end
+
+function portTextEdit(text)
+    if ui.EditingText then
+            ui.ForwardedText = ui.ForwardedText .. text
+    end
+end
+
 return ui

@@ -71,24 +71,9 @@ function portProgramStart()
         core.execNode(current_node)
     end
 
-    if (ui.getKeyboardState(SDL.Key.F2) == KeyEvent.Press) then
-        debugger.printTable(current_node)
-    end
-
     if (ui.getKeyboardState(SDL.Key.F3) == KeyEvent.Press) then
         loadTransforms()
     end
-
-    --sendText(ws, "CreateNode 100 200 150 90 sin Sin");
-    --sendText(ws, "CreateNode 400 100 1 2 cos Cos");
-    --sendText(ws, "UpdateNodePos 1 10 50");
-    --sendText(ws, "UpdateNodeSize 2 15 30");
-    --sendText(ws, "CreateNode 400 100 1 2 Hell Club");
-    --sendText(ws, "UpdateNodeOp 3 Lucy Proteus");
-    --sendText(ws, "LockNode 1 onat 5");
-    --sendText(ws, "LockNode 1 onat 20");
-    --sendText(ws, "UnlockNode 1 memati");
-    --sendText(ws, "UnlockNode 1 onat");
 
     if (ui.getKeyboardState(SDL.Key.C) == KeyEvent.Press) then
         C.nw_send("Workspace")
@@ -105,6 +90,7 @@ function portProgramStart()
     ui.drawNodes()
     ui.drawWorkspace()
     ui.Proceed(current_node)
+    ui.EditText()
 
     ui.drawNodeInfo(current_node)
 end

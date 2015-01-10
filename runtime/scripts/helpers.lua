@@ -7,6 +7,14 @@ function helpers.shallowCopy(orig)
   return t2
 end
 
+function helpers.SplitWhitespace(str)
+    tokens = {}
+    for token in str:gmatch("%S+") do 
+        table.insert(tokens, token)
+    end
+    return tokens
+end
+
 function helpers.deepCopy(orig)
     local orig_type = type(orig)
     local copy
