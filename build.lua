@@ -2,7 +2,11 @@
 local os = require 'os'
 
 function exec(str)
-    os.execute(str)
+    local res = os.execute(str)
+    print(res)
+    if res > 0 then
+        os.exit(-1)
+    end
 end
 
 local prgname
