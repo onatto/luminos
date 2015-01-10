@@ -220,3 +220,15 @@ void ui_drawText(float x, float y, const char* str)
 {
     nvgText(nvg, x, y, str, NULL);
 }
+
+void ui_textInputEvent(SDL_Event* event)
+{
+    lua_State* L = get_luaState();
+    lua_getglobal(L, "portDisplayRuntimeError");
+    lua_getglobal(L, "portTextEdit");
+    if (!lua_isfunction(L, -1))
+        return;
+
+    lua_pushlstring(L, (const char*)event->text.text, strlen(event->text.text));
+    lua_pcall(L, 1, 0, -2);
+}

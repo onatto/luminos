@@ -36,6 +36,9 @@ extern "C"
 bool ui_frameStart();
 void ui_frameEnd();
 
+union SDL_Event;
+void ui_textInputEvent(SDL_Event* event);
+
 struct KeyEvent
 {
     enum Enum

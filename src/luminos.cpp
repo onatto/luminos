@@ -78,10 +78,10 @@ int main(int /*_argc*/, char** /*_argv*/)
     while (!quit)
     {
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_QUIT) {
                 quit = true;
-            else if (event.type == SDL_WINDOWEVENT)
-            {
+            }
+            else if (event.type == SDL_WINDOWEVENT) {
                 switch (event.window.event) {
                     case SDL_WINDOWEVENT_RESIZED:
                     width = event.window.data1;
@@ -90,6 +90,10 @@ int main(int /*_argc*/, char** /*_argv*/)
                     break;
                 }
             }
+            else if (event.type == SDL_TEXTINPUT) {
+               ui_textInputEvent(&event); 
+            }
+
         }
         if (!quit)
             quit = ui_frameStart();
