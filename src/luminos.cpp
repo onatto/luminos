@@ -17,6 +17,8 @@
 #include "network.h"
 
 #include "nanovg/nanovg.h"
+#include "lua.hpp"
+#include "lauxlib.h"
 
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
@@ -72,7 +74,10 @@ int main(int /*_argc*/, char** /*_argv*/)
     ui_init();
     core_execPort("portProgramInit");
 
-    network_init(get_luaState(), "ws://localhost:8126/luminos");
+    lua_getglobal(get_luaState(), "serverIP");
+    const char* server_ip = lua_tolstring(get_luaState(), -1, NULL);
+
+    network_init(get_luaState(), server_ip);
 
     SDL_Event event;
     while (!quit)

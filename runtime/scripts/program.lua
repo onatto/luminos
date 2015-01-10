@@ -8,6 +8,7 @@ local debugger = require 'debugger'
 local lexer = require 'lexer'
 local network = require 'network'
 
+serverIP = "ws://188.166.27.157:8126/luminos"
 debugger.init()
 
 local C = ffi.C
