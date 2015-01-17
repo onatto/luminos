@@ -323,7 +323,6 @@ function ui.dragConnectors()
     local DragExistingConnection = function ()
         -- If it is an input port and a binding exists
         if NodeStart.connections[PortStart.name] then
-            debugger.print("Dragging existing conn")
             DraggingExistingConnection = true
             -- Then, it is as if we're dragging from that OutputNode's output
             OutputNode = core.nodes[InputNode.connections[InputPort.name].out_node_id]
@@ -332,6 +331,7 @@ function ui.dragConnectors()
             NodeStart = OutputNode
             PortStart = OutputPort
             InputNode.connections[InputPort.name] = nil
+            C.nw_send("DeleteConn " .. tostring(InputNode.id) .. " " .. InputPort.name)
         end
     end
     local CreateConnection = function ()
@@ -371,8 +371,6 @@ function ui.dragConnectors()
     if IReleaseLMB and DraggingConnectors then
         if NodeEnd and PortEnd then
             CreateConnection()
-        elseif DraggingExistingConnection then
-            C.nw_send("DeleteConn " .. tostring(InputNode.id) .. " " .. InputPort.name)
         end
         StopDraggingConnector()
     end
@@ -651,7 +649,6 @@ local CmdMap = {
 
 
 function ui.update()
-
    local EnteringCommands = ui.EnteringCommands
    local UpdatingConstants = ui.UpdatingConstants
    local ReceivingTextInput = ui.ReceivingTextInput
