@@ -42,4 +42,10 @@ function core.cloneTransform(node, transform)
     return clone
 end
 
+function core.programStart()
+    for _k,node in ipairs(core.nodes) do
+        node.xform.visited = false
+    end
+end
+
 return core

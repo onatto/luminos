@@ -35,22 +35,6 @@ ui.warpMouse = ffi.C.ui_warpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
-function ui.getTransforms()
-    local transforms = {}
-    for _i, node in ipairs(core.nodes) do
-        table.insert(transforms, node.xform)
-    end
-    return transforms
-end
-
-local function getTransform(xform_name)
-    local start, ends = string.find(xform_name, '[.]')
-    local module_name, xform_name = string.sub(xform_name, 1, start-1), string.sub(xform_name, ends+1)
-    local module = require(module_name)
-    local xform = module[xform_name]
-    return xform
-end
-
 function ui.createNode(id, x, y, w, h, module, submodule, constant_inputs)
     local node = {}
     node.sx = x
@@ -385,7 +369,7 @@ function ui.DragConnectors()
     end
 end
 
-local function findNode(snode)
+local function SearchInSelectedNodes(snode)
     for i, node in ipairs(SelectedNodes) do
         if node == snode then
             return i
@@ -401,7 +385,7 @@ end
 function ui.SelectNodes()
     -- This is the behaviour expected for holding CTRL, can override
     local SelectNodeCTRL = function ()
-        FoundNode = findNode(HoveredNode)
+        FoundNode = SearchInSelectedNodes(HoveredNode)
         if FoundNode then
             table.remove(SelectedNodes, FoundNode)
         else
@@ -410,7 +394,7 @@ function ui.SelectNodes()
     end
 
     local SelectNodeWithoutCTRL = function ()
-        FoundNode = findNode(HoveredNode)
+        FoundNode = SearchInSelectedNodes(HoveredNode)
         if not FoundNode then
             SelectedNodes = {HoveredNode}
         end
@@ -445,7 +429,7 @@ end
 
 function ui.DragNodes()
     -- States
-    local HoveredNodeAlreadySelected = findNode(HoveredNode)
+    local HoveredNodeAlreadySelected = SearchInSelectedNodes(HoveredNode)
     local HoveringAPort = not not(PortStart or PortEnd)
 
     -- Functional blocks

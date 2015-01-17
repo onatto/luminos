@@ -8,7 +8,8 @@ local debugger = require 'debugger'
 local lexer = require 'lexer'
 local network = require 'network'
 
-serverIP = "ws://188.166.27.157:8126/luminos"
+--serverIP = "ws://188.166.27.157:8126/luminos"
+serverIP = "ws://localhost:8126/luminos"
 debugger.init()
 
 local C = ffi.C
@@ -31,12 +32,6 @@ end
 loadTransforms()
 
 function portProgramInit()
-    debugger.printTable(core_xforms.Concat_transform)
-    --current_node = ui.createNode(350, 100, 180, 40, "core", "concat", {str_left = "Time is: "})
-    --ui.createNode(200, 400, 180, 40, "core", "mouse")
-    --ui.createNode(400, 300, 180, 40, "core", "time")
-    --ui.createNode(100, 300, 180, 40, "util", "print")
-    --ui.createNode(100, 400, 180, 40, "math", "sin")
 end
 
 function portProgramShutdown()
@@ -58,10 +53,7 @@ function portDisplayRuntimeError(error_msg)
 end
 
 function portProgramStart()
-    local transforms = ui.getTransforms()
-    for _k,transform in ipairs(transforms) do
-        transform.visited = false
-    end
+    core.programStart()
 
     local selected_nodes = ui.getSelectedNodes()
     if #selected_nodes > 0 then
