@@ -1,5 +1,6 @@
 package.path = ";./scripts/?.lua"
 
+serverIP = "ws://localhost:8126/luminos"
 local ffi =   require 'ffi'
 local core =  require "core"
 local ui =    require 'ui'
@@ -9,7 +10,6 @@ local lexer = require 'lexer'
 local network = require 'network'
 
 --serverIP = "ws://188.166.27.157:8126/luminos"
-serverIP = "ws://localhost:8126/luminos"
 debugger.init()
 
 local C = ffi.C
@@ -19,7 +19,7 @@ local C = ffi.C
 -- This is stored in the core module
 
 core_xforms, math_xforms, util_xforms = {}, {}, {}
-current_node = nil
+CurrentNode = nil
 
 local function loadTransforms()
     lexer.lex("core", "mouse")
@@ -57,13 +57,11 @@ function portProgramStart()
 
     local selected_nodes = ui.getSelectedNodes()
     if #selected_nodes > 0 then
-        current_node = selected_nodes[1]
+        CurrentNode = selected_nodes[1]
     end
 
-    ui.KeyboardControls(selected_nodes)
-
-    if current_node then
-        core.execNode(current_node)
+    if CurrentNode then
+        core.execNode(CurrentNode)
     end
 
     if (ui.getKeyboardState(SDL.Key.F3) == KeyEvent.Press) then
@@ -72,13 +70,12 @@ function portProgramStart()
 
     ui.start()
     ui.dragWorkspace()
-    ui.SelectNodes()
-    ui.DragNodes()
-    ui.DragConnectors()
+    ui.selectNodes()
+    ui.dragNodes()
+    ui.dragConnectors()
     ui.drawNodes()
     ui.drawWorkspace()
-    ui.Proceed(current_node)
-    ui.EditText()
+    ui.update()
 
-    ui.drawNodeInfo(current_node)
+    ui.drawNodeInfo(CurrentNode)
 end

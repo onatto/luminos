@@ -214,6 +214,13 @@ local IPressEnter
 local IPressHome
 local IPressTab
 local IHoldLShift
+local IPressEnter
+local IPressEscape
+local IPressBackspace
+local IPressInsert
+local IPressDelete
+local IPressHome
+local IPressTab
 
 function ui.start()
     MouseX, MouseY = g_mouseState.mx, g_mouseState.my
@@ -228,12 +235,17 @@ function ui.start()
     IPressTab  = ui.getKeyboardState(SDL.Key.TAB) == KeyEvent.Press
     IHoldLCTRL = ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold
     IHoldLShift  = ui.getKeyboardState(SDL.Key.LSHIFT) == KeyEvent.Hold
+    IPressEscape = ui.getKeyboardState(SDL.Key.ESCAPE) == KeyEvent.Press
+    IPressBackspace = ui.getKeyboardState(SDL.Key.BACKSPACE) == KeyEvent.Press
+    IPressInsert = ui.getKeyboardState(SDL.Key.INSERT) == KeyEvent.Press
+    IPressDelete = ui.getKeyboardState(SDL.Key.DELETE) == KeyEvent.Press
+    IPressTab = ui.getKeyboardState(SDL.Key.TAB) == KeyEvent.Press
 end
 
 local InputNode, OutputNode, InputPort, OutputPort
 local PortStart, PortEnd, NodeStart, NodeEnd
 
-function ui.DragConnectors()
+function ui.dragConnectors()
     local MouseOnPort = PortStart
 
     local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Other = 4}
@@ -379,7 +391,7 @@ local function FindHoveredNode(MouseX, MouseY)
     return nodes_pt_intersect(MouseX, MouseY)
 end
 
-function ui.SelectNodes()
+function ui.selectNodes()
     -- This is the behaviour expected for holding CTRL, can override
     local SelectNodeCTRL = function ()
         FoundNode = SearchInSelectedNodes(HoveredNode)
@@ -424,7 +436,7 @@ function ui.SelectNodes()
     return SelectedNodes
 end
 
-function ui.DragNodes()
+function ui.dragNodes()
     -- States
     local HoveredNodeAlreadySelected = SearchInSelectedNodes(HoveredNode)
     local HoveringAPort = not not(PortStart or PortEnd)
@@ -490,7 +502,7 @@ end
 local SelectedInput = 1
 
 function ui.drawNodeInfo(node, y)
-    if not current_node then
+    if not CurrentNode then
         return
     end
     local w, h= 1600, 900
@@ -498,8 +510,8 @@ function ui.drawNodeInfo(node, y)
     local header_size = 30
     local param_size = 22
     local align = 1
-    local input_cnt = helpers.tableLength(current_node.xform.inputs)
-    local output_cnt = helpers.tableLength(current_node.xform.outputs)
+    local input_cnt = helpers.tableLength(CurrentNode.xform.inputs)
+    local output_cnt = helpers.tableLength(CurrentNode.xform.outputs)
     C.ui_setTextProperties("header-bold", header_size, align)
     C.ui_setTextColor(255, 255, 255, 50)
     C.ui_drawText(x, y, "Inputs")
@@ -608,44 +620,74 @@ end
 
 local EnteringCommands = false
 
-function ui.Proceed(CurrentNode)
-    local StartEnteringCommands = function ()
-        EnteringCommands = true
+ui.ReceivingTextInput = false
+ui.TextInput = ""
+ui.EnteringCommands = false
+ui.UpdatingConstants = false
+
+local function CreateNodeRequest(args)
+    if not args or #args < 1 then
+        return
     end
-    local ToggleEnteringCommands = function ()
-        EnteringCommands = not EnteringCommands
+    local xform = args[1]
+    cmp = helpers.split(xform, '/')
+    local module, submodule = cmp[1], cmp[2]
+    local xformTable = lexer.getTransform(module, submodule)
+    if not xformTable then
+       debugger.print("Couldn't create node with xform: " .. xform)
+       return
     end
-    local ToggleTransformList = function ()
-        ShowTransformList = not ShowTransformList
+
+    req = "CreateNode " .. table.concat({g_mouseState.mx, g_mouseState.my, 180, 90,  xform, xformTable.name}, " ")
+    if #args > 1 then
+        req = req .. " " .. table.concat(args, " ")
     end
-    local ProcessCommand = function(CommandName, CommandParameters)
-        if     CommandName == 'c' then
-            ui.createNode(MouseX, MouseY, CommandParameters[1], CommandParameters[2])
-        elseif CommandName == 'h' or CommandName == 'help' then
-            ToggleTransformList()
-        end
-    end
-    local DrawTheModuleName = function (x, y)
-        C.ui_setTextProperties("header-bold", 25, 9)
-        C.ui_setTextColor(255, 255, 255, 200)
-        C.ui_drawText(x, y, "Core")
-    end
-    local DrawTheTransformNames = function (x, y, module)
-        C.ui_setTextProperties("header", 20, 9)
-        C.ui_setTextColor(255, 255, 255, 150)
-        for name, xform in pairs(module) do
-            local head, tail = string.find(name, "_xform")
-            if head then
-                C.ui_drawText(x, y, name)
-                y = y + 20
-            end
-        end
-    end
-    local LetsDrawTheTransformList = function(x, y)
-        DrawTheModuleName(x, y)
-        y = y + 20
-        DrawTheTransformNames(x, y, core)
-    end
+    C.nw_send(req)
+end
+
+local CmdMap = {
+    cn = CreateNodeRequest
+}
+
+
+function ui.update()
+
+   local EnteringCommands = ui.EnteringCommands
+   local UpdatingConstants = ui.UpdatingConstants
+   local ReceivingTextInput = ui.ReceivingTextInput
+   local function StartTextInput()
+      ui.ReceivingTextInput = true
+   end
+   local function StopTextInput()
+       ui.ReceivingTextInput = false
+       ui.TextInput = ""
+   end
+
+   local function StartEnteringCommands()
+      ui.EnteringCommands = true
+      StartTextInput()
+   end
+   local function StopEnteringCommands()
+      ui.EnteringCommands = false
+      StopTextInput()
+   end
+   local function StartUpdatingConstant()
+      ui.UpdatingConstants = true
+      ui.TextInput = 
+      StartTextInput()
+   end
+   local function StopUpdatingConstant()
+      ui.UpdatingConstants = false
+      StopTextInput()
+   end
+   local function DeleteNodesMsg(SelectedNodes)
+      for idx, node in ipairs(SelectedNodes) do
+         C.nw_send("DeleteNode " .. tostring(node.id))
+      end
+   end
+   local function ReloadWorkspaceMsg()
+      C.nw_send("Workspace")
+   end
     local SelectNextInput = function (CurrentNode)
         SelectedInput = ((SelectedInput) % helpers.tableLength(CurrentNode.xform.inputs)) + 1
     end
@@ -656,19 +698,57 @@ function ui.Proceed(CurrentNode)
             SelectedInput = SelectedInput - 1
         end
     end
+    local function ProcessCmd()
+       args = helpers.SplitWhitespace(ui.TextInput)
+       cmd = args[1]
+       table.remove(args, 1)
+       if CmdMap[cmd] then
+          CmdMap[cmd](args)
+       end
+       StopTextInput()
+    end
+    local function UpdateConstant()
 
-    if IPressEnter and not EnteringCommands then
-        StartEnteringCommands()
-    elseif IPressEnter and EnteringCommands then
-        ProcessCommand(CommandName, CommandParameters)
+    end
+   --
+   -- 
+   -- Logic starts here
+   if IPressEnter and not EnteringCommands then
+      StartEnteringCommands()
+   elseif IPressEnter and EnteringCommands then
+      ProcessCmd()
+      StopEnteringCommands()
+   end
+
+   if IPressInsert and not UpdatingConstants then
+      StartUpdatingConstant()
+   end
+
+   if IPressEnter and UpdatingConstants then
+      UpdateConstant()
+      StopUpdatingConstant()
+   end
+
+    if IPressEscape then
+       if EnteringCommands then
+          StopEnteringCommands()
+       elseif UpdatingConstants then
+          StopUpdatingConstant()
+       end
     end
 
+    if IPressBackspace and ReceivingTextInput then
+       ui.TextInput = string.sub(ui.TextInput, 1, -2)
+    end
+    if EnteringCommands then
+        C.ui_drawText(0, 30, "!cmd: " .. ui.TextInput)
+    end
+
+    if IPressDelete and SelectedNodes then
+       DeleteNodesMsg(SelectedNodes)
+    end
     if IPressHome then
-        ToggleTransformList()
-    end
-
-    if ShowTransformList then
-        LetsDrawTheTransformList(1400, 0)
+       ReloadWorkspaceMsg()
     end
 
     if IPressTab then
@@ -680,78 +760,9 @@ function ui.Proceed(CurrentNode)
     end
 end
 
-ui.EditingText = false
-ui.ForwardedText = ""
-ui.EnteredText = ""
-local function StopEditing()
-    ui.EditingText = false
-    ui.ForwardedText = ""
-end
-function ui.EditText()
-    if (ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press) and ui.EditingText then
-        ui.EnterText()
-    elseif (ui.getKeyboardState(SDL.Key.RETURN) == KeyEvent.Press) and not ui.EditingText then
-        ui.EditingText = true
-    end
-    if (ui.getKeyboardState(SDL.Key.ESCAPE) == KeyEvent.Press) and ui.EditingText then
-        StopEditing()
-    end
-    if (ui.getKeyboardState(SDL.Key.BACKSPACE) == KeyEvent.Press) and ui.EditingText then
-        ui.ForwardedText = string.sub(ui.ForwardedText, 1, -2)
-    end
-    if ui.EditingText then
-        C.ui_drawText(0, 30, "!cmd: " .. ui.ForwardedText)
-    end
-end
-
-local function CreateNodeReq(args)
-    if not args or #args < 1 then
-        return
-    end
-    local xform = args[1]
-    cmp = helpers.split(xform, '/')
-    local module, submodule = cmp[1], cmp[2]
-    local xformTable = lexer.getTransform(module, submodule)
-    if not xformTable then
-        return
-    end
-    req = "CreateNode " .. table.concat({g_mouseState.mx, g_mouseState.my, 180, 90,  xform, xformTable.name}, " ")
-    if #args > 1 then
-        req = req .. " " .. table.concat(args, " ")
-    end
-    C.nw_send(req)
-end
-
-local CmdMap = {
-    cn = CreateNodeReq
-}
-
-function ui.KeyboardControls(selected_nodes)
-    if (ui.getKeyboardState(SDL.Key.DELETE) == KeyEvent.Press) and selected_nodes then
-        for idx, node in ipairs(selected_nodes) do
-            C.nw_send("DeleteNode " .. tostring(node.id))
-        end
-    end
-
-    if (ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Press) then
-        C.nw_send("Workspace")
-    end
-    
-end
-
-function ui.EnterText()
-   args = helpers.SplitWhitespace(ui.ForwardedText)
-   cmd = args[1]
-   table.remove(args, 1)
-   if CmdMap[cmd] then
-       CmdMap[cmd](args)
-   end
-   StopEditing()
-end
-
 function portTextEdit(text)
-    if ui.EditingText then
-            ui.ForwardedText = ui.ForwardedText .. text
+    if ui.ReceivingTextInput then
+       ui.TextInput = ui.TextInput .. text
     end
 end
 
