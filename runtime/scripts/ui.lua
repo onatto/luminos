@@ -526,7 +526,7 @@ function ui.drawNodeInfo(node, y)
 
     C.ui_setTextColor(255, 255, 255, 255)
     local _i = 1
-    for name, input in pairs(node.xform.inputs) do
+    for name, input in pairs(node.xform.input_values) do
         connection = node.connections[name]
         if _i == SelectedInput then
             C.ui_setTextColor(255, 150, 100, 255)
@@ -540,7 +540,7 @@ function ui.drawNodeInfo(node, y)
         if not connection then
             C.ui_drawText(x, y, tostring(node.constants[name]))
         else
-            C.ui_drawText(x, y, tostring(core.nodes[connection.out_node_id].xform.outputs[connection.port_name].value))
+            C.ui_drawText(x, y, tostring(core.nodes[connection.out_node_id].xform.output_values[connection.port_name]))
         end
         y = y + param_size
         _i = _i + 1
@@ -552,12 +552,12 @@ function ui.drawNodeInfo(node, y)
     y = y + param_size
 
     C.ui_setTextColor(255, 255, 255, 255)
-    for name, output in pairs(node.xform.outputs) do
+    for name, output in pairs(node.xform.output_values) do
         C.ui_setTextProperties("header-bold", param_size, align)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-        C.ui_drawText(x, y, tostring(output.value))
+        C.ui_drawText(x, y, tostring(output))
         y = y + param_size
     end
 end

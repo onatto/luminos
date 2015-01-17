@@ -69,6 +69,7 @@ local function CreateTransformTable(xform)
         def = def .. string.format("viz = '%s',\n", xform.viz)
     end
     -- Inputs
+    def = def .. "input_values = {},\n output_values = {},\n"
     def = def ..               "inputs = {\n"
     for _, input in pairs(xform.inputs) do
         def = def .. string.format("%s = {type = '%s', default=%s},\n", input.vname, input.vtype, tostring(input.default))
@@ -84,17 +85,8 @@ local function CreateTransformTable(xform)
     
     xformDef = "local ffi = require 'ffi'\n"
     xformDef = xformDef .. "local C = ffi.C\n"
-    xformDef = xformDef .. "return function(self)\n" 
-    xformDef = xformDef .. [[
-    local function ExpandInputFunc(table, key)
-        return self.inputs[key].value
-    end
-    local function ExpandOutFunc(table, key, value)
-        self.outputs[key].value = value
-    end
-        local inp = setmetatable({},{__index = ExpandInputFunc})
-        local out = setmetatable({}, {__newindex = ExpandOutFunc})
-    ]] .. xform.func_str .. "\nend"
+    xformDef = xformDef .. "return function(inp, out)\n" 
+    xformDef = xformDef .. xform.func_str .. "\nend"
     return def, xformDef
 end
 

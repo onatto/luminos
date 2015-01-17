@@ -20,15 +20,15 @@ function core.execNode(node)
       if connection then
       -- The input is non-constant
           local result_node = core.execNode(core.nodes[connection.out_node_id])
-          input_def.value = result_node.xform.outputs[connection.port_name].value
+          transform.input_values[input_name] = result_node.xform.output_values[connection.port_name]
       else
       -- The input is a constant, each node has its unique constants
-        input_def.value = node.constants[input_name]
+        transform.input_values[input_name] = node.constants[input_name]
       end
   end
 
   -- All inputs are ready at this point, evaluate the transform which sets up any outputs it can too
-  lexer.xformFunc[transform.module][transform.submodule](transform)
+  lexer.xformFunc[transform.module][transform.submodule](transform.input_values, transform.output_values)
   transform.visited = true
   -- The outputs of this transform are ready, maybe they're there, maybe not
   return node
