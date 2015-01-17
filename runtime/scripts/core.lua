@@ -43,8 +43,10 @@ function core.cloneTransform(node, transform)
 end
 
 function core.programStart()
-    for _k,node in ipairs(core.nodes) do
+    for _k,node in pairs(core.nodes) do
+      if node then
         node.xform.visited = false
+      end
     end
 end
 

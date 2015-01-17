@@ -70,13 +70,6 @@ function portProgramStart()
         loadTransforms()
     end
 
-    if (ui.getKeyboardState(SDL.Key.C) == KeyEvent.Press) then
-        C.nw_send("Workspace")
-        --C.nw_send("CreateNode 100 200 150 90 sin Sin")
-        --C.nw_send("LockNode 1 onat 5")
-        --C.nw_send("UnlockNode 1 onat")
-    end
-    
     ui.start()
     ui.dragWorkspace()
     ui.SelectNodes()

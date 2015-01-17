@@ -33,6 +33,7 @@ local function CreateNodeCmd(args)
   local module, submodule = cmp[1], cmp[2]
   ui.createNode(id,x,y,w,h,module,submodule)
 end
+
 local function CreateConnCmd(args)
   local id = tonumber(args[1])
   table.remove(args, 1)
@@ -45,15 +46,25 @@ local function CreateConnCmd(args)
   end
 end
 
+local function DeleteConnCmd(args)
+  local id = tonumber(args[1]) -- Node ID
+  local input_name = args[2]
+  core.nodes[id].connections[input_name] = nil
+end
+
 local function DeleteNodeCmd(args)
   local id = tonumber(args[1])
   core.nodes[id] = nil
+
+  -- It doesn't stop here, must delete all connections to this node as well!
+  -- Iterate over all inputs of all nodes and delete connections to this node
 end
 
 local CmdMap = {
   createnode = CreateNodeCmd,
   connections = CreateConnCmd,
   deletenode = DeleteNodeCmd,
+  deleteconn = DeleteConnCmd,
 }
 
 function portReceiveMessage(msg)

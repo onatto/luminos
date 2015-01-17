@@ -90,7 +90,7 @@ end
 function ui.shutdown()
 end
 
-local function drawNode(node)
+local function DrawNode(node)
     ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.dispname, 255, 50, 100, 255)
     for name, port in pairs(node.ports) do
         if port.is_input then
@@ -103,24 +103,26 @@ local function drawNode(node)
     for inport_name, connection in pairs(node.connections) do
         local node_in = node
         local node_out = core.nodes[connection.out_node_id]
-        local port_in = node.ports[inport_name]
-        local port_out = node_out.ports[connection.port_name]
-        local node_inx = node_in.x + port_in.x * node_in.w
-        local node_iny = node_in.y + port_in.y * node_in.h
-        local node_outx = node_out.x + port_out.x * node_out.w
-        local node_outy = node_out.y + port_out.y * node_out.h
-        if node_inx < node_outx then
-        ui.drawWire(node_inx,
-                    node_iny,
-                    node_outx,
-                    node_outy,
-                    BNDWidgetState.Active, BNDWidgetState.Active)
-        else
-        ui.drawWire(node_outx,
-                    node_outy,
-                    node_inx,
-                    node_iny,
-                    BNDWidgetState.Active, BNDWidgetState.Active)
+        if node_out then
+           local port_in = node.ports[inport_name]
+           local port_out = node_out.ports[connection.port_name]
+           local node_inx = node_in.x + port_in.x * node_in.w
+           local node_iny = node_in.y + port_in.y * node_in.h
+           local node_outx = node_out.x + port_out.x * node_out.w
+           local node_outy = node_out.y + port_out.y * node_out.h
+           if node_inx < node_outx then
+              ui.drawWire(node_inx,
+              node_iny,
+              node_outx,
+              node_outy,
+              BNDWidgetState.Active, BNDWidgetState.Active)
+           else
+              ui.drawWire(node_outx,
+              node_outy,
+              node_inx,
+              node_iny,
+              BNDWidgetState.Active, BNDWidgetState.Active)
+           end
         end
     end
 end
@@ -140,15 +142,10 @@ local zooming = {
     aspect = 1600 / 900
 }
 function ui.drawNodes()
-    -- Wiggle
-    -- for _k, node in pairs(core.nodes) do
-        -- node.w = (math.sin(g_time * 2) + 1.0) * zooming.aspect * 40 + 160
-        -- node.h = (math.sin(g_time * 2) + 1.0) / zooming.aspect * 10 + 60
-    -- end
-    for _k, node in pairs(core.nodes) do
-         if node then
-           drawNode(node)
-        end
+    for idx, node in pairs(core.nodes) do
+       if node then
+          DrawNode(node)
+       end
     end
 end
 
@@ -735,6 +732,11 @@ function ui.KeyboardControls(selected_nodes)
             C.nw_send("DeleteNode " .. tostring(node.id))
         end
     end
+
+    if (ui.getKeyboardState(SDL.Key.HOME) == KeyEvent.Press) then
+        C.nw_send("Workspace")
+    end
+    
 end
 
 function ui.EnterText()

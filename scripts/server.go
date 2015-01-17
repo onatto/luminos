@@ -45,12 +45,37 @@ func UpdateConnection(args []string, rc *redis.Client) {
     errHndlr(r.Err)
 }
 
+func DeleteConnectionsToNode(nodeID string, rc *redis.Client, conn *websocket.Conn) {
+    // There are at most nextid nodes in the system
+    // If this becomes costly, create a reverse mapping nodes->connections for faster search
+    nextid, err := rc.Cmd("GET", "nextNodeID").Int64()
+    errHndlr(err)
+
+    var i int64
+    for i = 1; i <= nextid; i++ {
+        hash_name := "connections:" + strconv.FormatInt(i, 10)
+        connections, err := rc.Cmd("HGETALL", hash_name).Hash()
+        errHndlr(err)
+        for input_name, connection := range connections {
+            splitted := strings.SplitN(connection, " ", 2)    
+            input_node := splitted[0] 
+            fmt.Println("Connection for " + input_name + " ->" + input_node + " when deleting " + nodeID)
+            if input_node == nodeID {
+                reply := "deleteconn " + strconv.FormatInt(i, 10) + " " + input_name
+                rc.Cmd("HDEL", hash_name, input_name)
+                conn.WriteMessage(websocket.TextMessage, []byte(reply))
+            }
+        }
+    }
+}
+
 func DeleteNode(args []string, rc *redis.Client) string {
     nodeID      := args[0]
     r := rc.Cmd("DEL", "nodes:" + nodeID)
     errHndlr(r.Err)
     r = rc.Cmd("DEL", "connections:" + nodeID)
     errHndlr(r.Err)
+
     return "deletenode " + nodeID
 }
 func DeleteConnection(args []string, rc *redis.Client) {
@@ -241,6 +266,8 @@ func CmdHandler(cmd string, rc *redis.Client, conn *websocket.Conn) string {
         case "DeleteConn":
             DeleteConnection(args[1:], rc)
         case "DeleteNode":
+            // Delete connections to this node too, since they're pointing to a dead node now
+            DeleteConnectionsToNode(args[1], rc, conn)
             return DeleteNode(args[1:], rc)
     }
     return ""
