@@ -5,39 +5,41 @@ local lexer = require 'lexer'
 
 core.nodes = {}
 function core.execNode(node)
-  -- transform.visited means that the output table for that transform was calculated(cached) from an earlier transform
+  -- xform.visited means that the output table for that xform was calculated(cached) from an earlier xform
   -- that is, that this vertex has been visited in the DAG traversal before
 
-  local transform = node.xform
-  if transform.visited or transform.cached then
+  local xform = node.xform
+  if xform.visited or xform.cached then
     return node
   end
-  -- This is the data binding stage for the transform
-  local inputs = transform.inputs
+  -- This is the data binding stage for the xform
+  local inputs = xform.inputs
   local connections = node.connections
-  for input_name, input_def in pairs(inputs) do -- Iterate over each input
+  for input_idx, input_def in pairs(inputs) do -- Iterate over each input
+      local input_name = xform.input_map[input_idx]
       local connection = rawget(connections, input_name)
       if connection then
       -- The input is non-constant
           local result_node = core.execNode(core.nodes[connection.out_node_id])
-          transform.input_values[input_name] = result_node.xform.output_values[connection.port_name]
+          xform.input_values[input_name] = result_node.xform.output_values[connection.port_name]
       else
       -- The input is a constant, each node has its unique constants
-        transform.input_values[input_name] = node.constants[input_name]
+        xform.input_values[input_name] = node.constants[input_name]
       end
   end
 
-  -- All inputs are ready at this point, evaluate the transform which sets up any outputs it can too
-  lexer.xformFunc[transform.module][transform.submodule](transform.input_values, transform.output_values)
-  transform.visited = true
-  -- The outputs of this transform are ready, maybe they're there, maybe not
+  -- All inputs are ready at this point, evaluate the xform which sets up any outputs it can too
+  lexer.xformFunc[xform.module][xform.name](xform.input_values, xform.output_values)
+  xform.visited = true
+  -- The outputs of this xform are ready, maybe they're there, maybe not
   return node
 end
 
-function core.cloneTransform(node, transform)
-    local clone = helpers.deepCopy(transform)
-    for input_name,input in pairs(clone.inputs) do
-        node.constants[input_name] = input.default
+function core.cloneTransform(node, xform)
+    local clone = helpers.deepCopy(xform)
+    for input_idx,input in pairs(clone.inputs) do
+      local input_name = xform.input_map[input_idx]
+      node.constants[input_name] = input.default
     end
     return clone
 end

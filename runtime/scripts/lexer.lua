@@ -1,6 +1,3 @@
--- May the programming gods forgive me for the sins committed in this unholy lexer
--- I'll get to fixing this soon
---
 local lexer = {}
 local debugger = require 'debugger'
 
@@ -16,19 +13,25 @@ local function ParseTransform(def)
     local xform = {}
     xform.inputs = {}
     xform.outputs = {}
-    start_func = false
+    xform.input_values = {}
+    xform.output_values = {}
+    -- Map inputs/outputs idx to input/output name
+    xform.input_map = {}
+    xform.output_map = {}
     for line in def:gmatch("[^\r\n]+") do
         tokens = SplitWhitespace(line)
         if tokens[1] == 'in' then
-            local input = { vtype = tokens[2], vname = tokens[3] }
+            local input = { type = tokens[2], name = tokens[3] }
             if tokens[4] then
                 local s, e = string.find(line, '[%s+]=[%s+]')
                 input.default = string.sub(line, e+1)
             end
             table.insert(xform.inputs, input)
+            table.insert(xform.input_map, input.name)
         elseif tokens[1] == 'out' then
-            local output = { vtype = tokens[2], vname = tokens[3] }
+            local output = { type = tokens[2], name = tokens[3] }
             table.insert(xform.outputs, output)
+            table.insert(xform.output_map, output.name)
         elseif tokens[1] == 'module' then
             xform.module = tokens[2]
         elseif tokens[1] == 'viz' then
@@ -52,43 +55,6 @@ end
 
 lexer.xformFunc = {}
 lexer.xformTable = {}
-local function CreateTransformTable(xform)
-    local def = ""
-    local xformDef = ""
-    -- FFI
-    -- Transform module and name
-    def = def .. string.format("%s_xforms.%s_transform = {\n", xform.module, xform.name)
-    -- Transform name
-    def = def .. string.format("name = '%s',\n", xform.name)
-    -- Default display name of the transform, can be overwritten
-    if xform.dispname then
-        def = def .. string.format("dispname = '%s',\n", xform.dispname)
-    end
-    -- Visualization for this xform 
-    if xform.viz then
-        def = def .. string.format("viz = '%s',\n", xform.viz)
-    end
-    -- Inputs
-    def = def .. "input_values = {},\n output_values = {},\n"
-    def = def ..               "inputs = {\n"
-    for _, input in pairs(xform.inputs) do
-        def = def .. string.format("%s = {type = '%s', default=%s},\n", input.vname, input.vtype, tostring(input.default))
-    end
-    -- Outputs
-    def = def .. "},\noutputs = {\n"
-    for _, output in pairs(xform.outputs) do
-        def = def .. string.format("%s = {type = '%s'},\n", output.vname, output.vtype)
-    end
-    def = def .. "}}\nreturn "
-    def = def .. string.format("%s_xforms.%s_transform", xform.module, xform.name)
-    -- Eval Function
-    
-    xformDef = "local ffi = require 'ffi'\n"
-    xformDef = xformDef .. "local C = ffi.C\n"
-    xformDef = xformDef .. "return function(inp, out)\n" 
-    xformDef = xformDef .. xform.func_str .. "\nend"
-    return def, xformDef
-end
 
 local function ReadFile(path)
     local f = io.open(path, "r")
@@ -106,51 +72,40 @@ lexer.lex = function(module, submodule)
     if not def then
         return nil
     end
-    local parsed_xform  = ParseTransform(def)
-    local tableCode, funcCode = CreateTransformTable(parsed_xform)
-    debugger.print(tableCode, "transform_tables.txt")
-    debugger.print(funcCode, "functions.txt")
 
-    local tableFunc, err= loadstring(tableCode)
-
-    if not tableFunc then
-        debugger.print(err)
-    else
-        local transform = tableFunc()
-        transform.module = module
-        transform.submodule = submodule
-        if not lexer.xformTable[module] then
-            lexer.xformTable[module] = {}
-        end
-        lexer.xformTable[module][submodule] = transform
+    local xform  = ParseTransform(def)
+    if not lexer.xformTable[xform.module] then
+        lexer.xformTable[xform.module] = {}
     end
+    lexer.xformTable[xform.module][xform.name] = xform
 
-    local xformFunc, err = loadstring(funcCode)
+    func = "local ffi = require 'ffi'\n"
+    func = func .. "local C = ffi.C\n"
+    func = func .. "return function(inp, out)\n" 
+    func = func .. xform.func_str .. "\nend"
+
+    local xformFunc, err = loadstring(func)
     if not xformFunc then
         debugger.print(err)
-    else
-        if not lexer.xformFunc[module] then
-            lexer.xformFunc[module] = {}
-        end
-        lexer.xformFunc[module][submodule] = xformFunc()
-    end
-
-    if xformTable and xformFunc then
-        return xformTable
-    else
         return nil
+    else
+        if not lexer.xformFunc[xform.module] then
+            lexer.xformFunc[xform.module] = {}
+        end
+        lexer.xformFunc[xform.module][xform.name] = xformFunc()
+        return xform
     end
 end
 
-lexer.getTransform = function(module, submodule)
+lexer.xform = function(module, xform_name)
     if not lexer.xformFunc[module] then
         return nil
     end
-    if not lexer.xformFunc[module][submodule] then
-        local xformTable = lexer.lex(module,submodule)
+    if not lexer.xformFunc[module][xform_name] then
+        local xformTable = lexer.lex(module,xform_name)
         return xformTable
     else
-        return lexer.xformTable[module][submodule]
+        return lexer.xformTable[module][xform_name]
     end
 end
 

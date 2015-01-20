@@ -47,7 +47,7 @@ function ui.createNode(id, x, y, w, h, module, submodule, constant_inputs)
     node.connections = {}
     node.ports = {}
     node.xform_name = module .. "/" .. submodule
-    node.xform = core.cloneTransform(node, lexer.getTransform(module,submodule))
+    node.xform = core.cloneTransform(node, lexer.xform(module,submodule))
     if constant_inputs then
         for input_name, constant in pairs(constant_inputs) do
             node.constants[input_name] = constant
@@ -56,31 +56,34 @@ function ui.createNode(id, x, y, w, h, module, submodule, constant_inputs)
 
     -- Calculate input port locations
     local i = 1
-    local input_cnt = helpers.tableLength(node.xform.inputs)
-    for input_name, input in pairs(node.xform.inputs) do
-        local port = { name = input_name, type = input.type }
+    local input_cnt = #(node.xform.inputs)
+    for input_idx, input in ipairs(node.xform.inputs) do
+        local port = { name = input.name, type = input.type }
         port.x = (1/(input_cnt+1)) * i
         port.y = 0.85
         port.bndWidgetState = BNDWidgetState.Default
         port.is_input = true
         port.is_output = false
-        node.ports[input_name] = port
+        node.ports[input.name] = port
+         debugger.printTable(port)
         i = i+1
     end
 
     -- Calculate output port locations
     i = 1
-    local output_cnt = helpers.tableLength(node.xform.outputs)
-    for output_name, output in pairs(node.xform.outputs) do
-        local port = { name = output_name, type = output.type}
+    local output_cnt = #(node.xform.outputs)
+    for output_idx, output in ipairs(node.xform.outputs) do
+        local port = { name = output.name, type = output.type}
         port.x = (1/(output_cnt+1)) * i
         port.y = 0.2
         port.bndWidgetState = BNDWidgetState.Default
         port.is_input = false
         port.is_output = true
-        node.ports[output_name] = port
+        node.ports[output.name] = port
+         debugger.printTable(port)
         i = i+1
     end
+
 
     core.nodes[id] = node
     --table.insert(core.nodes, node)
@@ -508,8 +511,8 @@ function ui.drawNodeInfo(node, y)
     local header_size = 30
     local param_size = 22
     local align = 1
-    local input_cnt = helpers.tableLength(CurrentNode.xform.inputs)
-    local output_cnt = helpers.tableLength(CurrentNode.xform.outputs)
+    local input_cnt = #(CurrentNode.xform.inputs)
+    local output_cnt = #(CurrentNode.xform.outputs)
     C.ui_setTextProperties("header-bold", header_size, align)
     C.ui_setTextColor(255, 255, 255, 50)
     C.ui_drawText(x, y, "Inputs")
@@ -686,11 +689,11 @@ function ui.update()
       C.nw_send("Workspace")
    end
     local SelectNextInput = function (CurrentNode)
-        SelectedInput = ((SelectedInput) % helpers.tableLength(CurrentNode.xform.inputs)) + 1
+        SelectedInput = ((SelectedInput) % #(CurrentNode.xform.inputs)) + 1
     end
     local SelectPrevInput = function (CurrentNode)
         if SelectedInput == 1 then
-            SelectedInput = helpers.tableLength(CurrentNode.xform.inputs)
+            SelectedInput = #(CurrentNode.xform.inputs)
         else
             SelectedInput = SelectedInput - 1
         end
