@@ -136,6 +136,12 @@ func GetNodeOwner(node string, rc *redis.Client) string {
     return lockingUser
 }
 
+func DeleteConstant(args []string, rc *redis.Client) {
+    nodeID      := args[0]
+    input_name  := args[1]
+    r := rc.Cmd("HDEL", "constants:" + nodeID, input_name)
+    errHndlr(r.Err)
+}
 func UpdateConstant(cmd string, rc *redis.Client) {
     args        := strings.SplitN(cmd, " ", 4)
     nodeID      := args[1]
@@ -263,6 +269,8 @@ func CmdHandler(cmd string, rc *redis.Client, conn *websocket.Conn) string {
             UpdateNodeSize(args[1:], rc)
         case "UpdateConst":
             UpdateConstant(cmd, rc)
+        case "DeleteConst":
+            DeleteConstant(args[1:], rc)
         case "UpdateConn":
             UpdateConnection(args[1:], rc)
         case "DeleteConn":

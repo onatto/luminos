@@ -1,7 +1,7 @@
 module core
 
-in str str_left = "hello"
-in str str_right = "goodbye"
+in str str_left = Hello
+in str str_right =  World!
 
 out str str_concat
 

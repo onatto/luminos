@@ -219,6 +219,7 @@ local IPressInsert
 local IPressDelete
 local IPressHome
 local IPressTab
+local IPressLShift
 
 function ui.start()
     MouseX, MouseY = g_mouseState.mx, g_mouseState.my
@@ -745,8 +746,14 @@ function ui.update()
     end
 
     if IPressBackspace and not ReceivingTextInput then
-       StartUpdatingConstant()
-       ui.TextInput = ""
+       if not IHoldLShift then
+          StartUpdatingConstant()
+          ui.TextInput = ""
+       else
+         local InputName = CurrentNode.xform.input_map[SelectedInput]
+         CurrentNode.constants[InputName] = CurrentNode.xform.inputs[SelectedInput].default
+         C.nw_send("DeleteConst " .. tostring(CurrentNode.id) .. " " .. InputName)
+       end
     end
     if EnteringCommands then
         C.ui_drawText(0, 30, "!cmd: " .. ui.TextInput)
