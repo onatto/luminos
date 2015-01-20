@@ -685,6 +685,7 @@ function ui.update()
          C.nw_send("DeleteNode " .. tostring(node.id))
       end
    end
+
    local function ReloadWorkspaceMsg()
       C.nw_send("Workspace")
    end

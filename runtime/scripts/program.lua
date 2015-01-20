@@ -38,18 +38,20 @@ function portProgramShutdown()
 end
 
 function portDisplayRuntimeError(error_msg)
-    if not error_msg then
-        return
-    end
     local x, y = 2, 0
     C.ui_setTextProperties("header-bold", 25, 9)
     C.ui_setTextColor(255, 255, 255, 200)
     C.ui_drawText(x, y, g_statusMsg)
     C.ui_setTextProperties("header", 25, 9)
     y = y + 25
-    C.ui_drawText(x, y, error_msg)
-    y = y + 25
-    C.ui_drawText(x, y, debug.traceback())
+    if error_msg then
+        C.ui_drawText(x, y, error_msg)
+    end
+    local traceback = debug.traceback()
+    for line in traceback:gmatch("[^\r\n]+") do
+        y = y + 25
+        C.ui_drawText(x, y, line)
+    end
 end
 
 function portProgramStart()
