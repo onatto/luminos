@@ -631,7 +631,7 @@ local function CreateNodeRequest(args)
     local xform = args[1]
     cmp = helpers.split(xform, '/')
     local module, submodule = cmp[1], cmp[2]
-    local xformTable = lexer.getTransform(module, submodule)
+    local xformTable = lexer.xform(module, submodule)
     if not xformTable then
        debugger.print("Couldn't create node with xform: " .. xform)
        return
@@ -671,7 +671,7 @@ function ui.update()
    end
    local function StartUpdatingConstant()
       ui.UpdatingConstants = true
-      ui.TextInput = 
+      --ui.TextInput = ""
       StartTextInput()
    end
    local function StopUpdatingConstant()

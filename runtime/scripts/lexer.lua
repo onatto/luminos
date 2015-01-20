@@ -9,6 +9,21 @@ local function SplitWhitespace(str)
     return tokens
 end
 
+local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Other = 4}
+local GeneraliseType = function(Type)
+    if Type == 'f16' or Type == 'f32' or Type == 'f64' then
+        return Types.Float
+    elseif Type == 'i8' or Type == 'i16' or Type == 'i32' or Type == 'i64' or  Type == 'u8' or Type == 'u16' or Type == 'u32' or Type == 'u64' then
+        return Types.Float
+    elseif Type == 'str' then
+        return Types.String
+    elseif Type == 'vec2' or Type == 'vec3' or Type == 'vec4' then
+        return Types.VecN
+    else
+        return Types.Other
+    end
+end
+
 local function ParseTransform(def)
     local xform = {}
     xform.inputs = {}
@@ -24,7 +39,13 @@ local function ParseTransform(def)
             local input = { type = tokens[2], name = tokens[3] }
             if tokens[4] then
                 local s, e = string.find(line, '[%s+]=[%s+]')
-                input.default = string.sub(line, e+1)
+                local type = GeneraliseType(tokens[2])
+                local default = string.sub(line, e+1)
+                if type == Types.Float then
+                    input.default = tonumber(default)
+                elseif type == Types.String then
+                    input.default = tostring(default)
+                end
             end
             table.insert(xform.inputs, input)
             table.insert(xform.input_map, input.name)

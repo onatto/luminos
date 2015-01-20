@@ -1,8 +1,8 @@
 module util
 
-in str text = ""
 in f32 x = 0
 in f32 y = 0
+in str text = Hello
 
 dispname Print String
 xform Print
