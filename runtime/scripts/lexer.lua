@@ -24,6 +24,15 @@ local GeneraliseType = function(Type)
     end
 end
 
+lexer.convertFromString = function(Str, Type)
+    local type = GeneraliseType(Type)
+    if type == Types.Float then
+        return tonumber(Str)
+    elseif type == Types.String then
+        return tostring(Str)
+    end
+end
+
 local function ParseTransform(def)
     local xform = {}
     xform.inputs = {}
@@ -39,13 +48,8 @@ local function ParseTransform(def)
             local input = { type = tokens[2], name = tokens[3] }
             if tokens[4] then
                 local s, e = string.find(line, '[%s+]=[%s+]')
-                local type = GeneraliseType(tokens[2])
                 local default = string.sub(line, e+1)
-                if type == Types.Float then
-                    input.default = tonumber(default)
-                elseif type == Types.String then
-                    input.default = tostring(default)
-                end
+                input.default = lexer.convertFromString(default, tokens[2])
             end
             table.insert(xform.inputs, input)
             table.insert(xform.input_map, input.name)

@@ -35,7 +35,7 @@ ui.warpMouse = ffi.C.ui_warpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
-function ui.createNode(id, x, y, w, h, module, submodule, constant_inputs)
+function ui.createNode(id, x, y, w, h, module, submodule)
     local node = {}
     node.sx = x
     node.sy = y
@@ -48,11 +48,6 @@ function ui.createNode(id, x, y, w, h, module, submodule, constant_inputs)
     node.ports = {}
     node.xform_name = module .. "/" .. submodule
     node.xform = core.cloneTransform(node, lexer.xform(module,submodule))
-    if constant_inputs then
-        for input_name, constant in pairs(constant_inputs) do
-            node.constants[input_name] = constant
-        end
-    end
 
     -- Calculate input port locations
     local i = 1
@@ -532,7 +527,11 @@ function ui.drawNodeInfo(node, y)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-         C.ui_drawText(x, y, tostring(node.xform.input_values[name]))
+        if _i == SelectedInput and ui.UpdatingConstants then
+           C.ui_drawText(x, y, ui.TextInput)
+        else
+           C.ui_drawText(x, y, tostring(node.xform.input_values[name]))
+        end
         y = y + param_size
         _i = _i + 1
     end
@@ -671,7 +670,8 @@ function ui.update()
    end
    local function StartUpdatingConstant()
       ui.UpdatingConstants = true
-      --ui.TextInput = ""
+      local InputName = CurrentNode.xform.input_map[SelectedInput]
+      ui.TextInput = tostring(CurrentNode.constants[InputName])
       StartTextInput()
    end
    local function StopUpdatingConstant()
@@ -706,20 +706,24 @@ function ui.update()
        end
        StopTextInput()
     end
-    local function UpdateConstant()
-
-    end
-   --
-   -- 
+   local function UpdateConstant()
+      local InputName = CurrentNode.xform.input_map[SelectedInput]
+      local NewConst = lexer.convertFromString(ui.TextInput, CurrentNode.xform.inputs[SelectedInput].type)
+      -- Sanitize input at lexer.convertFromString
+      if NewConst then
+         CurrentNode.constants[InputName] = NewConst
+         C.nw_send("UpdateConst " .. tostring(CurrentNode.id) .. " " .. InputName .. " " .. tostring(NewConst))
+      end
+   end
    -- Logic starts here
-   if IPressEnter and not EnteringCommands then
+   if IPressEnter and not ReceivingTextInput then
       StartEnteringCommands()
    elseif IPressEnter and EnteringCommands then
       ProcessCmd()
       StopEnteringCommands()
    end
 
-   if IPressInsert and not UpdatingConstants then
+   if IPressInsert and not ReceivingTextInput then
       StartUpdatingConstant()
    end
 
@@ -738,6 +742,11 @@ function ui.update()
 
     if IPressBackspace and ReceivingTextInput then
        ui.TextInput = string.sub(ui.TextInput, 1, -2)
+    end
+
+    if IPressBackspace and not ReceivingTextInput then
+       StartUpdatingConstant()
+       ui.TextInput = ""
     end
     if EnteringCommands then
         C.ui_drawText(0, 30, "!cmd: " .. ui.TextInput)

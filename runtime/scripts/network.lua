@@ -4,6 +4,7 @@ local debugger = require 'debugger'
 local helpers = require 'helpers'
 local ui = require 'ui'
 local core = require 'core'
+local lexer = require 'lexer'
 
 ffi.cdef
 [[
@@ -60,6 +61,39 @@ local function DeleteNodeCmd(args)
   -- Iterate over all inputs of all nodes and delete connections to this node
 end
 
+local function ReadWord(str, start)
+  s, e = string.find(str, "%S+", start)
+  return string.sub(str,s,e), e+1
+end
+
+local function DefNodeConstant(node, input_name, const)
+  local type
+  for idx, input in ipairs(node.xform.inputs) do
+    if input.name == input_name then
+      type = input.type
+      break
+    end
+  end
+  node.constants[input_name] = lexer.convertFromString(const, type)
+end
+
+local function ConstCmd(cmd)
+  local head, command, id, input_name, len, const
+  head = 1
+  command, head = ReadWord(cmd, head) -- const
+  id, head = ReadWord(cmd, head) -- id
+  id = tonumber(id)
+
+  while head do
+    input_name, head = ReadWord(cmd, head)
+    len, head = ReadWord(cmd, head)
+    len = tostring(len)
+    const = string.sub(cmd, head+1, head+len)
+    DefNodeConstant(core.nodes[id], input_name, const)
+    head = head+len+1
+  end
+end
+
 local CmdMap = {
   createnode = CreateNodeCmd,
   connections = CreateConnCmd,
@@ -75,5 +109,8 @@ function portReceiveMessage(msg)
   table.remove(args, 1)
   if CmdMap[cmd] then
     CmdMap[cmd](args)
+  end
+  if cmd == "consts" then
+    ConstCmd(msg)
   end
 end
