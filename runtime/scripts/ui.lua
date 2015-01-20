@@ -520,7 +520,8 @@ function ui.drawNodeInfo(node, y)
 
     C.ui_setTextColor(255, 255, 255, 255)
     local _i = 1
-    for name, input in pairs(node.xform.input_values) do
+    for idx, input in pairs(node.xform.inputs) do
+        local name = node.xform.input_map[idx]
         connection = node.connections[name]
         if _i == SelectedInput then
             C.ui_setTextColor(255, 150, 100, 255)
@@ -531,11 +532,7 @@ function ui.drawNodeInfo(node, y)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-        if not connection then
-            C.ui_drawText(x, y, tostring(node.constants[name]))
-        else
-            C.ui_drawText(x, y, tostring(core.nodes[connection.out_node_id].xform.output_values[connection.port_name]))
-        end
+         C.ui_drawText(x, y, tostring(node.xform.input_values[name]))
         y = y + param_size
         _i = _i + 1
     end
@@ -546,12 +543,13 @@ function ui.drawNodeInfo(node, y)
     y = y + param_size
 
     C.ui_setTextColor(255, 255, 255, 255)
-    for name, output in pairs(node.xform.output_values) do
+    for idx, output in pairs(node.xform.outputs) do
+        local name = node.xform.output_map[idx]
         C.ui_setTextProperties("header-bold", param_size, align)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-        C.ui_drawText(x, y, tostring(output))
+        C.ui_drawText(x, y, tostring(node.xform.output_values[name]))
         y = y + param_size
     end
 end
