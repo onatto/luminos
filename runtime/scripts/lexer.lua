@@ -106,6 +106,7 @@ lexer.lex = function(module, submodule)
 
     func = "local ffi = require 'ffi'\n"
     func = func .. "local C = ffi.C\n"
+    func = func .. "local debugger = require 'debugger'\n"
     func = func .. "return function(inp, out)\n" 
     func = func .. xform.func_str .. "\nend"
 

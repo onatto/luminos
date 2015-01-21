@@ -21,12 +21,18 @@ local C = ffi.C
 core_xforms, math_xforms, util_xforms = {}, {}, {}
 CurrentNode = nil
 
+
 local function loadTransforms()
-    lexer.lex("core", "mouse")
-    lexer.lex("core", "concat")
-    lexer.lex("core", "time")
-    lexer.lex("math", "sin")
-    lexer.lex("util", "print")
+local modules = {"core", "math", "util"}
+local transforms = { {"mouse", "concat", "time"},
+                     {"sin", "cos", "add", "multiply", "divide", "mod"},
+                     {"print"}
+                    }
+    for modidx,module in ipairs(modules) do
+        for xformidx,transform in ipairs(transforms[modidx]) do
+            lexer.lex(module,transform)
+        end
+    end
 end
 
 loadTransforms()

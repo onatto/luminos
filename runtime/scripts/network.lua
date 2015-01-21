@@ -55,6 +55,11 @@ end
 
 local function DeleteNodeCmd(args)
   local id = tonumber(args[1])
+  local node = core.nodes[id]
+  local deleteFunc = lexer.xformFunc[node.xform.module][node.xform.name](node.xform.input_values,node.xform.output_values)
+  if deleteFunc then
+    deleteFunc()
+  end
   core.nodes[id] = nil
 
   -- It doesn't stop here, must delete all connections to this node as well!

@@ -47,7 +47,7 @@ int main(int /*_argc*/, char** /*_argv*/)
     bgfx::init();
     bgfx::reset(width, height);
 
-    NVGcontext* nvg = nvgCreate(512, 512, 1, 0);
+    NVGcontext* nvg = nvgCreate(2048, 2048, 1, 0);
     ui_setNVGContext(nvg);
 
 	bgfx::setViewSeq(0, true);
