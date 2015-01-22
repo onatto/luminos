@@ -21,27 +21,22 @@ function core.execNode(node)
       if connection then
       -- The input is non-constant
           local result_node = core.execNode(core.nodes[connection.out_node_id])
-          xform.input_values[input_name] = result_node.xform.output_values[connection.port_name]
+          node.input_values[input_name] = result_node.output_values[connection.port_name]
       else
       -- The input is a constant, each node has its unique constants
-        xform.input_values[input_name] = node.constants[input_name]
+        if node.constants[input_name] then
+          node.input_values[input_name] = node.constants[input_name]
+        else
+          node.input_values[input_name] = node.xform.inputs[input_idx].default
+        end
       end
   end
 
   -- All inputs are ready at this point, evaluate the xform which sets up any outputs it can too
-  lexer.xformFunc[xform.module][xform.name](xform.input_values, xform.output_values)
+  lexer.xformFunc[xform.module][xform.name](node.input_values, node.output_values)
   xform.visited = true
   -- The outputs of this xform are ready, maybe they're there, maybe not
   return node
-end
-
-function core.cloneTransform(node, xform)
-    local clone = helpers.deepCopy(xform)
-    for input_idx,input in pairs(clone.inputs) do
-      local input_name = xform.input_map[input_idx]
-      node.constants[input_name] = input.default
-    end
-    return clone
 end
 
 function core.programStart()

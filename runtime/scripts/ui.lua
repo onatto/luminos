@@ -35,20 +35,8 @@ ui.warpMouse = ffi.C.ui_warpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
-function ui.createNode(id, x, y, w, h, module, submodule)
-    local node = {}
-    node.sx = x
-    node.sy = y
-    node.w = w
-    node.h = h
-    node.id = id
-    node.bndWidgetState = BNDWidgetState.Default
-    node.constants = {}
-    node.connections = {}
+function ui.initPorts(node)
     node.ports = {}
-    node.xform_name = module .. "/" .. submodule
-    node.xform = core.cloneTransform(node, lexer.xform(module,submodule))
-
     -- Calculate input port locations
     local i = 1
     local input_cnt = #(node.xform.inputs)
@@ -60,7 +48,6 @@ function ui.createNode(id, x, y, w, h, module, submodule)
         port.is_input = true
         port.is_output = false
         node.ports[input.name] = port
-         debugger.printTable(port)
         i = i+1
     end
 
@@ -75,10 +62,26 @@ function ui.createNode(id, x, y, w, h, module, submodule)
         port.is_input = false
         port.is_output = true
         node.ports[output.name] = port
-         debugger.printTable(port)
         i = i+1
     end
+end
 
+function ui.createNode(id, x, y, w, h, module, submodule)
+    local node = {}
+    node.sx = x
+    node.sy = y
+    node.w = w
+    node.h = h
+    node.id = id
+    node.bndWidgetState = BNDWidgetState.Default
+    node.constants = {}
+    node.connections = {}
+    node.module = module
+    node.submodule = submodule
+    node.xform = lexer.xform(module,submodule)
+    node.input_values = {}
+    node.output_values = {}
+    ui.initPorts(node)
 
     core.nodes[id] = node
     --table.insert(core.nodes, node)
@@ -220,6 +223,8 @@ local IPressDelete
 local IPressHome
 local IPressTab
 local IPressLShift
+local IHoldPageUp
+local IHoldPageDown
 
 function ui.start()
     MouseX, MouseY = g_mouseState.mx, g_mouseState.my
@@ -239,6 +244,8 @@ function ui.start()
     IPressInsert = ui.getKeyboardState(SDL.Key.INSERT) == KeyEvent.Press
     IPressDelete = ui.getKeyboardState(SDL.Key.DELETE) == KeyEvent.Press
     IPressTab = ui.getKeyboardState(SDL.Key.TAB) == KeyEvent.Press
+    IHoldPageUp = ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Hold
+    IHoldPageDown = ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Hold
 end
 
 local InputNode, OutputNode, InputPort, OutputPort
@@ -531,7 +538,7 @@ function ui.drawNodeInfo(node, y)
         if _i == SelectedInput and ui.UpdatingConstants then
            C.ui_drawText(x, y, ui.TextInput)
         else
-           C.ui_drawText(x, y, tostring(node.xform.input_values[name]))
+           C.ui_drawText(x, y, tostring(node.input_values[name]))
         end
         y = y + param_size
         _i = _i + 1
@@ -549,7 +556,7 @@ function ui.drawNodeInfo(node, y)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-        C.ui_drawText(x, y, tostring(node.xform.output_values[name]))
+        C.ui_drawText(x, y, tostring(node.output_values[name]))
         y = y + param_size
     end
 end
@@ -589,9 +596,6 @@ function ui.dragWorkspace()
         end
     end
 
-    local IHoldPageUp = ui.getKeyboardState(SDL.Key.PAGEUP) == KeyEvent.Hold
-    local IHoldPageDown = ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Hold
-
     if IHoldPageUp then
         ZoomIn()
     elseif IHoldPageDown then
@@ -601,6 +605,9 @@ function ui.dragWorkspace()
     local CenterX = zooming.cx
     local CenterY = zooming.cy
     local ZoomAmount = zooming.zoom -- [1,2]
+
+    g_centerX = CenterX
+    g_centerY = CenterY
 
     UpdateNodePositions(CenterX, CenterY, ZoomAmount)
 

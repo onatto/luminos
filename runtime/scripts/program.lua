@@ -23,16 +23,23 @@ CurrentNode = nil
 
 
 local function loadTransforms()
-local modules = {"core", "math", "util"}
-local transforms = { {"mouse", "concat", "time"},
-                     {"sin", "cos", "add", "multiply", "divide", "mod"},
-                     {"print"}
-                    }
-    for modidx,module in ipairs(modules) do
-        for xformidx,transform in ipairs(transforms[modidx]) do
-            lexer.lex(module,transform)
+    local modules = {"core", "math", "util"}
+    local transforms = { {"mouse", "concat", "time"},
+                         {"sin", "cos", "add", "multiply", "divide", "mod"},
+                         {"print", "posws"}
+                        }
+        for modidx,module in ipairs(modules) do
+            for xformidx,transform in ipairs(transforms[modidx]) do
+                lexer.lex(module,transform)
+            end
         end
-    end
+
+        for idx, node in pairs(core.nodes) do
+            if node then
+                node.xform = lexer.xform(node.module, node.submodule)
+                ui.initPorts(node)
+            end
+        end
 end
 
 loadTransforms()

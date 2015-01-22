@@ -37,11 +37,10 @@ local function ParseTransform(def)
     local xform = {}
     xform.inputs = {}
     xform.outputs = {}
-    xform.input_values = {}
-    xform.output_values = {}
     -- Map inputs/outputs idx to input/output name
     xform.input_map = {}
     xform.output_map = {}
+    xform.cache = {}
     for line in def:gmatch("[^\r\n]+") do
         tokens = SplitWhitespace(line)
         if tokens[1] == 'in' then
@@ -107,6 +106,7 @@ lexer.lex = function(module, submodule)
     func = "local ffi = require 'ffi'\n"
     func = func .. "local C = ffi.C\n"
     func = func .. "local debugger = require 'debugger'\n"
+    func = func .. "local SDL = require 'sdlkeys'\n"
     func = func .. "return function(inp, out)\n" 
     func = func .. xform.func_str .. "\nend"
 
