@@ -26,7 +26,7 @@ local function loadTransforms()
     local modules = {"core", "math", "util"}
     local transforms = { {"mouse", "concat", "time"},
                          {"sin", "cos", "add", "multiply", "divide", "mod"},
-                         {"print", "posws"}
+                         {"print", "posws", "textprops"}
                         }
         for modidx,module in ipairs(modules) do
             for xformidx,transform in ipairs(transforms[modidx]) do

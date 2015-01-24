@@ -9,7 +9,7 @@ local function SplitWhitespace(str)
     return tokens
 end
 
-local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Other = 4}
+local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Table = 4}
 local GeneraliseType = function(Type)
     if Type == 'f16' or Type == 'f32' or Type == 'f64' then
         return Types.Float
@@ -20,9 +20,12 @@ local GeneraliseType = function(Type)
     elseif Type == 'vec2' or Type == 'vec3' or Type == 'vec4' then
         return Types.VecN
     else
-        return Types.Other
+        return Types.Table
     end
 end
+
+lexer.generaliseType = GeneraliseType
+lexer.Types = Types
 
 lexer.convertFromString = function(Str, Type)
     local type = GeneraliseType(Type)

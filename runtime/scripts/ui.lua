@@ -63,6 +63,11 @@ function ui.initPorts(node)
         port.is_output = true
         node.ports[output.name] = port
         i = i+1
+        
+        -- Initialize output tables to {}
+        if lexer.generaliseType(output.type) == lexer.Types.Table then
+           node.output_values[output.name] = {}
+        end
     end
 end
 
@@ -254,7 +259,7 @@ local PortStart, PortEnd, NodeStart, NodeEnd
 function ui.dragConnectors()
     local MouseOnPort = PortStart
 
-    local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Other = 4}
+    local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Table = 4}
     local GeneraliseType = function(Type)
         if Type == 'f16' or Type == 'f32' or Type == 'f64' then
             return Types.Float
@@ -265,7 +270,7 @@ function ui.dragConnectors()
         elseif Type == 'vec2' or Type == 'vec3' or Type == 'vec4' then
             return Types.VecN
         else
-            return Types.Other
+            return Types.Table
         end
     end
     local PortTypesMatch = function (TypeA, TypeB)
@@ -723,6 +728,9 @@ function ui.update()
          C.nw_send("UpdateConst " .. tostring(CurrentNode.id) .. " " .. InputName .. " " .. tostring(NewConst))
       end
    end
+   local function SelectedInputIsTable()
+      return lexer.generaliseType(CurrentNode.xform.inputs[SelectedInput].type) == lexer.Types.Table
+   end
    -- Logic starts here
    if IPressEnter and not ReceivingTextInput then
       StartEnteringCommands()
@@ -731,7 +739,7 @@ function ui.update()
       StopEnteringCommands()
    end
 
-   if IPressInsert and not ReceivingTextInput then
+   if IPressInsert and not ReceivingTextInput and not SelectedInputIsTable() then
       StartUpdatingConstant()
    end
 
@@ -752,7 +760,7 @@ function ui.update()
        ui.TextInput = string.sub(ui.TextInput, 1, -2)
     end
 
-    if IPressBackspace and not ReceivingTextInput then
+    if IPressBackspace and not ReceivingTextInput and not SelectedInputIsTable() then
        if not IHoldLShift then
           StartUpdatingConstant()
           ui.TextInput = ""
