@@ -73,9 +73,14 @@ void network_init(struct lua_State* l, const char* url, unsigned port)
 
 }
 
+static char wbuffer[4096];
 void nw_send(const char* msg)
 {
-    int n = write(sockfd, msg, strlen(msg));
+    int len = strlen(msg);
+    memcpy(wbuffer, msg, len);
+    wbuffer[len] = 0;
+    printf("Sending msg: %s\n", msg);
+    int n = write(sockfd, wbuffer, len+1);
     if (n < 0) {
         error("ERROR writing to socket");
     }
