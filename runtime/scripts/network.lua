@@ -68,11 +68,16 @@ end
 
 local function ReadWord(str, start)
   s, e = string.find(str, "%S+", start)
-  return string.sub(str,s,e), e+1
+  if s then
+    return string.sub(str,s,e), e+1
+  end
 end
 
 local function DefNodeConstant(node, input_name, const)
   local type
+  if not node then
+    return
+  end
   for idx, input in ipairs(node.xform.inputs) do
     if input.name == input_name then
       type = input.type
@@ -88,14 +93,19 @@ local function ConstCmd(cmd)
   command, head = ReadWord(cmd, head) -- const
   id, head = ReadWord(cmd, head) -- id
   id = tonumber(id)
+  debugger.print("Got const command " .. cmd .. " for id " .. tostring(id))
 
   while head do
+    debugger.print("Defining new const")
     input_name, head = ReadWord(cmd, head)
-    len, head = ReadWord(cmd, head)
-    len = tostring(len)
-    const = string.sub(cmd, head+1, head+len)
-    DefNodeConstant(core.nodes[id], input_name, const)
-    head = head+len+1
+    if head then
+      len, head = ReadWord(cmd, head)
+      len = tonumber(len)
+      const = string.sub(cmd, head+1, head+len)
+      debugger.print("Const for: " .. input_name .. " -- " .. const .. " with head " .. tostring(head))
+      DefNodeConstant(core.nodes[id], input_name, const)
+      head = head+len+1
+    end
   end
 end
 
@@ -108,14 +118,18 @@ local CmdMap = {
 
 function portReceiveMessage(msg)
   debugger.print("Received msg: >>> " .. msg)
-  args = SplitWhitespace(msg)
-  cmd = args[1]
-  debugger.print("cmd is: " .. cmd)
-  table.remove(args, 1)
-  if CmdMap[cmd] then
-    CmdMap[cmd](args)
-  end
-  if cmd == "consts" then
-    ConstCmd(msg)
+  cmds = helpers.split(msg, string.char(4))
+  for _, command_str in pairs(cmds) do
+    debugger.print("Received cmd: >>> " .. command_str)
+    args = SplitWhitespace(command_str)
+    cmd = args[1]
+    debugger.print("cmd is: " .. cmd)
+    table.remove(args, 1)
+    if CmdMap[cmd] then
+      CmdMap[cmd](args)
+    end
+    if cmd == "consts" then
+      ConstCmd(string.sub(command_str, 1, #command_str-1))
+    end
   end
 end

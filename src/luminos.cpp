@@ -14,7 +14,9 @@
 #include <bgfxplatform.h>
 
 #include "core_xforms.h"
+extern "C" {
 #include "network.h"
+}
 
 #include "nanovg/nanovg.h"
 #include "lua.hpp"
@@ -77,7 +79,7 @@ int main(int /*_argc*/, char** /*_argv*/)
     lua_getglobal(get_luaState(), "serverIP");
     const char* server_ip = lua_tolstring(get_luaState(), -1, NULL);
 
-    network_init(get_luaState(), server_ip);
+    network_init(get_luaState(), server_ip, 3333);
 
     SDL_Event event;
     while (!quit)

@@ -1,6 +1,8 @@
 #include "ui_xforms.h"
 #include "core_xforms.h"
+extern "C" {
 #include "network.h"
+}
 #include "lua.hpp"
 #include "lauxlib.h"
 
@@ -218,7 +220,9 @@ void ui_setTextColor(int r, int g, int b, int a)
 }
 void ui_drawText(float x, float y, const char* str)
 {
+    if (str) {
     nvgText(nvg, x, y, str, NULL);
+    }
 }
 
 void ui_textInputEvent(SDL_Event* event)

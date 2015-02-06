@@ -13,20 +13,15 @@ Workspaces are just clonable parent nodes with xform_name: ws_[id]
 package main
 
 import (
-    "net/http"
-    "github.com/gorilla/websocket"
-    "log"
+    "net"
     "github.com/fzzy/radix/redis"
     "strings"
     "fmt"
     "time"
     "strconv"
+    "os"
+    "bytes"
 )
-
-var upgrader = websocket.Upgrader {
-    ReadBufferSize:     1024,
-    WriteBufferSize:    1024,
-}
 
 func errHndlr(err error) {
     if err != nil {
@@ -45,7 +40,7 @@ func UpdateConnection(args []string, rc *redis.Client) {
     errHndlr(r.Err)
 }
 
-func DeleteConnectionsToNode(nodeID string, rc *redis.Client, conn *websocket.Conn) {
+func DeleteConnectionsToNode(nodeID string, rc *redis.Client, conn net.Conn) {
     // There are at most nextid nodes in the system
     // If this becomes costly, create a reverse mapping nodes->connections for faster search
     nextid, err := rc.Cmd("GET", "nextNodeID").Int64()
@@ -63,7 +58,7 @@ func DeleteConnectionsToNode(nodeID string, rc *redis.Client, conn *websocket.Co
             if input_node == nodeID {
                 reply := "deleteconn " + strconv.FormatInt(i, 10) + " " + input_name
                 rc.Cmd("HDEL", hash_name, input_name)
-                conn.WriteMessage(websocket.TextMessage, []byte(reply))
+                conn.Write([]byte(reply))
             }
         }
     }
@@ -212,7 +207,7 @@ func CreateNodeMsg(node map[string]string) (bool, string){
 }
 
 // Push deleted node ids to a new list for reuse later...
-func GetWorkspace(args []string, rc *redis.Client, conn *websocket.Conn) {
+func GetWorkspace(args []string, rc *redis.Client, conn net.Conn) {
     nextid, err := rc.Cmd("GET", "nextNodeID").Int64()
     errHndlr(err)
 
@@ -224,21 +219,27 @@ func GetWorkspace(args []string, rc *redis.Client, conn *websocket.Conn) {
         if succ {
             reply := "createnode " + strconv.FormatInt(i, 10) + " " + msg
             fmt.Println("Replied with>>> " + reply)
-            conn.WriteMessage(websocket.TextMessage, []byte(reply))
+            conn.Write(append([]byte(reply), 4))
         }
+    }
+    for i = 1; i <= nextid; i++ {
         connections, err := rc.Cmd("HGETALL", "connections:" + strconv.FormatInt(i, 10)).Hash()
-        msg = CreateConnMsg(connections)
+        errHndlr(err)
+        msg := CreateConnMsg(connections)
         if msg != "" {
             reply := "connections " + strconv.FormatInt(i, 10) + " " + msg
             fmt.Println("Replied with>>> " + reply)
-            conn.WriteMessage(websocket.TextMessage, []byte(reply))
+            conn.Write(append([]byte(reply), 4))
         }
+    }
+    for i = 1; i <= nextid; i++ {
         constants, err := rc.Cmd("HGETALL", "constants:" + strconv.FormatInt(i, 10)).Hash()
-        msg = CreateConstMsg(constants)
+        errHndlr(err)
+        msg := CreateConstMsg(constants)
         if msg != "" {
             reply := "consts " + strconv.FormatInt(i, 10) + " " + msg
             fmt.Println("Replied with>>> " + reply)
-            conn.WriteMessage(websocket.TextMessage, []byte(reply))
+            conn.Write(append([]byte(reply), 4))
         }
     }
 }
@@ -250,8 +251,9 @@ func UpdateNodeOperator(args []string, rc *redis.Client) {
     errHndlr(r.Err)
 }
 
-func CmdHandler(cmd string, rc *redis.Client, conn *websocket.Conn) string {
+func CmdHandler(cmd string, rc *redis.Client, conn net.Conn) string {
     args := strings.Split(cmd, " ")
+
     switch args[0] {
         case "Workspace":
             GetWorkspace(args[1:], rc, conn)
@@ -283,33 +285,52 @@ func CmdHandler(cmd string, rc *redis.Client, conn *websocket.Conn) string {
     return ""
 }
 
-func wsHandler(w http.ResponseWriter, req *http.Request) {
-    var rc *redis.Client
-    conn, err := upgrader.Upgrade(w, req, nil)
-    if err != nil {
-        log.Println("Error upgrading connection", err)
-        return
-    }
-    rc, err = redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
+func handleRequest(conn net.Conn) {
+    // Make a buffer to hold incoming data.
+    buf := make([]byte, 4096)
+
+    rc, err := redis.DialTimeout("tcp", "127.0.0.1:6379", time.Duration(10)*time.Second)
     errHndlr(err)
     defer rc.Close()
+    defer conn.Close()
 
     for {
-        _, p, err := conn.ReadMessage()
+        reqLen, err := conn.Read(buf)
         if err != nil {
-            errHndlr(err)
+            fmt.Println("Error reading:", err.Error())
             return
         }
-
-        fmt.Println(string(p))
-        reply := CmdHandler(string(p), rc, conn)
-        if reply != "" {
-            conn.WriteMessage(websocket.TextMessage, []byte(reply))
+        if reqLen > 0 {
+            n := bytes.Index(buf, []byte{0})
+            cmd := string(buf[:n])
+            fmt.Println(cmd)
+            reply := CmdHandler(cmd, rc, conn)
+            if reply != "" {
+                 // Write the message in the connection channel.
+                conn.Write(append([]byte(reply), 4))
+            }
         }
     }
 }
 
 func main() {
-    http.HandleFunc("/luminos", wsHandler)
-    http.ListenAndServe(":8126", nil)
+    // Listen for incoming connections.
+    l, err := net.Listen("tcp", "localhost:3333")
+        if err != nil {
+            fmt.Println("Error listening:", err.Error())
+                os.Exit(1)
+        }
+    // Close the listener when the application closes.
+    defer l.Close()
+        //fmt.Println("Listening on " + CONN_HOST + ":" + CONN_PORT)
+        for {
+            // Listen for an incoming connection.
+            conn, err := l.Accept()
+                if err != nil {
+                    fmt.Println("Error accepting: ", err.Error())
+                        os.Exit(1)
+                }
+            // Handle connections in a new goroutine.
+            go handleRequest(conn)
+        }
 }

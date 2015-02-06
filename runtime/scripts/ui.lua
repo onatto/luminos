@@ -188,13 +188,15 @@ end
 local function nodes_pt_intersect(px, py)
     local isect = nil
     for _k, node in pairs(core.nodes) do
-        insideAABB = pt_aabb_test(node.x, node.y, node.w, node.h, px, py)
-        if insideAABB and not isect then
-            node.bndWidgetState = BNDWidgetState.Hover
-            isect = node
-        else
-            node.bndWidgetState = BNDWidgetState.Default
-        end
+       if node then
+          insideAABB = pt_aabb_test(node.x, node.y, node.w, node.h, px, py)
+          if insideAABB and not isect then
+             node.bndWidgetState = BNDWidgetState.Hover
+             isect = node
+          else
+             node.bndWidgetState = BNDWidgetState.Default
+          end
+       end
     end
     return isect
 end
@@ -516,8 +518,8 @@ function ui.drawNodeInfo(node, y)
     end
     local w, h= 1600, 900
     local x, y = 2, 80
-    local header_size = 30
-    local param_size = 22
+    local header_size = 18
+    local param_size = 16
     local align = 1
     local input_cnt = #(CurrentNode.xform.inputs)
     local output_cnt = #(CurrentNode.xform.outputs)
@@ -527,11 +529,10 @@ function ui.drawNodeInfo(node, y)
     y = y + param_size
 
     C.ui_setTextColor(255, 255, 255, 255)
-    local _i = 1
     for idx, input in pairs(node.xform.inputs) do
         local name = node.xform.input_map[idx]
         connection = node.connections[name]
-        if _i == SelectedInput then
+        if idx == SelectedInput then
             C.ui_setTextColor(255, 150, 100, 255)
         else
             C.ui_setTextColor(255, 255, 255, 255)
@@ -540,13 +541,12 @@ function ui.drawNodeInfo(node, y)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-        if _i == SelectedInput and ui.UpdatingConstants then
+        if idx == SelectedInput and ui.UpdatingConstants then
            C.ui_drawText(x, y, ui.TextInput)
         else
-           C.ui_drawText(x, y, tostring(node.input_values[name]))
+           C.ui_drawText(x, y, lexer.convertToString(node.input_values[name], node.xform.inputs[idx].type))
         end
         y = y + param_size
-        _i = _i + 1
     end
 
     C.ui_setTextProperties("header-bold", header_size, align)
@@ -561,7 +561,7 @@ function ui.drawNodeInfo(node, y)
         C.ui_drawText(x, y, name)
         y = y + param_size
         C.ui_setTextProperties("header", param_size - 2, align)
-        C.ui_drawText(x, y, tostring(node.output_values[name]))
+        C.ui_drawText(x, y, lexer.convertToString(node.output_values[name], node.xform.outputs[idx].type))
         y = y + param_size
     end
 end
@@ -594,10 +594,17 @@ function ui.dragWorkspace()
 
     local UpdateNodePositions = function (CenterX, CenterY, ZoomAmount)
         for _k, node in pairs(core.nodes) do
-            node.x = (-CenterX + node.sx) * ZoomAmount
-            node.y = (-CenterY + node.sy) * ZoomAmount
-            node.w = 180 * ZoomAmount
-            node.h = 40 * ZoomAmount
+           if node then
+              C.ui_setTextProperties("header", 25, 9)
+              C.ui_drawText(100 + 25*node.id, 400, tostring(node.id));
+              if node.sy then
+                 C.ui_drawText(100 + 25*node.id, 420, "Y");
+              end
+              node.x = (-CenterX + node.sx) * ZoomAmount
+              node.y = (-CenterY + node.sy) * ZoomAmount
+              node.w = 180 * ZoomAmount
+              node.h = 40 * ZoomAmount
+           end
         end
     end
 

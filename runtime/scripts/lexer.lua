@@ -36,6 +36,18 @@ lexer.convertFromString = function(Str, Type)
     end
 end
 
+lexer.convertToString = function(Val, Type)
+    if not Val then
+        return nil
+    end
+    local type = GeneraliseType(Type)
+    if type == Types.Float then
+        return string.format("%.2f", Val)
+    else
+        return tostring(Val)
+    end
+end
+
 local function ParseTransform(def)
     local xform = {}
     xform.inputs = {}

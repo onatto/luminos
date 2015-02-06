@@ -1,6 +1,6 @@
 package.path = ";./scripts/?.lua"
 
-serverIP = "ws://localhost:8126/luminos"
+serverIP = "localhost"
 local ffi =   require 'ffi'
 local core =  require "core"
 local ui =    require 'ui'
@@ -75,10 +75,6 @@ function portProgramStart()
         CurrentNode = selected_nodes[1]
     end
 
-    if CurrentNode then
-        core.execNode(CurrentNode)
-    end
-
     if (ui.getKeyboardState(SDL.Key.F3) == KeyEvent.Press) then
         loadTransforms()
     end
@@ -93,4 +89,9 @@ function portProgramStart()
     ui.update()
 
     ui.drawNodeInfo(CurrentNode)
+
+    if CurrentNode then
+        core.execNode(CurrentNode)
+    end
+
 end
