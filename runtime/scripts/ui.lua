@@ -595,11 +595,6 @@ function ui.dragWorkspace()
     local UpdateNodePositions = function (CenterX, CenterY, ZoomAmount)
         for _k, node in pairs(core.nodes) do
            if node then
-              C.ui_setTextProperties("header", 25, 9)
-              C.ui_drawText(100 + 25*node.id, 400, tostring(node.id));
-              if node.sy then
-                 C.ui_drawText(100 + 25*node.id, 420, "Y");
-              end
               node.x = (-CenterX + node.sx) * ZoomAmount
               node.y = (-CenterY + node.sy) * ZoomAmount
               node.w = 180 * ZoomAmount
