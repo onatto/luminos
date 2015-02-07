@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 #include <fcntl.h>
+#include <errno.h>
 
 #include "lua.h"
 #include "lauxlib.h"
@@ -74,15 +75,26 @@ void network_init(struct lua_State* l, const char* url, unsigned port)
 }
 
 static char wbuffer[4096];
+static size_t wbuffer_len = 0;
 void nw_send(const char* msg)
 {
     int len = strlen(msg);
-    memcpy(wbuffer, msg, len);
-    wbuffer[len] = 0;
+    memcpy(wbuffer + wbuffer_len, msg, len);
+    wbuffer[wbuffer_len + len] = 4;
+    wbuffer_len += len+1;
     printf("Sending msg: %s\n", msg);
-    int n = write(sockfd, wbuffer, len+1);
+}
+
+// Flush writes at the end of the frame
+void network_flushw()
+{
+    int n = send(sockfd, wbuffer, wbuffer_len, 0);
     if (n < 0) {
-        error("ERROR writing to socket");
+        printf("Error writing to socket...");
+    }
+    else
+    {
+        wbuffer_len = 0;
     }
 }
 

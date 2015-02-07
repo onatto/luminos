@@ -130,6 +130,8 @@ int main(int /*_argc*/, char** /*_argv*/)
         bgfx::frame();
         ui_frameEnd();
         network_update();
+        // Flush writes at the end of the frame
+        network_flushw();
         SDL_WaitEventTimeout(NULL, 16);
     }
 

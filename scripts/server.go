@@ -304,10 +304,13 @@ func handleRequest(conn net.Conn) {
             n := bytes.Index(buf, []byte{0})
             cmd := string(buf[:n])
             fmt.Println(cmd)
-            reply := CmdHandler(cmd, rc, conn)
-            if reply != "" {
-                 // Write the message in the connection channel.
-                conn.Write(append([]byte(reply), 4))
+            cmds := strings.Split(cmd, string([]byte{4}))    
+            for _,command := range cmds {
+                reply := CmdHandler(command, rc, conn)
+                if reply != "" {
+                     // Write the message in the connection channel.
+                    conn.Write(append([]byte(reply), 4))
+                }
             }
         }
     }

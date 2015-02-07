@@ -360,7 +360,7 @@ function ui.dragConnectors()
             --if PortTypesMatch(InputPort.type, OutputPort.type) then
                 -- Connect the port that is an input of a node to the output port
                 InputNode.connections[InputPort.name] = {out_node_id = OutputNode.id, port_name = OutputPort.name}
-                C.nw_send("UpdateConn " .. InputNode.id .. " " .. InputPort.name .. " " .. tostring(OutputNode.id) .. " " .. OutputPort.name)
+                C.nw_send("UpdateConn " .. tostring(InputNode.id) .. " " .. InputPort.name .. " " .. tostring(OutputNode.id) .. " " .. OutputPort.name)
             --end
         end
     end
