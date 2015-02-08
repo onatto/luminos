@@ -2129,6 +2129,7 @@ NVGcolor bndTextColor(const BNDwidgetTheme *theme, BNDwidgetState state) {
 void bndIconLabelValue(NVGcontext *ctx, float x, float y, float w, float h,
     int iconid, NVGcolor color, int align, float fontsize, const char *label, 
     const char *value) {
+    (void)(h);
     float pleft = BND_PAD_LEFT;
     if (label) {
         if (iconid >= 0) {
@@ -2174,6 +2175,7 @@ void bndIconLabelValue(NVGcontext *ctx, float x, float y, float w, float h,
 void bndNodeIconLabel(NVGcontext *ctx, float x, float y, float w, float h,
     int iconid, NVGcolor color, NVGcolor shadowColor, 
     int align, float fontsize, const char *label) {
+    (void)(align);
     if (label && (bnd_font >= 0)) {
         nvgFontFaceId(ctx, bnd_font);
         nvgFontSize(ctx, fontsize);
@@ -2195,6 +2197,7 @@ void bndNodeIconLabel(NVGcontext *ctx, float x, float y, float w, float h,
 
 int bndIconLabelTextPosition(NVGcontext *ctx, float x, float y, float w, float h,
     int iconid, float fontsize, const char *label, int px, int py) {
+    (void)(h);
     float bounds[4];
     float pleft = BND_TEXT_RADIUS;
     if (!label) return -1;
@@ -2257,6 +2260,7 @@ static void bndCaretPosition(NVGcontext *ctx, float x, float y,
 void bndIconLabelCaret(NVGcontext *ctx, float x, float y, float w, float h,
     int iconid, NVGcolor color, float fontsize, const char *label, 
     NVGcolor caretcolor, int cbegin, int cend) {
+    (void)(h);
     float pleft = BND_TEXT_RADIUS;
     if (!label) return;
     if (iconid >= 0) {

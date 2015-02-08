@@ -1,5 +1,6 @@
+#include <stdio.h>
 #include "types.h"
-#include "gl_core_4_4.h"
+#include "gl44.h"
 
 #include <SDL2/SDL.h>
 
@@ -33,7 +34,7 @@ struct SDL_Window* wndInitSDL(uint32_t width, uint32_t height)
 
 void wndInitGL(struct SDL_Window* wnd)
 {
-    SDL_GLContext glcontext = SDL_GL_CreateContext(wnd);
+    SDL_GL_CreateContext(wnd);
     if(ogl_LoadFunctions() == ogl_LOAD_FAILED) {
         printf("Loading GL functions failed.\n");
     }

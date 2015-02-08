@@ -54,7 +54,7 @@ void networkInit(struct lua_State* l, const char* url, unsigned port)
     /* gethostbyname: get the server's DNS entry */
     server = gethostbyname(url);
     if (server == NULL) {
-        printf("ERROR, no such host as %s:%d\n", url);
+        printf("ERROR, no such host as %s:%d\n", url, port);
         exit(0);
     }
 
@@ -66,7 +66,7 @@ void networkInit(struct lua_State* l, const char* url, unsigned port)
     serveraddr.sin_port = htons(port);
 
     /* connect: create a connection with the server */
-    if (connect(sockfd, &serveraddr, sizeof(serveraddr)) < 0) {
+    if (connect(sockfd, (__CONST_SOCKADDR_ARG)&serveraddr, sizeof(serveraddr)) < 0) {
         error("ERROR connecting");
     }
 

@@ -15,7 +15,7 @@
 #include "nanovg/nanovg.h"
 
 #include "windowing.h"
-#include "gl_core_4_4.h"
+#include "gl44.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg/nanovg_gl.h"
 #include "nanovg/nanovg_gl_utils.h"
@@ -27,10 +27,13 @@
 #include "blendish.h"
 #include "ui.h"
 
+#include "types.h"
 
 static bool quit = false;
 int main(int _argc, char** _argv)
 {
+    UNUSED(_argc);
+    UNUSED(_argv);
     uint32_t width = 1920;
     uint32_t height = 1080;
 

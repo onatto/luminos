@@ -118,38 +118,6 @@ void uiFrameEnd()
     mouse_state_prev = mouse_state;
 }
 
-static char dump_str[512] = { 0 };
-int uiDebugPrintfStack(int base_y)
-{
-    static const int flt_size = 16;
-    char flt[flt_size];
-    lua_State* L = getLuaState();
-
-    int top = lua_gettop(L);
-    for (int i = 1; i <= top; i++)
-    {
-        memset(dump_str, 0, 256);
-        int t = lua_type(L, i);
-        strcat(dump_str, lua_typename(L, t));
-        strcat(dump_str, " : ");
-        switch (t)
-        {
-            case LUA_TSTRING:  /* strings */
-                strcat(dump_str, lua_tostring(L, i));
-                break;
-            case LUA_TBOOLEAN:  /* booleans */
-                strcat(dump_str, lua_toboolean(L, i) ? "true" : "false");
-                break;
-            case LUA_TNUMBER:  /* numbers */
-                strcat(dump_str, flt);
-                break;
-            default:  /* other values */
-                break;
-        }
-    }
-    return top;
-}
-
 int uiSetNVGContext(void* _nvg)
 {
     nvg = (NVGcontext*)_nvg;

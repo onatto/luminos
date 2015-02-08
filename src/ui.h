@@ -15,7 +15,6 @@ struct SDL_Window;
 int uiInit();
 int uiInitGlobals();
 int uiUploadMouseGlobals(void*);
-int uiDebugPrintfStack(int base_y);
 int uiSetNVGContext(void* ctx);
 
 // For the FFI, export these as C functions
