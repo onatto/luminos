@@ -59,12 +59,4 @@ function debugger.printTable(table, file, depth)
     end
 end
 
-function debugger.mouseData(base_y)
-   ui.dbgText(base_y, "mx: " .. g_mouseState.mx)
-   ui.dbgText(base_y+1, "my: " .. g_mouseState.my)
-   ui.dbgText(base_y+2, "Left: " .. KeyEventEnum[g_mouseState.left+1])
-   ui.dbgText(base_y+3, "Right: " .. KeyEventEnum[g_mouseState.right+1])
-   ui.dbgText(base_y+4, "Middle: " .. KeyEventEnum[g_mouseState.middle+1])
-end
-
 return debugger

@@ -3,15 +3,10 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#include <bx/timer.h>
-
 #include <SDL2/SDL.h>
 #define SDL_VIDEO_DRIVER_X11
 #undef SDL_VIDEO_DRIVER_WINDOWS
 #undef main
-
-#include <bgfx.h>
-#include <bgfxplatform.h>
 
 #include "core_xforms.h"
 extern "C" {
@@ -52,10 +47,10 @@ int main(int /*_argc*/, char** /*_argv*/)
     NVGcontext* nvg = nvgCreate(2048, 2048, 1, 0);
     ui_setNVGContext(nvg);
 
-	bgfx::setViewSeq(0, true);
+    bgfx::setViewSeq(0, true);
 
-	bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
-	bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png"));
+    bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
+    bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png"));
 
     // Enable debug text.
     bgfx::setDebug(debug);

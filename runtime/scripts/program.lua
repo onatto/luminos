@@ -1,6 +1,6 @@
 package.path = ";./scripts/?.lua"
 
-serverIP = "localhost"
+serverIP = "188.166.27.157"
 local ffi =   require 'ffi'
 local core =  require "core"
 local ui =    require 'ui'

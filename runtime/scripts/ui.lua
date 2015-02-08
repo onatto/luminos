@@ -14,7 +14,6 @@ ffi.cdef
     void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
     void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a);
     void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
-    void ui_dbgTextPrintf(int y, const char *str);
     uint8_t ui_getKeyboardState(uint16_t key);
     void ui_warpMouseInWindow(int x, int y);
     void ui_saveNVGState();
@@ -28,7 +27,6 @@ local C = ffi.C
 
 ui.drawNode = ffi.C.ui_drawNode
 ui.drawPort = ffi.C.ui_drawPort
-ui.dbgText = ffi.C.ui_dbgTextPrintf
 ui.drawWire = ffi.C.ui_drawWire
 ui.getKeyboardState = ffi.C.ui_getKeyboardState
 ui.warpMouse = ffi.C.ui_warpMouseInWindow

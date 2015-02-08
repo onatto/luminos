@@ -6,10 +6,6 @@ extern "C" {
 #include "lua.hpp"
 #include "lauxlib.h"
 
-#include "bgfx.h"
-
-#include "bx/string.h"
-
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype/stb_truetype.h"
 
@@ -101,12 +97,6 @@ bool ui_frameStart()
         return false;
     }
 
-    bgfx::dbgTextClear();
-
-    if (show_errorMsg) {
-        bgfx::dbgTextPrintf(0, 4, 0x4f, s_errorMsg);
-    }
-
     lua_getglobal(L, "g_mouseState");
     lua_pushnumber(L, mx);
     lua_setfield(L, -2, "mx");
@@ -136,7 +126,7 @@ int ui_debugPrintfStack(int base_y)
     char flt[flt_size];
     lua_State* L = get_luaState();
 
-    bgfx::dbgTextPrintf(0, base_y, 0x4f, "Stack info:");
+    //bgfx::dbgTextPrintf(0, base_y, 0x4f, "Stack info:");
     int top = lua_gettop(L);
     for (int i = 1; i <= top; i++)
     {
@@ -159,7 +149,7 @@ int ui_debugPrintfStack(int base_y)
             default:  /* other values */
                 break;
         }
-        bgfx::dbgTextPrintf(0, i + base_y, 0x4f, dump_str);
+        //bgfx::dbgTextPrintf(0, i + base_y, 0x4f, dump_str);
     }
     return top;
 }
@@ -168,11 +158,6 @@ int ui_setNVGContext(void* _nvg)
 {
     nvg = (NVGcontext*)_nvg;
     return 0;
-}
-
-void ui_dbgTextPrintf(int y, const char* str)
-{
-    bgfx::dbgTextPrintf(0, y, 0x4f, str);
 }
 
 void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a)
