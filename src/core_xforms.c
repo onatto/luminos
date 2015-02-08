@@ -1,10 +1,10 @@
-#include "lua.hpp"
+#include "lua.h"
 #include "lauxlib.h"
 
 #include "core_xforms.h"
 #include "string.h"
 
-lua_State* s_luaState;
+struct lua_State* s_luaState;
 char s_statusMsg[256] = {0};
 char s_errorMsg[2048] = {0};
 const char* s_errorPort = NULL;
@@ -14,6 +14,10 @@ int core_init()
     s_luaState = NULL;
     return 0;
 }
+
+struct lua_State* get_luaState(){ return s_luaState; }
+char* get_statusMsg() { return s_statusMsg; }
+char* get_errorMsg() { return s_errorMsg; }
 
 int core_start(const char* program_lua, char* error_msg)
 {

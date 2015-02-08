@@ -14,6 +14,8 @@
 #include "lua.h"
 #include "lauxlib.h"
 
+#include <strings.h>
+
 #define BUFFER_SIZE 4096*32
 
 static int sockfd = 0; // Socket file descriptor
@@ -59,7 +61,7 @@ void network_init(struct lua_State* l, const char* url, unsigned port)
     /* build the server's Internet address */
     bzero((char *) &serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
+    bcopy((char *)server->h_addr_list[0], 
             (char *)&serveraddr.sin_addr.s_addr, server->h_length);
     serveraddr.sin_port = htons(port);
 

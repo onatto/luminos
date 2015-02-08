@@ -1,13 +1,12 @@
+#include <string.h>
+
 #include "ui_xforms.h"
 #include "core_xforms.h"
-extern "C" {
-#include "network.h"
-}
-#include "lua.hpp"
-#include "lauxlib.h"
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "stb_truetype/stb_truetype.h"
+#include "network.h"
+
+#include "lua.h"
+#include "lauxlib.h"
 
 #include "nanovg/nanovg.h"
 #include "blendish.h"
@@ -32,12 +31,12 @@ struct UIData
     int fontHeaderBold;
 };
 
-static UIData data;
+static struct UIData data;
 
 int ui_init()
 {
-	data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
-	data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
+    data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
+    data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
     ui_initGlobals();
 
     return 0;
@@ -79,15 +78,15 @@ bool ui_frameStart()
     mmask = SDL_BUTTON(SDL_BUTTON_MIDDLE);
     mmiddle = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
 
-    if (ui_getKeyboardState(SDL_SCANCODE_LCTRL) == KeyEvent::Hold && ui_getKeyboardState(SDL_SCANCODE_Q) == KeyEvent::Press)
+    if (ui_getKeyboardState(SDL_SCANCODE_LCTRL) == KeyEvent_Hold && ui_getKeyboardState(SDL_SCANCODE_Q) == KeyEvent_Press)
         return true;
 
-    if (ui_getKeyboardState(SDL_SCANCODE_F4) == KeyEvent::Press)
+    if (ui_getKeyboardState(SDL_SCANCODE_F4) == KeyEvent_Press)
     {
         show_errorMsg = !show_errorMsg;
     }
 
-    if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent::Press)
+    if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent_Press)
     {
         core_shutdown();
         cmd_restart("scripts/program.lua");
@@ -143,7 +142,6 @@ int ui_debugPrintfStack(int base_y)
                 strcat(dump_str, lua_toboolean(L, i) ? "true" : "false");
                 break;
             case LUA_TNUMBER:  /* numbers */
-                bx::snprintf(flt, 16, "%g", lua_tonumber(L, i));
                 strcat(dump_str, flt);
                 break;
             default:  /* other values */

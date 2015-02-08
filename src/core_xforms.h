@@ -13,23 +13,20 @@ int core_updateGlobals(float time);
 #ifdef MSVC
 #define FFI_EXPORT __declspec(dllexport)
 #else
-#define FFI_EXPORT
+#define FFI_EXPORT __attribute__((visibility("default")))
 #endif
 
 // For the FFI, export these as C functions
-extern "C"
-{
-    FFI_EXPORT int cmd_restart(const char* filename);
-}
+FFI_EXPORT int cmd_restart(const char* filename);
 
 /* States by the core module */
 struct lua_State;
 
-extern lua_State* s_luaState;
+extern struct lua_State* s_luaState;
 extern char s_statusMsg[256];
 extern char s_errorMsg[2048];
 extern const char* s_errorPort;
 
-inline lua_State* get_luaState() { return s_luaState; }
-inline char* get_statusMsg() { return s_statusMsg; }
-inline char* get_errorMsg() { return s_errorMsg; }
+inline struct lua_State* get_luaState();
+inline char* get_statusMsg();
+inline char* get_errorMsg();

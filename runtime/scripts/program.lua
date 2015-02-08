@@ -51,6 +51,8 @@ function portProgramShutdown()
 end
 
 function portDisplayRuntimeError(error_msg)
+    debugger.print("Error!")
+    debugger.print(error_msg)
     local x, y = 2, 0
     C.ui_setTextProperties("header-bold", 25, 9)
     C.ui_setTextColor(255, 255, 255, 200)
@@ -68,6 +70,7 @@ function portDisplayRuntimeError(error_msg)
 end
 
 function portProgramStart()
+    debugger.print("Hello")
     core.programStart()
 
     local selected_nodes = ui.getSelectedNodes()

@@ -14,7 +14,7 @@ local config
 local builddir
 
 if not arg[1] then
-    arg[1] = 'R64'
+    arg[1] = 'D64'
 end
 
 if arg[1] == 'D32' then

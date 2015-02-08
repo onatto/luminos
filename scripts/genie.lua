@@ -45,11 +45,14 @@ includedirs {
     LUA_DIR .. "/src",
 }
 
+-- Required for FFI
+linkoptions { "-rdynamic" }
+
 files {
     LUMINOS_DIR .. "/src/**.cpp",
     LUMINOS_DIR .. "/src/**.c",
     LUMINOS_DIR .. "/src/**.h",
-    LUMINOS_DIR .. "/3rdparty/nanovg/*.cpp",
+    LUMINOS_DIR .. "/3rdparty/nanovg/*.c",
     LUMINOS_DIR .. "/3rdparty/imgui/*.cpp",
 }
 
@@ -104,6 +107,7 @@ configuration { "linux-*" }
         "X11",
         "GL",
         "pthread",
+	"m",
     }
 
 configuration {}
