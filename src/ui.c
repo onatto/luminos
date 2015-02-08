@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include "ui_xforms.h"
-#include "core_xforms.h"
+#include "ui.h"
+#include "core.h"
 
 #include "network.h"
 
@@ -44,7 +44,7 @@ int ui_init()
 
 int ui_initGlobals()
 {
-    lua_State* L = get_luaState();
+    lua_State* L = getLuaState();
     lua_createtable(L, 0, TABLE_ENTRIES);
     lua_pushnumber(L, 0.0);
     lua_setfield(L, -2, "mx");
@@ -67,7 +67,7 @@ bool ui_frameStart()
     int mx,my;
     uint32_t mleft, mright, mmiddle, mmask;
 
-    lua_State* L = get_luaState();
+    lua_State* L = getLuaState();
     keyboard_state = SDL_GetKeyboardState(NULL);
     mouse_state = SDL_GetMouseState(&mx, &my);
 
@@ -88,11 +88,11 @@ bool ui_frameStart()
 
     if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent_Press)
     {
-        core_shutdown();
-        cmd_restart("scripts/program.lua");
+        coreShutdown();
+        coreStart("scripts/program.lua", getErrorMsg());
         ui_initGlobals();
-        network_setlua(get_luaState());
-        core_execPort("portProgramInit");
+        networkSetlua(getLuaState());
+        coreExecPort("portProgramInit");
         return false;
     }
 
@@ -123,7 +123,7 @@ int ui_debugPrintfStack(int base_y)
 {
     static const int flt_size = 16;
     char flt[flt_size];
-    lua_State* L = get_luaState();
+    lua_State* L = getLuaState();
 
     //bgfx::dbgTextPrintf(0, base_y, 0x4f, "Stack info:");
     int top = lua_gettop(L);
@@ -158,9 +158,9 @@ int ui_setNVGContext(void* _nvg)
     return 0;
 }
 
-void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a)
+void ui_drawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
 {
-    bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widget_state, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
+    bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widgetState, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
 }
 
 uint8_t ui_getKeyboardState(uint16_t key)
@@ -168,9 +168,9 @@ uint8_t ui_getKeyboardState(uint16_t key)
     return (keyboard_state_prev[key] << 1) | (keyboard_state[key] << 0);
 }
 
-void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a)
+void ui_drawPort(float x, float y, int widgetState, char r, char g, char b, char a)
 {
-    bndNodePort(nvg, x, y, (BNDwidgetState)widget_state, nvgRGBA(r,g,b,a));
+    bndNodePort(nvg, x, y, (BNDwidgetState)widgetState, nvgRGBA(r,g,b,a));
 }
 
 void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state)
@@ -210,7 +210,7 @@ void ui_drawText(float x, float y, const char* str)
 
 void ui_textInputEvent(SDL_Event* event)
 {
-    lua_State* L = get_luaState();
+    lua_State* L = getLuaState();
     lua_getglobal(L, "portDisplayRuntimeError");
     lua_getglobal(L, "portTextEdit");
     if (!lua_isfunction(L, -1))

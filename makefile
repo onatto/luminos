@@ -26,3 +26,6 @@ run:
 	make -C .build/projects/gmake-linux
 	cp .build/linux32_gcc/bin/luminosDebug runtime
 	cd runtime ; ./luminosDebug
+
+clean:
+	rm -rf .build/

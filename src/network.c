@@ -27,7 +27,7 @@ void error(char *msg) {
     exit(0);
 }
 
-void receive_data(void* data, size_t size)
+void receiveData(void* data, size_t size)
 {
     lua_getglobal(L, "portReceiveMessageError");
     lua_getglobal(L, "portReceiveMessage");
@@ -38,7 +38,7 @@ void receive_data(void* data, size_t size)
     memset(buffer, 0, BUFFER_SIZE);
 }
 
-void network_init(struct lua_State* l, const char* url, unsigned port)
+void networkInit(struct lua_State* l, const char* url, unsigned port)
 {
     struct sockaddr_in serveraddr;
     struct hostent *server;
@@ -88,7 +88,7 @@ void nw_send(const char* msg)
 }
 
 // Flush writes at the end of the frame
-void network_flushw()
+void networkFlushw()
 {
     int n = send(sockfd, wbuffer, wbuffer_len, 0);
     if (n < 0) {
@@ -100,20 +100,20 @@ void network_flushw()
     }
 }
 
-void network_update()
+void networkUpdate()
 {
     int n = read(sockfd, buffer, BUFFER_SIZE);
     if (n > 0) {
-        receive_data(buffer, n);
+        receiveData(buffer, n);
     }
 }
 
-void network_close()
+void networkClose()
 {
     close(sockfd);
 }
 
-void network_setlua(struct lua_State* l)
+void networkSetlua(struct lua_State* l)
 {
     L = l;
 }

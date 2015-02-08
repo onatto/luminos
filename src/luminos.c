@@ -9,11 +9,12 @@
 #undef main
 
 #include "types.h"
-#include "core_xforms.h"
+#include "core.h"
 #include "network.h"
 
 #include "nanovg/nanovg.h"
 
+#include "windowing.h"
 #include "gl_core_4_4.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg/nanovg_gl.h"
@@ -24,55 +25,17 @@
 
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
-#include "ui_xforms.h"
+#include "ui.h"
 
 
 static bool quit = false;
-void wnd_resizeWindow(uint32 width, uint32 height)
-{
-    glViewport(0,0,width,height);
-}
-
-SDL_Window* wnd_initSDL(uint32 width, uint32 height) 
-{
-    SDL_Window* sdl_wnd;
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
-    sdl_wnd = SDL_CreateWindow("luminos"
-                    , 0
-                    , 0
-                    , width
-                    , height
-                    , SDL_WINDOW_SHOWN
-                    | SDL_WINDOW_RESIZABLE
-                    | SDL_WINDOW_OPENGL
-                    );
-
-    if (sdl_wnd == NULL) {
-	printf("Couldn't create SDL window. %s\n", SDL_GetError());
-	return NULL;
-    }
-
-    return sdl_wnd;
-}
-
-SDL_GLContext wnd_initGL(SDL_Window* wnd)
-{
-    SDL_GLContext glcontext = SDL_GL_CreateContext(wnd);
-    if(ogl_LoadFunctions() == ogl_LOAD_FAILED) {
-        printf("Loading GL functions failed.\n");
-        return NULL;
-    }
-    return glcontext;
-}
-
 int main(int _argc, char** _argv)
 {
     uint32_t width = 1920;
     uint32_t height = 1080;
 
-    SDL_Window* wnd = wnd_initSDL(width, height);
-    SDL_GLContext glcontext = wnd_initGL(wnd);
+    SDL_Window* wnd = wndInitSDL(width, height);
+    wndInitGL(wnd);
 
     NVGcontext* nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
     ui_setNVGContext(nvg);
@@ -83,25 +46,19 @@ int main(int _argc, char** _argv)
     glClearColor(0.1,0.1,0.1,1);
     glClearStencil(0);
     glEnable(GL_STENCIL_FUNC);
-/*    bgfx::setViewClear(0
-        , BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH
-        , 0x303030ff
-        , 1.0f
-        , 0
-        );*/
-	int64_t timeOffset = SDL_GetPerformanceCounter();
+    int64_t timeOffset = SDL_GetPerformanceCounter();
 
     // Setup Lua
-    core_init();
+    coreInit();
 
-    cmd_restart("scripts/program.lua");
+    coreStart("scripts/program.lua", getErrorMsg());
     ui_init();
-    core_execPort("portProgramInit");
+    coreExecPort("portProgramInit");
 
-    lua_getglobal(get_luaState(), "serverIP");
-    const char* server_ip = lua_tolstring(get_luaState(), -1, NULL);
+    lua_getglobal(getLuaState(), "serverIP");
+    const char* server_ip = lua_tolstring(getLuaState(), -1, NULL);
 
-    network_init(get_luaState(), server_ip, 3333);
+    networkInit(getLuaState(), server_ip, 3333);
 
     SDL_Event event;
     while (!quit)
@@ -115,7 +72,7 @@ int main(int _argc, char** _argv)
                     case SDL_WINDOWEVENT_RESIZED:
                     width = event.window.data1;
                     height = event.window.data2;
-                    wnd_resizeWindow(width, height);
+                    wndResizeWindow(width, height);
                     break;
                 }
             }
@@ -146,14 +103,14 @@ int main(int _argc, char** _argv)
         // if no other draw calls are submitted to view 0.
         //bgfx::submit(0);
 
-        core_updateGlobals(time);
+        coreUpdateGlobals(time);
 
         nvgBeginFrame(nvg, width, height, 1.f);
         
         if (!s_errorPort)
-            core_execPort("portProgramStart");
+            coreExecPort("portProgramStart");
         else
-            core_execPort(s_errorPort);
+            coreExecPort(s_errorPort);
         
 
         nvgEndFrame(nvg);
@@ -162,17 +119,17 @@ int main(int _argc, char** _argv)
         // process submitted rendering primitives.
         //bgfx::frame();
         ui_frameEnd();
-        network_update();
+        networkUpdate();
         // Flush writes at the end of the frame
-        network_flushw();
+        networkFlushw();
         SDL_WaitEventTimeout(NULL, 16);
 	SDL_GL_SwapWindow(wnd);
     }
 
     // Shutdown bgfx.
     //bgfx::shutdown();
-    core_shutdown();
-    network_close();
+    coreShutdown();
+    networkClose();
     nvgDeleteGL3(nvg);
 
     SDL_DestroyWindow(sdl_wnd);
