@@ -148,7 +148,7 @@ int main(int _argc, char** _argv)
 
         core_updateGlobals(time);
 
-        nvgBeginFrame(nvg, width, height, 1.2f);
+        nvgBeginFrame(nvg, width, height, 1.f);
         
         if (!s_errorPort)
             core_execPort("portProgramStart");

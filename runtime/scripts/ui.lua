@@ -516,8 +516,8 @@ function ui.drawNodeInfo(node, y)
     end
     local w, h= 1600, 900
     local x, y = 2, 80
-    local header_size = 18
-    local param_size = 16
+    local header_size = 22
+    local param_size = 20
     local align = 1
     local input_cnt = #(CurrentNode.xform.inputs)
     local output_cnt = #(CurrentNode.xform.outputs)
