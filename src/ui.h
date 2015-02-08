@@ -12,29 +12,29 @@ struct SDL_Window;
 #define FFI_EXPORT __attribute__((visibility("default")))
 #endif
 
-int ui_init();
-int ui_initGlobals();
-int ui_uploadMouseGlobals(void*);
-int ui_debugPrintfStack(int base_y);
-int ui_setNVGContext(void* ctx);
+int uiInit();
+int uiInitGlobals();
+int uiUploadMouseGlobals(void*);
+int uiDebugPrintfStack(int base_y);
+int uiSetNVGContext(void* ctx);
 
 // For the FFI, export these as C functions
-FFI_EXPORT void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
-FFI_EXPORT void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a);
-FFI_EXPORT void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
-FFI_EXPORT uint8_t ui_getKeyboardState(uint16_t key);
-FFI_EXPORT void ui_warpMouseInWindow(int x, int y);
-FFI_EXPORT void ui_saveNVGState();
-FFI_EXPORT void ui_restoreNVG();
-FFI_EXPORT void ui_setTextProperties(const char* font, float size, int align);
-FFI_EXPORT void ui_setTextColor(int r, int g, int b, int a);
-FFI_EXPORT void ui_drawText(float x, float y, const char* str);
+FFI_EXPORT void uiDrawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
+FFI_EXPORT void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
+FFI_EXPORT void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
+FFI_EXPORT uint8_t uiGetKeyboardState(uint16_t key);
+FFI_EXPORT void uiWarpMouseInWindow(int x, int y);
+FFI_EXPORT void uiSaveNVGState();
+FFI_EXPORT void uiRestoreNVG();
+FFI_EXPORT void uiSetTextProperties(const char* font, float size, int align);
+FFI_EXPORT void uiSetTextColor(int r, int g, int b, int a);
+FFI_EXPORT void uiDrawText(float x, float y, const char* str);
 
-bool ui_frameStart();
-void ui_frameEnd();
+bool uiFrameStart();
+void uiFrameEnd();
 
 union SDL_Event;
-void ui_textInputEvent(union SDL_Event* event);
+void uiTextInputEvent(union SDL_Event* event);
 
 enum KeyEvent
 {

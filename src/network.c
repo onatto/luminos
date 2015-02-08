@@ -88,7 +88,7 @@ void nw_send(const char* msg)
 }
 
 // Flush writes at the end of the frame
-void networkFlushw()
+void networkFlushWrites()
 {
     int n = send(sockfd, wbuffer, wbuffer_len, 0);
     if (n < 0) {
@@ -113,8 +113,7 @@ void networkClose()
     close(sockfd);
 }
 
-void networkSetlua(struct lua_State* l)
+void networkSetLua(struct lua_State* l)
 {
     L = l;
 }
-

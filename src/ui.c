@@ -33,16 +33,16 @@ struct UIData
 
 static struct UIData data;
 
-int ui_init()
+int uiInit()
 {
     data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
     data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
-    ui_initGlobals();
+    uiInitGlobals();
 
     return 0;
 }
 
-int ui_initGlobals()
+int uiInitGlobals()
 {
     lua_State* L = getLuaState();
     lua_createtable(L, 0, TABLE_ENTRIES);
@@ -62,7 +62,7 @@ int ui_initGlobals()
     return 0;
 }
 
-bool ui_frameStart()
+bool uiFrameStart()
 {
     int mx,my;
     uint32_t mleft, mright, mmiddle, mmask;
@@ -78,20 +78,20 @@ bool ui_frameStart()
     mmask = SDL_BUTTON(SDL_BUTTON_MIDDLE);
     mmiddle = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
 
-    if (ui_getKeyboardState(SDL_SCANCODE_LCTRL) == KeyEvent_Hold && ui_getKeyboardState(SDL_SCANCODE_Q) == KeyEvent_Press)
+    if (uiGetKeyboardState(SDL_SCANCODE_LCTRL) == KeyEvent_Hold && uiGetKeyboardState(SDL_SCANCODE_Q) == KeyEvent_Press)
         return true;
 
-    if (ui_getKeyboardState(SDL_SCANCODE_F4) == KeyEvent_Press)
+    if (uiGetKeyboardState(SDL_SCANCODE_F4) == KeyEvent_Press)
     {
         show_errorMsg = !show_errorMsg;
     }
 
-    if (ui_getKeyboardState(SDL_SCANCODE_F5) == KeyEvent_Press)
+    if (uiGetKeyboardState(SDL_SCANCODE_F5) == KeyEvent_Press)
     {
         coreShutdown();
         coreStart("scripts/program.lua", getErrorMsg());
-        ui_initGlobals();
-        networkSetlua(getLuaState());
+        uiInitGlobals();
+        networkSetLua(getLuaState());
         coreExecPort("portProgramInit");
         return false;
     }
@@ -112,20 +112,19 @@ bool ui_frameStart()
 
     return false;
 }
-void ui_frameEnd()
+void uiFrameEnd()
 {
     memcpy((void*)keyboard_state_prev, keyboard_state, 512);
     mouse_state_prev = mouse_state;
 }
 
 static char dump_str[512] = { 0 };
-int ui_debugPrintfStack(int base_y)
+int uiDebugPrintfStack(int base_y)
 {
     static const int flt_size = 16;
     char flt[flt_size];
     lua_State* L = getLuaState();
 
-    //bgfx::dbgTextPrintf(0, base_y, 0x4f, "Stack info:");
     int top = lua_gettop(L);
     for (int i = 1; i <= top; i++)
     {
@@ -147,68 +146,67 @@ int ui_debugPrintfStack(int base_y)
             default:  /* other values */
                 break;
         }
-        //bgfx::dbgTextPrintf(0, i + base_y, 0x4f, dump_str);
     }
     return top;
 }
 
-int ui_setNVGContext(void* _nvg)
+int uiSetNVGContext(void* _nvg)
 {
     nvg = (NVGcontext*)_nvg;
     return 0;
 }
 
-void ui_drawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
+void uiDrawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
 {
     bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widgetState, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
 }
 
-uint8_t ui_getKeyboardState(uint16_t key)
+uint8_t uiGetKeyboardState(uint16_t key)
 {
     return (keyboard_state_prev[key] << 1) | (keyboard_state[key] << 0);
 }
 
-void ui_drawPort(float x, float y, int widgetState, char r, char g, char b, char a)
+void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char a)
 {
     bndNodePort(nvg, x, y, (BNDwidgetState)widgetState, nvgRGBA(r,g,b,a));
 }
 
-void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state)
+void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state)
 {
     bndNodeWire(nvg, px, py, qx, qy, (BNDwidgetState)start_state, (BNDwidgetState)end_state);
 }
-void ui_warpMouseInWindow(int x, int y)
+void uiWarpMouseInWindow(int x, int y)
 {
     SDL_WarpMouseInWindow(sdl_wnd, x, y);
 }
 
-void ui_saveNVGState()
+void uiSaveNVGState()
 {
     nvgSave(nvg);
 }
 
-void ui_restoreNVGState()
+void uiRestoreNVGState()
 {
     nvgRestore(nvg);
 }
-void ui_setTextProperties(const char* font, float size, int align)
+void uiSetTextProperties(const char* font, float size, int align)
 {
 	nvgFontFace(nvg, font);
 	nvgFontSize(nvg, size);
 	nvgTextAlign(nvg, align);
 }
-void ui_setTextColor(int r, int g, int b, int a)
+void uiSetTextColor(int r, int g, int b, int a)
 {
 	nvgFillColor(nvg, nvgRGBA(r,g,b,a));
 }
-void ui_drawText(float x, float y, const char* str)
+void uiDrawText(float x, float y, const char* str)
 {
     if (str) {
     nvgText(nvg, x, y, str, NULL);
     }
 }
 
-void ui_textInputEvent(SDL_Event* event)
+void uiTextInputEvent(SDL_Event* event)
 {
     lua_State* L = getLuaState();
     lua_getglobal(L, "portDisplayRuntimeError");

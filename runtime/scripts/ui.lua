@@ -11,25 +11,25 @@ local lexer = require 'lexer'
 
 ffi.cdef
 [[
-    void ui_drawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
-    void ui_drawPort(float x, float y, int widget_state, char r, char g, char b, char a);
-    void ui_drawWire(float px, float py, float qx, float qy, int start_state, int end_state);
-    uint8_t ui_getKeyboardState(uint16_t key);
-    void ui_warpMouseInWindow(int x, int y);
-    void ui_saveNVGState();
-    void ui_restoreNVG();
-    void ui_setTextProperties(const char* font, float size, int align);
-    void ui_setTextColor(int r, int g, int b, int a);
-    void ui_drawText(float x, float y, const char* str);
+    void uiDrawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
+    void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
+    void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
+    uint8_t uiGetKeyboardState(uint16_t key);
+    void uiWarpMouseInWindow(int x, int y);
+    void uiSaveNVGState();
+    void uiRestoreNVG();
+    void uiSetTextProperties(const char* font, float size, int align);
+    void uiSetTextColor(int r, int g, int b, int a);
+    void uiDrawText(float x, float y, const char* str);
 ]]
 
 local C = ffi.C
 
-ui.drawNode = ffi.C.ui_drawNode
-ui.drawPort = ffi.C.ui_drawPort
-ui.drawWire = ffi.C.ui_drawWire
-ui.getKeyboardState = ffi.C.ui_getKeyboardState
-ui.warpMouse = ffi.C.ui_warpMouseInWindow
+ui.drawNode = ffi.C.uiDrawNode
+ui.drawPort = ffi.C.uiDrawPort
+ui.drawWire = ffi.C.uiDrawWire
+ui.getKeyboardState = ffi.C.uiGetKeyboardState
+ui.warpMouse = ffi.C.uiWarpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
@@ -497,14 +497,14 @@ end
 function ui.drawWorkspace()
     local x, y = 2, 0
 
-    C.ui_setTextProperties("header-bold", 25, 9)
-    C.ui_setTextColor(255, 255, 255, 200)
-    C.ui_drawText(x, y, g_statusMsg)
-    C.ui_setTextProperties("header", 25, 9)
+    C.uiSetTextProperties("header-bold", 25, 9)
+    C.uiSetTextColor(255, 255, 255, 200)
+    C.uiDrawText(x, y, g_statusMsg)
+    C.uiSetTextProperties("header", 25, 9)
     y = y + 28
 
     if g_errorMsg then
-        C.ui_drawText(x, y, g_errorMsg)
+        C.uiDrawText(x, y, g_errorMsg)
     end
 end
 
@@ -521,45 +521,45 @@ function ui.drawNodeInfo(node, y)
     local align = 1
     local input_cnt = #(CurrentNode.xform.inputs)
     local output_cnt = #(CurrentNode.xform.outputs)
-    C.ui_setTextProperties("header-bold", header_size, align)
-    C.ui_setTextColor(255, 255, 255, 50)
-    C.ui_drawText(x, y, "Inputs")
+    C.uiSetTextProperties("header-bold", header_size, align)
+    C.uiSetTextColor(255, 255, 255, 50)
+    C.uiDrawText(x, y, "Inputs")
     y = y + param_size
 
-    C.ui_setTextColor(255, 255, 255, 255)
+    C.uiSetTextColor(255, 255, 255, 255)
     for idx, input in pairs(node.xform.inputs) do
         local name = node.xform.input_map[idx]
         connection = node.connections[name]
         if idx == SelectedInput then
-            C.ui_setTextColor(255, 150, 100, 255)
+            C.uiSetTextColor(255, 150, 100, 255)
         else
-            C.ui_setTextColor(255, 255, 255, 255)
+            C.uiSetTextColor(255, 255, 255, 255)
         end
-        C.ui_setTextProperties("header-bold", param_size, align)
-        C.ui_drawText(x, y, name)
+        C.uiSetTextProperties("header-bold", param_size, align)
+        C.uiDrawText(x, y, name)
         y = y + param_size
-        C.ui_setTextProperties("header", param_size - 2, align)
+        C.uiSetTextProperties("header", param_size - 2, align)
         if idx == SelectedInput and ui.UpdatingConstants then
-           C.ui_drawText(x, y, ui.TextInput)
+           C.uiDrawText(x, y, ui.TextInput)
         else
-           C.ui_drawText(x, y, lexer.convertToString(node.input_values[name], node.xform.inputs[idx].type))
+           C.uiDrawText(x, y, lexer.convertToString(node.input_values[name], node.xform.inputs[idx].type))
         end
         y = y + param_size
     end
 
-    C.ui_setTextProperties("header-bold", header_size, align)
-    C.ui_setTextColor(255, 255, 255, 50)
-    C.ui_drawText(x, y, "Outputs")
+    C.uiSetTextProperties("header-bold", header_size, align)
+    C.uiSetTextColor(255, 255, 255, 50)
+    C.uiDrawText(x, y, "Outputs")
     y = y + param_size
 
-    C.ui_setTextColor(255, 255, 255, 255)
+    C.uiSetTextColor(255, 255, 255, 255)
     for idx, output in pairs(node.xform.outputs) do
         local name = node.xform.output_map[idx]
-        C.ui_setTextProperties("header-bold", param_size, align)
-        C.ui_drawText(x, y, name)
+        C.uiSetTextProperties("header-bold", param_size, align)
+        C.uiDrawText(x, y, name)
         y = y + param_size
-        C.ui_setTextProperties("header", param_size - 2, align)
-        C.ui_drawText(x, y, lexer.convertToString(node.output_values[name], node.xform.outputs[idx].type))
+        C.uiSetTextProperties("header", param_size - 2, align)
+        C.uiDrawText(x, y, lexer.convertToString(node.output_values[name], node.xform.outputs[idx].type))
         y = y + param_size
     end
 end
@@ -771,7 +771,7 @@ function ui.update()
        end
     end
     if EnteringCommands then
-        C.ui_drawText(0, 30, "!cmd: " .. ui.TextInput)
+        C.uiDrawText(0, 30, "!cmd: " .. ui.TextInput)
     end
 
     if IPressDelete and SelectedNodes then

@@ -38,7 +38,7 @@ int main(int _argc, char** _argv)
     wndInitGL(wnd);
 
     NVGcontext* nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-    ui_setNVGContext(nvg);
+    uiSetNVGContext(nvg);
 
     bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
     bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png", 0));
@@ -52,7 +52,7 @@ int main(int _argc, char** _argv)
     coreInit();
 
     coreStart("scripts/program.lua", getErrorMsg());
-    ui_init();
+    uiInit();
     coreExecPort("portProgramInit");
 
     lua_getglobal(getLuaState(), "serverIP");
@@ -77,12 +77,12 @@ int main(int _argc, char** _argv)
                 }
             }
             else if (event.type == SDL_TEXTINPUT) {
-               ui_textInputEvent(&event); 
+               uiTextInputEvent(&event); 
             }
 
         }
         if (!quit) {
-            quit = ui_frameStart();
+            quit = uiFrameStart();
         }
 
         int64 now = SDL_GetPerformanceCounter();
@@ -96,13 +96,6 @@ int main(int _argc, char** _argv)
         glEnable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
 
-        // Set view 0 default viewport.
-        //bgfx::setViewRect(0, 0, 0, width, height);
-
-        // This dummy draw call is here to make sure that view 0 is cleared
-        // if no other draw calls are submitted to view 0.
-        //bgfx::submit(0);
-
         coreUpdateGlobals(time);
 
         nvgBeginFrame(nvg, width, height, 1.f);
@@ -115,19 +108,13 @@ int main(int _argc, char** _argv)
 
         nvgEndFrame(nvg);
 
-        // Advance to next frame. Rendering thread will be kicked to
-        // process submitted rendering primitives.
-        //bgfx::frame();
-        ui_frameEnd();
+        uiFrameEnd();
         networkUpdate();
-        // Flush writes at the end of the frame
-        networkFlushw();
+        networkFlushWrites();
         SDL_WaitEventTimeout(NULL, 16);
 	SDL_GL_SwapWindow(wnd);
     }
 
-    // Shutdown bgfx.
-    //bgfx::shutdown();
     coreShutdown();
     networkClose();
     nvgDeleteGL3(nvg);

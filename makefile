@@ -27,5 +27,8 @@ run:
 	cp .build/linux32_gcc/bin/luminosDebug runtime
 	cd runtime ; ./luminosDebug
 
+deb:
+	cd runtime ; gdb ./luminosDebug
+
 clean:
 	rm -rf .build/
