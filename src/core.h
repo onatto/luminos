@@ -21,6 +21,6 @@ extern char s_statusMsg[256];
 extern char s_errorMsg[2048];
 extern const char* s_errorPort;
 
-inline struct lua_State* getLuaState();
-inline char* getStatusMsg();
-inline char* getErrorMsg();
+struct lua_State* getLuaState();
+char* getStatusMsg();
+char* getErrorMsg();

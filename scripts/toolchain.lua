@@ -471,7 +471,7 @@ function toolchain(_buildDir, _libDir)
 
 	configuration { "linux-*" }
 		buildoptions {
-			"-std=c99",
+			"-std=c11",
 			"-msse2",
 			"-Wunused-value",
 			"-Wundef",

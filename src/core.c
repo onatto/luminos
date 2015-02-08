@@ -9,14 +9,14 @@ char s_statusMsg[256] = {0};
 char s_errorMsg[2048] = {0};
 const char* s_errorPort = NULL;
 
+struct lua_State* getLuaState(){ return s_luaState; }
+char* getStatusMsg() { return s_statusMsg; }
+char* getErrorMsg() { return s_errorMsg; }
+
 void coreInit()
 {
     s_luaState = NULL;
 }
-
-struct lua_State* getLuaState(){ return s_luaState; }
-char* getStatusMsg() { return s_statusMsg; }
-char* getErrorMsg() { return s_errorMsg; }
 
 /* Start running the program @path = program_lua */
 void coreStart(const char* program_lua, char* error_msg)
