@@ -5,12 +5,16 @@ luminos will be a non-OO visual programming environment, putting emphasis on und
 
 Dependencies
 -------------
-bgfx
-bx
 SDL2
 luajit2.0
 
 Installation
 ------------
-Set $(SDL2_DIR) environment variable
-bgfx, bx and luajit are expected at the parent folder of luminos
+Set $(SDL2_DIR) and $(LUAJIT_DIR) environment variables, otherwise they are expected at the parent folder of luminos
+
+For Visual Studio project files:
+lua build.lua vs
+
+Building for Linux:
+lua build.lua clang
+lua build.lua d64

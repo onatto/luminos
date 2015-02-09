@@ -4,8 +4,8 @@
 -- License: http://www.opensource.org/licenses/BSD-2-Clause
 
 LUMINOS_DIR = path.getabsolute("./../") .. "/"
-LUA_DIR = LUMINOS_DIR .. "../luajit-2.0"
-SDL2_DIR = LUMINOS_DIR .. "../SDL"
+LUA_DIR = os.getenv("LUAJIT_DIR") or LUMINOS_DIR .. "../luajit-2.0"
+SDL2_DIR = os.getenv("SDL2_DIR") or LUMINOS_DIR .. "../SDL"
 
 solution "luminos"
 	configurations {
@@ -13,14 +13,12 @@ solution "luminos"
 		"Release",
 	}
 
-    language "C++"
+language "C"
 
-	platforms {
-		"x32",
-		"x64",
---		"Xbox360",
-		"Native", -- for targets where bitness is not specified
-	}
+    platforms {
+	    "x32",
+	    "x64",
+    }
 
 local LUMINOS_BUILD_DIR = (LUMINOS_DIR .. "/.build/")
 local LUMINOS_THIRD_PARTY_DIR = (LUMINOS_DIR .. "/3rdparty/")
@@ -49,11 +47,9 @@ includedirs {
 linkoptions { "-rdynamic" }
 
 files {
-    LUMINOS_DIR .. "/src/**.cpp",
     LUMINOS_DIR .. "/src/**.c",
     LUMINOS_DIR .. "/src/**.h",
     LUMINOS_DIR .. "/3rdparty/nanovg/*.c",
-    LUMINOS_DIR .. "/3rdparty/imgui/*.cpp",
 }
 
 links {
