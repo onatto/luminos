@@ -8,7 +8,10 @@
 #include "lua.h"
 #include "lauxlib.h"
 
+#include "gl44.h"
 #include "nanovg/nanovg.h"
+#define NANOVG_GL3_IMPLEMENTATION
+#include "nanovg/nanovg_gl.h"
 #include "blendish.h"
 
 #define TABLE_ENTRIES 6
@@ -19,11 +22,14 @@ static NVGcontext* nvg;
 static Uint8 keyboard_state_prev[512];
 static const Uint8 *keyboard_state;
 
-static uint32_t mouse_state;
-static uint32_t mouse_state_prev;
+static uint32 mouse_state;
+static uint32 mouse_state_prev;
 SDL_Window* sdl_wnd;
 
 static bool show_errorMsg = false;
+
+#define BLENDISH_IMPLEMENTATION
+#include "blendish.h"
 
 struct UIData
 {
@@ -35,10 +41,13 @@ static struct UIData data;
 
 int uiInit()
 {
+    nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
+    bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png", 0));
+
     data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
     data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
     uiInitGlobals();
-
     return 0;
 }
 
@@ -62,10 +71,13 @@ int uiInitGlobals()
     return 0;
 }
 
-bool uiFrameStart()
+int uiFrameStart(uint32 width, uint32 height)
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    nvgBeginFrame(nvg, width, height, 1.f);
+
     int mx,my;
-    uint32_t mleft, mright, mmiddle, mmask;
+    uint32 mleft, mright, mmiddle, mmask;
 
     lua_State* L = getLuaState();
     keyboard_state = SDL_GetKeyboardState(NULL);
@@ -79,7 +91,7 @@ bool uiFrameStart()
     mmiddle = ((mouse_state_prev & mmask ) ? 0x2 : 0x0) | ((mouse_state & mmask) ? 0x1 : 0x0);
 
     if (uiGetKeyboardState(SDL_SCANCODE_LCTRL) == KeyEvent_Hold && uiGetKeyboardState(SDL_SCANCODE_Q) == KeyEvent_Press)
-        return true;
+        return 1;
 
     if (uiGetKeyboardState(SDL_SCANCODE_F4) == KeyEvent_Press)
     {
@@ -110,18 +122,13 @@ bool uiFrameStart()
     lua_setfield(L, -2, "right");
     lua_pop(L, 1);
 
-    return false;
+    return 0;
 }
 void uiFrameEnd()
 {
     memcpy((void*)keyboard_state_prev, keyboard_state, 512);
     mouse_state_prev = mouse_state;
-}
-
-int uiSetNVGContext(void* _nvg)
-{
-    nvg = (NVGcontext*)_nvg;
-    return 0;
+    nvgEndFrame(nvg);
 }
 
 void uiDrawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
@@ -129,7 +136,7 @@ void uiDrawNode(float x, float y, float w, float h, int widgetState, const char*
     bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widgetState, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
 }
 
-uint8_t uiGetKeyboardState(uint16_t key)
+uint8 uiGetKeyboardState(uint16 key)
 {
     return (keyboard_state_prev[key] << 1) | (keyboard_state[key] << 0);
 }
@@ -184,4 +191,9 @@ void uiTextInputEvent(SDL_Event* event)
 
     lua_pushlstring(L, (const char*)event->text.text, strlen(event->text.text));
     lua_pcall(L, 1, 0, -2);
+}
+
+void uiShutdown()
+{
+    nvgDeleteGL3(nvg);
 }

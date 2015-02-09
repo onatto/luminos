@@ -15,6 +15,6 @@ struct lua_State;
 
 void networkInit(struct lua_State* l, const char* url, unsigned port);
 void networkUpdate();
-void networkClose();
+void networkShutdown();
 void networkSetLua(struct lua_State* l);
 void networkFlushWrites();

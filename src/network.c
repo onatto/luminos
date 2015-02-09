@@ -16,7 +16,7 @@
 
 #include <strings.h>
 
-#define BUFFER_SIZE 4096*32
+#define BUFFER_SIZE 1024*128
 
 static int sockfd = 0; // Socket file descriptor
 static lua_State* L; // Current Lua state
@@ -108,7 +108,7 @@ void networkUpdate()
     }
 }
 
-void networkClose()
+void networkShutdown()
 {
     close(sockfd);
 }
