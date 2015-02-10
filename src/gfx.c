@@ -207,6 +207,49 @@ void gfxReplaceComputeShader(uint32 pipeline, uint32 comp) {
   glUseProgramStages(pipeline, GL_COMPUTE_SHADER_BIT, comp);
 }
 
+uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint8 depthFormat, uint32& colorTex, uint32& depthTex)
+{
+  uint32 fbo = gctx.fbos[gctx.fboCount++];
+  uint32 color = gctx.textures[gctx.texCount++];
+  uint32 depth = gctx.textures[gctx.texCount++];
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  // Create color texture(buffer)
+  glBindTexture(GL_TEXTURE_2D, color);
+  glTexImage2D( GL_TEXTURE_2D, 
+                0,                                                      // level
+                s_textureFormats[colorFormat].sizedInternalFormat,      // internalFormat
+                width,                                                  // width
+                height,                                                 // height
+                0,                                                      // border must be 0
+                s_textureFormats[colorFormat].baseInternalFormat,       // format
+                GL_UNSIGNED_BYTE,                                       // type of pixel data
+                0);                                                     // data
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
+
+  // Create depth buffer
+  glBindTexture(GL_TEXTURE_2D, depth);
+  glTexImage2D( GL_TEXTURE_2D, 
+                0,                                                      // level
+                s_textureFormats[depthFormat].sizedInternalFormat,      // internalFormat
+                width,                                                  // width
+                height,                                                 // height
+                0,                                                      // border must be 0
+                s_textureFormats[depthFormat].baseInternalFormat,       // format
+                GL_UNSIGNED_BYTE,                                       // type of pixel data
+                0);                                                     // data
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, 
+      depthFormat >= TEX_D24S8 : GL_DEPTH_STENCIL_ATTACHMENT | GL_DEPTH_ATTACHMENT, 
+      GL_TEXTURE_2D, depth, 0);
+
+  *colorTex = color;
+  *depthTex = depth;
+  return fbo;
+}
+
 void gfxShutdown() {
   glDeleteBuffers(MAX_VBOS, (uint32*)&gctx.vbo);
   glDeleteBuffers(MAX_IBOS, (uint32*)&gctx.ibo);
