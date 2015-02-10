@@ -32,10 +32,12 @@ int main(int _argc, char** _argv)
     SDL_Window* wnd = wndInitSDL(width, height);
     wndInitGL(wnd);
 
-
     glClearColor(0.1,0.1,0.1,1);
     glClearStencil(0);
     glEnable(GL_STENCIL_FUNC);
+    
+    // Init gfx
+    gfxInit();
 
     // Init core module
     coreInit();
@@ -94,6 +96,7 @@ int main(int _argc, char** _argv)
     uiShutdown();
     networkShutdown();
     coreShutdown();
+    gfxShutdown();
 
     SDL_DestroyWindow(sdl_wnd);
     SDL_Quit();
