@@ -14,6 +14,7 @@ struct SDL_Window* wndInitSDL(uint32_t width, uint32_t height)
     SDL_Window* wnd;
     SDL_Init(SDL_INIT_VIDEO);
     SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     wnd = SDL_CreateWindow("luminos"
                     , 0
                     , 0

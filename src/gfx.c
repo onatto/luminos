@@ -33,7 +33,47 @@ typedef struct GfxContext {
   uint16 fboCnt;
 } GfxContext;
 
+struct ScreenSpaceQuad
+{
+  uint32 vbo;
+  uint32 ibo;
+  uint32 vsh;
+};
+
+static const float ssquad_vertices[] = {
+  -1.f,   1.f,  0.f, 0.f ,
+   1.f,   1.f,  1.f, 0.f ,
+  -1.f,  -1.f,  0.f, 1.f ,
+   1.f,  -1.f,  1.f, 1.f ,
+};
+static const uint32 ssquad_indices[] = {
+  1, 0, 2,
+  1, 2, 3
+};
+
+static const char* vertex_shader =  ""
+"#version 440 core\n"
+"layout(location = 0) in vec2 a_pos;\n"
+"layout(location = 1) in vec2 a_tex;\n"
+"out gl_PerVertex\n"
+"{\n"
+"vec4 gl_Position;\n"
+"};\n"
+"out vec2 v_tex;\n"
+"void main() {\n"
+"v_tex = a_tex;\n"
+"gl_Position = vec4(a_pos, 0.0, 1.0);\n"
+"}";
+
 static GfxContext gctx;
+static struct ScreenSpaceQuad ssquad;
+
+static void initScreenSpaceQuad()
+{
+    ssquad.vbo = gfxCreateVBO(ssquad_vertices, sizeof(ssquad_vertices));
+    ssquad.ibo = gfxCreateIBO(ssquad_indices, sizeof(ssquad_indices));
+    ssquad.vsh = gfxCreateShaderSource(vertex_shader, SHADER_VERT);
+}
 
 static void initVertexFormats()
 {
@@ -47,40 +87,36 @@ static void initVertexFormats()
                        0                  // Offset
                        );
   glVertexAttribBinding(0, 0);
-  glEnableVertexAttribArray(0);
   glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);            // NORMAL
   glVertexAttribBinding(1, 1);
-  glEnableVertexAttribArray(1);
 
   glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_T0]);
   glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);            // POS
   glVertexAttribBinding(0, 0);
-  glEnableVertexAttribArray(0);
   glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);            // NORMAL
   glVertexAttribBinding(1, 1);
-  glEnableVertexAttribArray(1);
   glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 0);            // TEXCOORD0
   glVertexAttribBinding(2, 2);
-  glEnableVertexAttribArray(2);
 
   glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_STRIDED]);
   glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);                            // POS
   glVertexAttribBinding(0, 0);
-  glEnableVertexAttribArray(0);
   glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));            // NORMAL
   glVertexAttribBinding(1, 0);
-  glEnableVertexAttribArray(1);
 
   glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_T0_STRIDED]);
   glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);                            // POS
   glVertexAttribBinding(0, 0);
-  glEnableVertexAttribArray(0);
   glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));            // NORMAL
-  glVertexAttribBinding(0, 0);
-  glEnableVertexAttribArray(1);
+  glVertexAttribBinding(1, 0);
   glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float));            // TEXCOORD0
   glVertexAttribBinding(2, 0);
-  glEnableVertexAttribArray(2);
+
+  glBindVertexArray(gctx.vtxformats[VERT_POS_T0_STRIDED]);
+  glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0 * sizeof(float));             // POS
+  glVertexAttribBinding(0, 0);
+  glVertexAttribFormat(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));            // NORMAL
+  glVertexAttribBinding(1, 0);
 
   glBindVertexArray(0);
 }
@@ -101,6 +137,7 @@ void gfxInit()
   glDebugMessageCallback(debugOutputCallback, 0);
 
   initVertexFormats();
+  initScreenSpaceQuad();
 }
 
 uint32 gfxCreateVBO(void* data, uint32 size)
@@ -121,6 +158,14 @@ void gfxUseVertexFormat(uint8 vertexFormat) {
   glBindVertexArray(gctx.vtxformats[vertexFormat]);
 }
 
+void gfxBindSSQuad(uint32 pipeline) {
+  gfxUseVertexFormat(VERT_POS_T0_STRIDED);
+  gfxBindVertexBuffer(ssquad.vbo, 0, 4 * sizeof(float));
+  gfxBindIndexBuffer(ssquad.ibo);
+  gfxReplaceVertexShader(pipeline, ssquad.vsh);
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+}
 void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride) {
   glBindVertexBuffer(bindingPoint, vbo, 0, stride);
 }
@@ -221,6 +266,25 @@ uint32 gfxCreateTexture2D(const char* filename, uint16* w, uint16* h, uint8 texF
 
 static const uint32 s_shaderTypes[SHADER_COUNT] = { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER, GL_GEOMETRY_SHADER };
 
+uint32 gfxCreateShaderSource(const char* src, uint8 shaderType) {
+  uint32 program = glCreateShaderProgramv(s_shaderTypes[shaderType], 1, &src);
+  GLint isLinked = 0;
+  glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+  if(isLinked == GL_FALSE)
+  {
+    GLint maxLength = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+    //The maxLength includes the NULL character
+    char* log_str = malloc(maxLength);
+    glGetProgramInfoLog(program, maxLength, &maxLength, log_str);
+    printf("Program link failed: %s\n", log_str);
+    free(log_str);
+  }
+
+  gctx.programs[gctx.shaderCnt++] = program;
+  return program;
+}
 uint32 gfxCreateShader(const char* filename, uint8 shaderType) {
   char* shaderSrc;
   size_t srcSize;
@@ -346,4 +410,13 @@ void gfxShutdown() {
 
 void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format) {
     glBindImageTexture(img_unit, image, 0, GL_FALSE, 0, access, s_textureFormats[format].sizedInternalFormat);
+}
+
+void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program) {
+  for (uint8 i=0; i<numTextures; i++)
+  {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, texs[i]);
+        glProgramUniform1i(program, 0, locations[i]);
+  }
 }

@@ -8,12 +8,14 @@ uint32 gfxCreateIBO(void* data, uint32 size);
 uint32 gfxCreateTexture2D(const char* filename, uint16* w, uint16* h, uint8 texFormat, uint8 numMips);
 uint32 gfxCreateImage2D(uint16 w, uint16 h, uint8 texFormat);
 uint32 gfxCreateShader(const char* filename, uint8 shaderType);
+uint32 gfxCreateShaderSource(const char* src, uint8 shaderType);
 uint32 gfxCreatePipeline();
 
 void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride);
 void gfxBindIndexBuffer(uint32 ibo);
 void gfxUseVertexFormat(uint8 vertexFormat);
 void gfxBindFramebuffer(uint32 fbo);
+void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
 void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format);
 
 void gfxBindPipeline(uint32 pipeline);
@@ -60,5 +62,6 @@ enum VertexFormats {
   VERT_POS_NOR_T0,
   VERT_POS_NOR_STRIDED,
   VERT_POS_NOR_T0_STRIDED,
+  VERT_POS_T0_STRIDED,
   VERTEX_FORMATS,
 };

@@ -27,18 +27,12 @@ struct PosNormalVertex {
     float normal[3];
 };
 
-static struct PosNormalVertex s_cubeVertices[] = {
-    {{-1.f,  1.f, -1.f}, { -.57735f,  .57735f,  -.57735f}},
-    {{-1.f,  1.f,  1.f}, { -.57735f,  .57735f,   .57735f}},
-    {{ 1.f,  1.f,  1.f}, {  .57735f,  .57735f,   .57735f}},
-    {{ 1.f,  1.f, -1.f}, {  .57735f,  .57735f,  -.57735f}},
-    {{-1.f, -1.f, -1.f}, { -.57735f, -.57735f,  -.57735f}},
-    {{-1.f, -1.f,  1.f}, { -.57735f, -.57735f,   .57735f}},
-    {{ 1.f, -1.f,  1.f}, {  .57735f, -.57735f,   .57735f}},
-    {{ 1.f, -1.f, -1.f}, {  .57735f, -.57735f,  -.57735f}},
+struct PosTexcoord0Vertex {
+    float pos[2];
+    float texcoord[2];
 };
 
-static uint32 s_cubeIndices[] = {
+static const uint32 s_cubeIndices[] = {
     0, 1, 2,
     0, 2, 3,
     0, 1, 5,
@@ -52,6 +46,19 @@ static uint32 s_cubeIndices[] = {
     4, 5, 6,
     4, 6, 7
 };
+
+static struct PosNormalVertex s_cubeVertices[] = {
+    {{-1.f,  1.f, -1.f}, { -.57735f,  .57735f,  -.57735f}},
+    {{-1.f,  1.f,  1.f}, { -.57735f,  .57735f,   .57735f}},
+    {{ 1.f,  1.f,  1.f}, {  .57735f,  .57735f,   .57735f}},
+    {{ 1.f,  1.f, -1.f}, {  .57735f,  .57735f,  -.57735f}},
+    {{-1.f, -1.f, -1.f}, { -.57735f, -.57735f,  -.57735f}},
+    {{-1.f, -1.f,  1.f}, { -.57735f, -.57735f,   .57735f}},
+    {{ 1.f, -1.f,  1.f}, {  .57735f, -.57735f,   .57735f}},
+    {{ 1.f, -1.f, -1.f}, {  .57735f, -.57735f,  -.57735f}},
+};
+
+
 
 int main(int _argc, char** _argv)
 {
@@ -69,12 +76,13 @@ int main(int _argc, char** _argv)
     
     // Init gfx
     gfxInit();
-    uint32 vbo = gfxCreateVBO(s_cubeVertices, sizeof(s_cubeVertices));
-    uint32 ibo = gfxCreateIBO(s_cubeIndices, sizeof(s_cubeIndices));
-    uint32 vsh = gfxCreateShader("shaders/blinn.vert", SHADER_VERT);
-    uint32 fsh = gfxCreateShader("shaders/blinn.frag", SHADER_FRAG);
+    //uint32 vbo = gfxCreateVBO(s_cubeVertices, sizeof(s_cubeVertices));
+    //uint32 ibo = gfxCreateIBO(s_cubeIndices, sizeof(s_cubeIndices));
+    uint32 fsh = gfxCreateShader("shaders/ssquad.frag", SHADER_FRAG);
     uint32 blinn = gfxCreatePipeline();
-    gfxReplaceShaders(blinn, vsh, fsh);
+    uint32 tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
+    uint32 location = glGetUniformLocation(fsh, "tex");
+    gfxReplaceFragShader(blinn, fsh);
 
     // Init core module
     coreInit();
@@ -116,12 +124,14 @@ int main(int _argc, char** _argv)
         float time = (float)( (now-timeOffset)/freq);
 
         coreUpdateGlobals(time);
-        gfxBindVertexBuffer(vbo, 0, 6 * sizeof(float));
-        gfxBindIndexBuffer(ibo);
-        gfxUseVertexFormat(VERT_POS_NOR_STRIDED);
-        gfxBindPipeline(blinn);
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
+        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        gfxBindSSQuad(blinn);
+        gfxBindPipeline(blinn);
+        gfxBindTextures2D(&tex, &location, 1, fsh);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        /*
         quit |= uiFrameStart(width, height);
         if (!s_errorPort)
             coreExecPort("portProgramStart");
@@ -129,6 +139,7 @@ int main(int _argc, char** _argv)
             coreExecPort(s_errorPort);
 
         uiFrameEnd();
+        */
         networkUpdate();
         networkFlushWrites();
         SDL_WaitEventTimeout(NULL, 16);
