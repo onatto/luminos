@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #define ASSERT(n) assert(n)
@@ -45,30 +46,40 @@ static void initVertexFormats()
                        GL_FALSE,          // Normalised?
                        0                  // Offset
                        );
+  glVertexAttribBinding(0, 0);
   glEnableVertexAttribArray(0);
   glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);            // NORMAL
+  glVertexAttribBinding(1, 1);
   glEnableVertexAttribArray(1);
 
   glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_T0]);
   glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);            // POS
+  glVertexAttribBinding(0, 0);
   glEnableVertexAttribArray(0);
   glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);            // NORMAL
+  glVertexAttribBinding(1, 1);
   glEnableVertexAttribArray(1);
   glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 0);            // TEXCOORD0
+  glVertexAttribBinding(2, 2);
   glEnableVertexAttribArray(2);
 
   glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_STRIDED]);
-  glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);            // POS
+  glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);                            // POS
+  glVertexAttribBinding(0, 0);
   glEnableVertexAttribArray(0);
-  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3);            // NORMAL
+  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));            // NORMAL
+  glVertexAttribBinding(1, 0);
   glEnableVertexAttribArray(1);
 
   glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_T0_STRIDED]);
-  glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);            // POS
+  glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);                            // POS
+  glVertexAttribBinding(0, 0);
   glEnableVertexAttribArray(0);
-  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3);            // NORMAL
+  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));            // NORMAL
+  glVertexAttribBinding(0, 0);
   glEnableVertexAttribArray(1);
-  glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 6);            // TEXCOORD0
+  glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float));            // TEXCOORD0
+  glVertexAttribBinding(2, 0);
   glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);

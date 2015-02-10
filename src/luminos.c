@@ -8,20 +8,51 @@
 #undef SDL_VIDEO_DRIVER_WINDOWS
 #undef main
 
-#include "types.h"
-#include "core.h"
-#include "network.h"
-#include "windowing.h"
 
 #include "gl44.h"
 #include "lua.h"
 #include "lauxlib.h"
 
+#include "types.h"
+#include "core.h"
+#include "network.h"
+#include "windowing.h"
+#include "gfx.h"
 #include "ui.h"
 
-#include "types.h"
-
 static bool quit = false;
+
+struct PosNormalVertex {
+    float pos[3];
+    float normal[3];
+};
+
+static struct PosNormalVertex s_cubeVertices[] = {
+    {{-1.f,  1.f, -1.f}, { -.57735f,  .57735f,  -.57735f}},
+    {{-1.f,  1.f,  1.f}, { -.57735f,  .57735f,   .57735f}},
+    {{ 1.f,  1.f,  1.f}, {  .57735f,  .57735f,   .57735f}},
+    {{ 1.f,  1.f, -1.f}, {  .57735f,  .57735f,  -.57735f}},
+    {{-1.f, -1.f, -1.f}, { -.57735f, -.57735f,  -.57735f}},
+    {{-1.f, -1.f,  1.f}, { -.57735f, -.57735f,   .57735f}},
+    {{ 1.f, -1.f,  1.f}, {  .57735f, -.57735f,   .57735f}},
+    {{ 1.f, -1.f, -1.f}, {  .57735f, -.57735f,  -.57735f}},
+};
+
+static uint32 s_cubeIndices[] = {
+    0, 1, 2,
+    0, 2, 3,
+    0, 1, 5,
+    0, 5, 4,
+    0, 3, 4,
+    3, 7, 4,
+    1, 2, 5,
+    5, 2, 6,
+    3, 2, 6,
+    3, 6, 7,
+    4, 5, 6,
+    4, 6, 7
+};
+
 int main(int _argc, char** _argv)
 {
     UNUSED(_argc);
@@ -38,6 +69,12 @@ int main(int _argc, char** _argv)
     
     // Init gfx
     gfxInit();
+    uint32 vbo = gfxCreateVBO(s_cubeVertices, sizeof(s_cubeVertices));
+    uint32 ibo = gfxCreateIBO(s_cubeIndices, sizeof(s_cubeIndices));
+    uint32 vsh = gfxCreateShader("shaders/blinn.vert", SHADER_VERT);
+    uint32 fsh = gfxCreateShader("shaders/blinn.frag", SHADER_FRAG);
+    uint32 blinn = gfxCreatePipeline();
+    gfxReplaceShaders(blinn, vsh, fsh);
 
     // Init core module
     coreInit();
@@ -79,6 +116,11 @@ int main(int _argc, char** _argv)
         float time = (float)( (now-timeOffset)/freq);
 
         coreUpdateGlobals(time);
+        gfxBindVertexBuffer(vbo, 0, 6 * sizeof(float));
+        gfxBindIndexBuffer(ibo);
+        gfxUseVertexFormat(VERT_POS_NOR_STRIDED);
+        gfxBindPipeline(blinn);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
         quit |= uiFrameStart(width, height);
         if (!s_errorPort)
