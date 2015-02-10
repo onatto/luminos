@@ -23,6 +23,7 @@ typedef struct GfxContext {
   uint32 programs[MAX_SHADERS];
   uint32 pipelines[MAX_PIPELINES];
   uint32 fbos[MAX_FBOS];
+  uint32 vtxformats[VERTEX_FORMATS];
   uint16 vboCnt;
   uint16 iboCnt;
   uint16 texCnt;
@@ -31,18 +32,64 @@ typedef struct GfxContext {
   uint16 fboCnt;
 } GfxContext;
 
-GfxContext gctx;
+static GfxContext gctx;
+
+static void initVertexFormats()
+{
+  // Specify vertex formats using ARB_vertex_attrib_binding
+  glBindVertexArray(gctx.vtxformats[VERT_POS_NOR]);  
+  // Position
+  glVertexAttribFormat(0,                 // Attribute index layout (location = 0) for pos
+                       3,                 // Size 3 * floats
+                       GL_FLOAT,          // Type of attrib
+                       GL_FALSE,          // Normalised?
+                       0                  // Offset
+                       );
+  glEnableVertexAttribArray(0);
+  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);            // NORMAL
+  glEnableVertexAttribArray(1);
+
+  glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_T0]);
+  glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);            // POS
+  glEnableVertexAttribArray(0);
+  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);            // NORMAL
+  glEnableVertexAttribArray(1);
+  glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 0);            // TEXCOORD0
+  glEnableVertexAttribArray(2);
+
+  glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_STRIDED]);
+  glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);            // POS
+  glEnableVertexAttribArray(0);
+  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3);            // NORMAL
+  glEnableVertexAttribArray(1);
+
+  glBindVertexArray(gctx.vtxformats[VERT_POS_NOR_T0_STRIDED]);
+  glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);            // POS
+  glEnableVertexAttribArray(0);
+  glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 3);            // NORMAL
+  glEnableVertexAttribArray(1);
+  glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 6);            // TEXCOORD0
+  glEnableVertexAttribArray(2);
+
+  glBindVertexArray(0);
+}
 
 void gfxInit()
 {
   memset(&gctx, 0, sizeof(GfxContext));
+  // Generate resource names
   glGenBuffers(MAX_VBOS, (uint32*)&gctx.vbo);
   glGenBuffers(MAX_IBOS, (uint32*)&gctx.ibo);
   glGenTextures(MAX_TEXTURES, (uint32*)&gctx.tex);
   glGenProgramPipelines(MAX_PIPELINES, (uint32*)&gctx.pipelines);
   glGenFramebuffers(MAX_FBOS, (uint32*)&gctx.fbos);
+  glGenVertexArrays(VERTEX_FORMATS, (uint32*)&gctx.vtxformats);
+
+  // Enable debug output
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(debugOutputCallback, 0);
+
+  initVertexFormats();
 }
 
 uint32 gfxCreateVBO(void* data, uint32 size)
@@ -59,12 +106,24 @@ uint32 gfxCreateIBO(void* data, uint32 size)
     return gctx.ibo[gctx.iboCnt++];
 }
 
+void gfxUseVertexFormat(uint8 vertexFormat) {
+  glBindVertexArray(gctx.vtxformats[vertexFormat]);
+}
+
+void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride) {
+  glBindVertexBuffer(bindingPoint, vbo, 0, stride);
+}
+
+void gfxBindIndexBuffer(uint32 ibo) {
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+}
+
 typedef struct TextureFormatsGL {
   uint32 sizedInternalFormat;
   uint32 baseInternalFormat;
 } TextureFormatsGL;
 
-static const uint8 s_requestedComponents[TEX_Count] = 
+static const uint8 s_requestedComponents[TEXTURE_FORMATS] = 
 {
    1,  //TEX_R8
    1,  //TEX_R16
@@ -87,7 +146,7 @@ static const uint8 s_requestedComponents[TEX_Count] =
    0,  //TEX_D24S8
 };
 
-static const TextureFormatsGL s_textureFormats[TEX_Count] =
+static const TextureFormatsGL s_textureFormats[TEXTURE_FORMATS] =
 {
   { GL_R8	,	GL_RED },
   { GL_R16	,	GL_RED },
@@ -246,14 +305,25 @@ uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint
       depthFormat >= TEX_D24S8 ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, 
       GL_TEXTURE_2D, depth, 0);
 
-  *colorTex = color;
-  *depthTex = depth;
+  if (colorTex)
+    *colorTex = color;
+  
+  if (depthTex)
+    *depthTex = depth;
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   return fbo;
+}
+
+void gfxBindFramebuffer(uint32 fbo) {
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
 void gfxShutdown() {
   glDeleteBuffers(MAX_VBOS, (uint32*)&gctx.vbo);
   glDeleteBuffers(MAX_IBOS, (uint32*)&gctx.ibo);
+  glDeleteVertexArrays(VERTEX_FORMATS, (uint32*)&gctx.vtxformats);
   glDeleteTextures(MAX_TEXTURES, (uint32*)&gctx.tex);
   glDeleteProgramPipelines(MAX_PIPELINES, (uint32*)&gctx.pipelines);
   glDeleteFramebuffers(MAX_FBOS, (uint32*)&gctx.fbos);
