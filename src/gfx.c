@@ -28,6 +28,7 @@ typedef struct GfxContext {
   uint16 texCnt;
   uint16 shaderCnt;
   uint16 pipelineCnt;
+  uint16 fboCnt;
 } GfxContext;
 
 GfxContext gctx;
@@ -207,11 +208,11 @@ void gfxReplaceComputeShader(uint32 pipeline, uint32 comp) {
   glUseProgramStages(pipeline, GL_COMPUTE_SHADER_BIT, comp);
 }
 
-uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint8 depthFormat, uint32& colorTex, uint32& depthTex)
+uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint8 depthFormat, uint32* colorTex, uint32* depthTex)
 {
-  uint32 fbo = gctx.fbos[gctx.fboCount++];
-  uint32 color = gctx.textures[gctx.texCount++];
-  uint32 depth = gctx.textures[gctx.texCount++];
+  uint32 fbo = gctx.fbos[gctx.fboCnt++];
+  uint32 color = gctx.tex[gctx.texCnt++];
+  uint32 depth = gctx.tex[gctx.texCnt++];
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
   // Create color texture(buffer)
   glBindTexture(GL_TEXTURE_2D, color);
@@ -242,7 +243,7 @@ uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glFramebufferTexture2D(GL_FRAMEBUFFER, 
-      depthFormat >= TEX_D24S8 : GL_DEPTH_STENCIL_ATTACHMENT | GL_DEPTH_ATTACHMENT, 
+      depthFormat >= TEX_D24S8 ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, 
       GL_TEXTURE_2D, depth, 0);
 
   *colorTex = color;
