@@ -41,7 +41,7 @@ static struct UIData data;
 
 int uiInit()
 {
-    nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
     bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
     bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png", 0));
 

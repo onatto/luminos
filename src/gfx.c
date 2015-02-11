@@ -70,8 +70,8 @@ static struct ScreenSpaceQuad ssquad;
 
 static void initScreenSpaceQuad()
 {
-    ssquad.vbo = gfxCreateVBO(ssquad_vertices, sizeof(ssquad_vertices));
-    ssquad.ibo = gfxCreateIBO(ssquad_indices, sizeof(ssquad_indices));
+    ssquad.vbo = gfxCreateVBO((void*)ssquad_vertices, sizeof(ssquad_vertices));
+    ssquad.ibo = gfxCreateIBO((void*)ssquad_indices, sizeof(ssquad_indices));
     ssquad.vsh = gfxCreateShaderSource(vertex_shader, SHADER_VERT);
 }
 
@@ -266,47 +266,31 @@ uint32 gfxCreateTexture2D(const char* filename, uint16* w, uint16* h, uint8 texF
 
 static const uint32 s_shaderTypes[SHADER_COUNT] = { GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER, GL_GEOMETRY_SHADER };
 
+static char s_shaderLog[4096];
 uint32 gfxCreateShaderSource(const char* src, uint8 shaderType) {
   uint32 program = glCreateShaderProgramv(s_shaderTypes[shaderType], 1, &src);
-  GLint isLinked = 0;
-  glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-  if(isLinked == GL_FALSE)
-  {
-    GLint maxLength = 0;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-
-    //The maxLength includes the NULL character
-    char* log_str = malloc(maxLength);
-    glGetProgramInfoLog(program, maxLength, &maxLength, log_str);
-    printf("Program link failed: %s\n", log_str);
-    free(log_str);
+  int32 length;
+  glGetProgramInfoLog(program, 4096, &length, s_shaderLog);
+  if (length) {
+    printf("Shader compilation failed:\n%s\n", s_shaderLog);
+    return 0;
   }
-
   gctx.programs[gctx.shaderCnt++] = program;
   return program;
 }
 uint32 gfxCreateShader(const char* filename, uint8 shaderType) {
   char* shaderSrc;
   size_t srcSize;
+  int32 length;
   int ret = load_file(filename, &shaderSrc, &srcSize);
-
   ASSERT(ret == FILELOAD_SUCCESS);
 
   uint32 program = glCreateShaderProgramv(s_shaderTypes[shaderType], 1, (const char**)&shaderSrc);
-  GLint isLinked = 0;
-  glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-  if(isLinked == GL_FALSE)
-  {
-    GLint maxLength = 0;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-
-    //The maxLength includes the NULL character
-    char* log_str = malloc(maxLength);
-    glGetProgramInfoLog(program, maxLength, &maxLength, log_str);
-    printf("Program link failed: %s\n", log_str);
-    free(log_str);
+  glGetProgramInfoLog(program, 4096, &length, s_shaderLog);
+  if (length) {
+    printf("Shader compilation failed for %s:\n%s\n", filename, s_shaderLog);
+    return 0;
   }
-
   gctx.programs[gctx.shaderCnt++] = program;
   return program;
 }
