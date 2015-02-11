@@ -17,6 +17,7 @@ void gfxUseVertexFormat(uint8 vertexFormat);
 void gfxBindFramebuffer(uint32 fbo);
 void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
 void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format);
+void gfxBindSSQuad(uint32 pipeline);
 
 void gfxBindPipeline(uint32 pipeline);
 void gfxReplaceGeomShader(uint32 pipeline, uint32 geom);

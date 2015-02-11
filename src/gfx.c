@@ -72,7 +72,8 @@ static void initScreenSpaceQuad()
 {
     ssquad.vbo = gfxCreateVBO((void*)ssquad_vertices, sizeof(ssquad_vertices));
     ssquad.ibo = gfxCreateIBO((void*)ssquad_indices, sizeof(ssquad_indices));
-    ssquad.vsh = gfxCreateShaderSource(vertex_shader, SHADER_VERT);
+    //ssquad.vsh = gfxCreateShaderSource(vertex_shader, SHADER_VERT);
+    //ssquad.vsh = gfxCreateShader("shaders/ssquad.vert", SHADER_VERT);
 }
 
 static void initVertexFormats()
@@ -162,7 +163,7 @@ void gfxBindSSQuad(uint32 pipeline) {
   gfxUseVertexFormat(VERT_POS_T0_STRIDED);
   gfxBindVertexBuffer(ssquad.vbo, 0, 4 * sizeof(float));
   gfxBindIndexBuffer(ssquad.ibo);
-  gfxReplaceVertexShader(pipeline, ssquad.vsh);
+  //gfxReplaceVertexShader(pipeline, ssquad.vsh);
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
 }
