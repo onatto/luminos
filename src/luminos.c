@@ -83,10 +83,10 @@ int main(int _argc, char** _argv)
     
     // Init gfx
     gfxInit();
-    //uint32 vbo = gfxCreateVBO(s_cubeVertices, sizeof(s_cubeVertices));
-    //uint32 ibo = gfxCreateIBO(s_cubeIndices, sizeof(s_cubeIndices));
-    uint32 vsh = gfxCreateShader("shaders/ssquad.vert", SHADER_VERT);
-    uint32 fsh = gfxCreateShader("shaders/ssquad.frag", SHADER_FRAG);
+    uint32 vbo = gfxCreateVBO(s_cubeVertices, sizeof(s_cubeVertices));
+    uint32 ibo = gfxCreateIBO(s_cubeIndices, sizeof(s_cubeIndices));
+    uint32 vsh = gfxCreateShader("shaders/blinn.vert", SHADER_VERT);
+    uint32 fsh = gfxCreateShader("shaders/blinn.frag", SHADER_FRAG);
     uint32 blinn = gfxCreatePipeline();
     //gfxReplaceFragShader(blinn, fsh);
     //
@@ -149,26 +149,29 @@ int main(int _argc, char** _argv)
         coreUpdateGlobals(time);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
         mat4x4_rotate_Y(transforms.world, identity, time);
         mat4x4_identity(transforms.view);
         mat4x4_translate(transforms.view, 0.f, 0.f, -8.f);
-        mat4x4_perspective(transforms.proj, 1.57f, height<width ? (float)(width/height) : (float)(height/width), 0.1f, 400.f);
+        //float aspect = height<width ? (float)((float)width/(float)height) : (float)((float)height/(float)width);
+        float aspect = (float)width/(float)height;
+        mat4x4_perspective(transforms.proj, 1.57f * (9.f/16.f) / aspect, aspect, 0.1f, 400.f);
         mat4x4_mul(temp, transforms.view, transforms.world);
         mat4x4_mul(transforms.proj_view_world, transforms.proj, temp);
 
-        //gfxUseVertexFormat(VERT_POS_NOR_STRIDED);
-        //gfxBindVertexBuffer(vbo, 0, sizeof(struct PosNormalVertex));
-        //gfxBindIndexBuffer(ibo);
-        gfxBindSSQuad(blinn);
+        gfxVertexFormat(VERT_POS_NOR_STRIDED);
+        gfxBindVertexBuffer(vbo, 0, sizeof(struct PosNormalVertex));
+        gfxBindIndexBuffer(ibo);
+        //gfxBindSSQuad(blinn);
         gfxBindPipeline(blinn);
         // Update the buffer
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(struct Transforms) , &transforms);
 
-        gfxBindTextures2D(&tex, &location, 1, fsh);
+        //gfxBindTextures2D(&tex, &location, 1, fsh);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        /*
+        
         quit |= uiFrameStart(width, height);
         if (!s_errorPort)
             coreExecPort("portProgramStart");
@@ -176,7 +179,7 @@ int main(int _argc, char** _argv)
             coreExecPort(s_errorPort);
 
         uiFrameEnd();
-        */
+       
         networkUpdate();
         networkFlushWrites();
         SDL_WaitEventTimeout(NULL, 16);

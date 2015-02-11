@@ -51,20 +51,6 @@ static const uint32 ssquad_indices[] = {
   1, 2, 3
 };
 
-static const char* vertex_shader =  ""
-"#version 440 core\n"
-"layout(location = 0) in vec2 a_pos;\n"
-"layout(location = 1) in vec2 a_tex;\n"
-"out gl_PerVertex\n"
-"{\n"
-"vec4 gl_Position;\n"
-"};\n"
-"out vec2 v_tex;\n"
-"void main() {\n"
-"v_tex = a_tex;\n"
-"gl_Position = vec4(a_pos, 0.0, 1.0);\n"
-"}";
-
 static GfxContext gctx;
 static struct ScreenSpaceQuad ssquad;
 
@@ -72,8 +58,6 @@ static void initScreenSpaceQuad()
 {
     ssquad.vbo = gfxCreateVBO((void*)ssquad_vertices, sizeof(ssquad_vertices));
     ssquad.ibo = gfxCreateIBO((void*)ssquad_indices, sizeof(ssquad_indices));
-    //ssquad.vsh = gfxCreateShaderSource(vertex_shader, SHADER_VERT);
-    //ssquad.vsh = gfxCreateShader("shaders/ssquad.vert", SHADER_VERT);
 }
 
 static void initVertexFormats()
@@ -155,17 +139,19 @@ uint32 gfxCreateIBO(void* data, uint32 size)
     return gctx.ibo[gctx.iboCnt++];
 }
 
-void gfxUseVertexFormat(uint8 vertexFormat) {
+void gfxVertexFormat(uint8 vertexFormat) {
   glBindVertexArray(gctx.vtxformats[vertexFormat]);
-}
-
-void gfxBindSSQuad(uint32 pipeline) {
-  gfxUseVertexFormat(VERT_POS_T0_STRIDED);
-  gfxBindVertexBuffer(ssquad.vbo, 0, 4 * sizeof(float));
-  gfxBindIndexBuffer(ssquad.ibo);
-  //gfxReplaceVertexShader(pipeline, ssquad.vsh);
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
+  if (vertexFormat > VERT_POS_T0_STRIDED) {
+    glEnableVertexAttribArray(2);
+  }
+}
+
+void gfxBindSSQuadBuffers() {
+  gfxVertexFormat(VERT_POS_T0_STRIDED);
+  gfxBindVertexBuffer(ssquad.vbo, 0, 4 * sizeof(float));
+  gfxBindIndexBuffer(ssquad.ibo);
 }
 void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride) {
   glBindVertexBuffer(bindingPoint, vbo, 0, stride);

@@ -13,11 +13,11 @@ uint32 gfxCreatePipeline();
 
 void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride);
 void gfxBindIndexBuffer(uint32 ibo);
-void gfxUseVertexFormat(uint8 vertexFormat);
+void gfxVertexFormat(uint8 vertexFormat);
 void gfxBindFramebuffer(uint32 fbo);
 void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
 void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format);
-void gfxBindSSQuad(uint32 pipeline);
+void gfxBindSSQuadBuffers();
 
 void gfxBindPipeline(uint32 pipeline);
 void gfxReplaceGeomShader(uint32 pipeline, uint32 geom);
@@ -60,9 +60,9 @@ enum ShaderTypes {
 
 enum VertexFormats {
   VERT_POS_NOR,
-  VERT_POS_NOR_T0,
   VERT_POS_NOR_STRIDED,
-  VERT_POS_NOR_T0_STRIDED,
   VERT_POS_T0_STRIDED,
+  VERT_POS_NOR_T0,
+  VERT_POS_NOR_T0_STRIDED,
   VERTEX_FORMATS,
 };
