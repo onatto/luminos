@@ -5,6 +5,7 @@ void gfxShutdown();
 
 uint32 gfxCreateVBO(void* data, uint32 size);
 uint32 gfxCreateIBO(void* data, uint32 size);
+uint32 gfxCreateUBO(uint32 size);
 uint32 gfxCreateTexture2D(const char* filename, uint16* w, uint16* h, uint8 texFormat, uint8 numMips);
 uint32 gfxCreateImage2D(uint16 w, uint16 h, uint8 texFormat);
 uint32 gfxCreateShader(const char* filename, uint8 shaderType);
@@ -18,6 +19,8 @@ void gfxBindFramebuffer(uint32 fbo);
 void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
 void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format);
 void gfxBindSSQuadBuffers();
+void gfxUniformBindingPoint(uint32 shader, const char* uniformBlockName, uint32 bindingPoint);
+void gfxBindUniformBuffer(uint32 ubo, void* data, size_t size, uint32 bindingPoint);
 
 void gfxBindPipeline(uint32 pipeline);
 void gfxReplaceGeomShader(uint32 pipeline, uint32 geom);
@@ -26,6 +29,8 @@ void gfxReplaceVertexShader(uint32 pipeline, uint32 vert);
 void gfxReplaceShaders(uint32 pipeline, uint32 vert, uint32 frag);
 void gfxReplaceShadersGeom(uint32 pipeline, uint32 vert, uint32 frag, uint32 geom);
 void gfxReplaceComputeShader(uint32 pipeline, uint32 comp);
+
+void gfxSetTransform(float* transform);
 
 enum TextureFormats {
   TEX_R8,

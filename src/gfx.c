@@ -13,6 +13,7 @@
 
 #define MAX_VBOS 16
 #define MAX_IBOS 16
+#define MAX_UBOS 16
 #define MAX_TEXTURES 16
 #define MAX_SHADERS 16
 #define MAX_PIPELINES 16
@@ -20,6 +21,7 @@
 typedef struct GfxContext {
   uint32 vbo[MAX_VBOS];
   uint32 ibo[MAX_IBOS];
+  uint32 ubo[MAX_UBOS];
   uint32 tex[MAX_TEXTURES];
   uint32 programs[MAX_SHADERS];
   uint32 pipelines[MAX_PIPELINES];
@@ -27,6 +29,7 @@ typedef struct GfxContext {
   uint32 vtxformats[VERTEX_FORMATS];
   uint16 vboCnt;
   uint16 iboCnt;
+  uint16 uboCnt;
   uint16 texCnt;
   uint16 shaderCnt;
   uint16 pipelineCnt;
@@ -112,6 +115,7 @@ void gfxInit()
   // Generate resource names
   glGenBuffers(MAX_VBOS, (uint32*)&gctx.vbo);
   glGenBuffers(MAX_IBOS, (uint32*)&gctx.ibo);
+  glGenBuffers(MAX_UBOS, (uint32*)&gctx.ubo);
   glGenTextures(MAX_TEXTURES, (uint32*)&gctx.tex);
   glGenProgramPipelines(MAX_PIPELINES, (uint32*)&gctx.pipelines);
   glGenFramebuffers(MAX_FBOS, (uint32*)&gctx.fbos);
@@ -127,16 +131,45 @@ void gfxInit()
 
 uint32 gfxCreateVBO(void* data, uint32 size)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, gctx.vbo[gctx.vboCnt]);
+    uint32 vbo = gctx.vbo[gctx.vboCnt++];
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-    return gctx.vbo[gctx.vboCnt++];
+    return vbo;
 }
 
 uint32 gfxCreateIBO(void* data, uint32 size)
 {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gctx.ibo[gctx.iboCnt]);
+    uint32 ibo = gctx.ibo[gctx.iboCnt++];
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-    return gctx.ibo[gctx.iboCnt++];
+    return ibo;
+}
+
+uint32 gfxCreateUBO(uint32 size)
+{
+  uint32 ubo = gctx.ubo[gctx.uboCnt++];
+  glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+  glBufferData(GL_UNIFORM_BUFFER, size, 0, GL_DYNAMIC_DRAW);
+  return ubo;
+}
+
+void gfxUniformBindingPoint(uint32 shader, const char* uniformBlockName, uint32 bindingPoint)
+{
+    uint32 uboIndex = glGetUniformBlockIndex(shader, uniformBlockName); 
+    glUniformBlockBinding(shader, uboIndex, bindingPoint);
+}
+
+void gfxBindUniformBuffer(uint32 ubo, void* data, size_t size, uint32 bindingPoint)
+{
+    glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
+}
+void gfxBindUniformBuffers(uint32* ubos, void** data, size_t* sizes, uint8 numBuffers)
+{
+  for (uint8 i=0; i < numBuffers; i++) {
+    glBindBufferBase(GL_UNIFORM_BUFFER, i, ubos[i]);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizes[i], data[i]);
+  }
 }
 
 void gfxVertexFormat(uint8 vertexFormat) {

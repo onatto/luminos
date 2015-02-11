@@ -88,8 +88,6 @@ int main(int _argc, char** _argv)
     uint32 vsh = gfxCreateShader("shaders/blinn.vert", SHADER_VERT);
     uint32 fsh = gfxCreateShader("shaders/blinn.frag", SHADER_FRAG);
     uint32 blinn = gfxCreatePipeline();
-    //gfxReplaceFragShader(blinn, fsh);
-    //
 
     uint32 tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
     uint32 location = glGetUniformLocation(fsh, "tex");
@@ -98,13 +96,8 @@ int main(int _argc, char** _argv)
     mat4x4 identity, temp;
     mat4x4_identity(identity);
 
-    uint32 ubo;
-    glGenBuffers(1, &ubo);
-    uint32 uboIndex = glGetUniformBlockIndex(vsh, "Transforms"); 
-    glUniformBlockBinding(vsh, uboIndex, 0);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(struct Transforms), 0, GL_DYNAMIC_DRAW);
-
+    uint32 ubo = gfxCreateUBO(sizeof(struct Transforms));
+    gfxUniformBindingPoint(vsh, "Transforms", 0);
     gfxReplaceShaders(blinn, vsh, fsh);
 
     // Init core module
@@ -153,8 +146,8 @@ int main(int _argc, char** _argv)
 
         mat4x4_rotate_Y(transforms.world, identity, time);
         mat4x4_identity(transforms.view);
-        mat4x4_translate(transforms.view, 0.f, 0.f, -8.f);
-        //float aspect = height<width ? (float)((float)width/(float)height) : (float)((float)height/(float)width);
+        mat4x4_translate(transforms.view, 0.f, 0.f, -16.f);
+
         float aspect = (float)width/(float)height;
         mat4x4_perspective(transforms.proj, 1.57f * (9.f/16.f) / aspect, aspect, 0.1f, 400.f);
         mat4x4_mul(temp, transforms.view, transforms.world);
@@ -163,13 +156,9 @@ int main(int _argc, char** _argv)
         gfxVertexFormat(VERT_POS_NOR_STRIDED);
         gfxBindVertexBuffer(vbo, 0, sizeof(struct PosNormalVertex));
         gfxBindIndexBuffer(ibo);
-        //gfxBindSSQuad(blinn);
         gfxBindPipeline(blinn);
-        // Update the buffer
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(struct Transforms) , &transforms);
+        gfxBindUniformBuffer(ubo, &transforms, sizeof(struct Transforms), 0);
 
-        //gfxBindTextures2D(&tex, &location, 1, fsh);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         
         quit |= uiFrameStart(width, height);
