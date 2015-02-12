@@ -40,6 +40,7 @@ location (LUMINOS_BUILD_DIR .. "/projects/" .. _ACTION)
 
 includedirs {
     LUMINOS_DIR .. "/3rdparty",
+    LUMINOS_DIR .. "/src",
     LUA_DIR .. "/src",
 }
 
@@ -50,6 +51,7 @@ files {
     LUMINOS_DIR .. "/src/**.c",
     LUMINOS_DIR .. "/src/**.h",
     LUMINOS_DIR .. "/3rdparty/nanovg/*.c",
+    LUMINOS_DIR .. "/3rdparty/linmath_lua.c",
 }
 
 links {

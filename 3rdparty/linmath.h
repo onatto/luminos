@@ -387,25 +387,25 @@ static inline void mat4x4_look_at(mat4x4 m, vec3 eye, vec3 center, vec3 up)
 	vec3_norm(f, f);	
 	
 	vec3 s;
-	vec3_mul_cross(s, f, up);
+	vec3_mul_cross(s, up, f);
 	vec3_norm(s, s);
 
 	vec3 t;
-	vec3_mul_cross(t, s, f);
+	vec3_mul_cross(t, f, s);
 
 	m[0][0] =  s[0];
 	m[0][1] =  t[0];
-	m[0][2] = -f[0];
+	m[0][2] =  f[0];
 	m[0][3] =   0.f;
 
 	m[1][0] =  s[1];
 	m[1][1] =  t[1];
-	m[1][2] = -f[1];
+	m[1][2] =  f[1];
 	m[1][3] =   0.f;
 
 	m[2][0] =  s[2];
 	m[2][1] =  t[2];
-	m[2][2] = -f[2];
+	m[2][2] =  f[2];
 	m[2][3] =   0.f;
 
 	m[3][0] =  0.f;
@@ -413,7 +413,7 @@ static inline void mat4x4_look_at(mat4x4 m, vec3 eye, vec3 center, vec3 up)
 	m[3][2] =  0.f;
 	m[3][3] =  1.f;
 
-	mat4x4_translate_in_place(m, -eye[0], -eye[1], -eye[2]);
+	mat4x4_translate_in_place(m, eye[0], eye[1], eye[2]);
 }
 
 typedef float quat[4];
