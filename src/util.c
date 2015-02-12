@@ -31,8 +31,8 @@ int load_file(const char *filename, char** data, size_t* size_out)
     return FILELOAD_SUCCESS;
 }
 
-void* debugOutputCallback(unsigned int src, unsigned int type, unsigned int id, 
-        unsigned int severity, size_t len, const char* msg, const void* userParam )
+void debugOutputCallback(unsigned int src, unsigned int type, unsigned int id, 
+        unsigned int severity, int len, const char* msg, const void* userParam )
 {
   UNUSED(id); UNUSED(userParam);
   char* srcStr, *typeStr, *sevStr;
@@ -105,5 +105,6 @@ void* debugOutputCallback(unsigned int src, unsigned int type, unsigned int id,
 	  Type: %s\n \
 	  Severity: %s\n \
 	  %.*s\n", srcStr, typeStr, sevStr, (int)len, msg);
+
 }
 

@@ -105,7 +105,7 @@ int main(int _argc, char** _argv)
         mat4x4_perspective(proj, 1.57f * (9.f/16.f) / aspect, aspect, 0.1f, 400.f);
 
         vec3 rot = {sin(time), cos(time), 0.f};
-        cubeUpdate(&cube, rot, time, 0.f, 0.f, -4.f, view, proj);
+        cubeUpdate(&cube, rot, time, 0.f, 0.f, -4.f, (float*)view, (float*)proj);
         cubeDraw(&cube);
         
         quit |= uiFrameStart(width, height);

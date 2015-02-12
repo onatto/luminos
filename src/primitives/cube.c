@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "types.h"
 #include "gfx.h"
@@ -35,8 +36,8 @@ static struct PosNormalVertex s_cubeVertices[] = {
 
 void cubeInit(CubeRenderPacket* cube, const char* vsh, const char* fsh)
 {
-    cube->rp.vbo     = gfxCreateVBO(s_cubeVertices, sizeof(s_cubeVertices));
-    cube->rp.ibo     = gfxCreateIBO(s_cubeIndices , sizeof(s_cubeIndices));
+    cube->rp.vbo     = gfxCreateVBO((void*)s_cubeVertices, sizeof(s_cubeVertices));
+    cube->rp.ibo     = gfxCreateIBO((void*)s_cubeIndices , sizeof(s_cubeIndices));
     cube->ubo        = gfxCreateUBO(sizeof(struct Transforms));
     cube->rp.vsh     = gfxCreateShader(vsh, SHADER_VERT);
     cube->rp.fsh     = gfxCreateShader(fsh, SHADER_FRAG);
