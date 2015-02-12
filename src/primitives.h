@@ -29,6 +29,8 @@ typedef struct CubeRenderPacket {
     struct Transforms transforms;
 } CubeRenderPacket;
 
-void cubeInit(CubeRenderPacket* cube, const char* vsh, const char* fsh);
+void cubeInit(CubeRenderPacket* cube, const char* vsh_path, const char* fsh_path);
 void cubeDraw(CubeRenderPacket* cube);
 void cubeUpdate(CubeRenderPacket* cube, vec3 rot, float angle, float x, float y, float z, float* view, float* proj);
+void ssquadInit(RenderPacket* ssquad, const char* vsh_path, const char* fsh_path);
+void ssquadDraw(RenderPacket* ssquad);

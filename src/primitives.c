@@ -34,13 +34,13 @@ static struct PosNormalVertex s_cubeVertices[] = {
 };
 
 
-void cubeInit(CubeRenderPacket* cube, const char* vsh, const char* fsh)
+void cubeInit(CubeRenderPacket* cube, const char* vsh_path, const char* fsh_path)
 {
     cube->rp.vbo     = gfxCreateVBO((void*)s_cubeVertices, sizeof(s_cubeVertices));
     cube->rp.ibo     = gfxCreateIBO((void*)s_cubeIndices , sizeof(s_cubeIndices));
     cube->ubo        = gfxCreateUBO(sizeof(struct Transforms));
-    cube->rp.vsh     = gfxCreateShader(vsh, SHADER_VERT);
-    cube->rp.fsh     = gfxCreateShader(fsh, SHADER_FRAG);
+    cube->rp.vsh     = gfxCreateShader(vsh_path, SHADER_VERT);
+    cube->rp.fsh     = gfxCreateShader(fsh_path, SHADER_FRAG);
     cube->rp.pipe    = gfxCreatePipeline();
 
     gfxReplaceShaders(cube->rp.pipe, cube->rp.vsh, cube->rp.fsh);
@@ -71,4 +71,34 @@ void cubeUpdate(CubeRenderPacket* cube, vec3 rot, float angle, float x, float y,
     mat4x4_mul(temp, cube->transforms.view, cube->transforms.world);
     mat4x4_mul(cube->transforms.proj_view_world, cube->transforms.proj, temp);
     gfxBindUniformBuffer(cube->ubo, &cube->transforms, sizeof(struct Transforms), 0);
+}
+
+static const float ssquad_vertices[] = {
+  -1.f,   1.f,  0.f, 0.f ,
+   1.f,   1.f,  1.f, 0.f ,
+  -1.f,  -1.f,  0.f, 1.f ,
+   1.f,  -1.f,  1.f, 1.f ,
+};
+static const uint32 ssquad_indices[] = {
+  1, 0, 2,
+  1, 2, 3
+};
+
+void ssquadInit(RenderPacket* ssquad, const char* vsh_path, const char* fsh_path)
+{
+    ssquad->vbo        = gfxCreateVBO((void*)ssquad_vertices, sizeof(ssquad_vertices));
+    ssquad->ibo        = gfxCreateIBO((void*)ssquad_indices, sizeof(ssquad_indices));
+    ssquad->vsh     = gfxCreateShader(vsh_path, SHADER_VERT);
+    ssquad->fsh     = gfxCreateShader(fsh_path, SHADER_FRAG);
+    ssquad->pipe    = gfxCreatePipeline();
+
+    gfxReplaceShaders(ssquad->pipe, ssquad->vsh, ssquad->fsh);
+}
+
+void ssquadDraw(RenderPacket* ssquad) {
+  gfxVertexFormat(VERT_POS_T0_STRIDED);
+  gfxBindVertexBuffer(ssquad->vbo, 0, 4 * sizeof(float));
+  gfxBindIndexBuffer(ssquad->ibo);
+  gfxBindPipeline(ssquad->pipe);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

@@ -8,18 +8,8 @@ out gl_PerVertex
       vec4 gl_Position;
 };
 
-layout(std140) uniform Transforms
-{
-    mat4 world;
-    mat4 view;
-    mat4 proj;
-    mat4 proj_view_world;
-    vec4 camera_wspos;
-};
-
 out vec2 v_tex;
-
 void main() {
     v_tex = a_tex;
-    gl_Position = proj * view * world * vec4(a_pos, 0.0, 1.0);
+    gl_Position = vec4(a_pos, 0.999, 1.0);
 }

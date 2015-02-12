@@ -36,32 +36,8 @@ typedef struct GfxContext {
   uint16 fboCnt;
 } GfxContext;
 
-struct ScreenSpaceQuad
-{
-  uint32 vbo;
-  uint32 ibo;
-  uint32 vsh;
-};
-
-static const float ssquad_vertices[] = {
-  -1.f,   1.f,  0.f, 0.f ,
-   1.f,   1.f,  1.f, 0.f ,
-  -1.f,  -1.f,  0.f, 1.f ,
-   1.f,  -1.f,  1.f, 1.f ,
-};
-static const uint32 ssquad_indices[] = {
-  1, 0, 2,
-  1, 2, 3
-};
 
 static GfxContext gctx;
-static struct ScreenSpaceQuad ssquad;
-
-static void initScreenSpaceQuad()
-{
-    ssquad.vbo = gfxCreateVBO((void*)ssquad_vertices, sizeof(ssquad_vertices));
-    ssquad.ibo = gfxCreateIBO((void*)ssquad_indices, sizeof(ssquad_indices));
-}
 
 static void initVertexFormats()
 {
@@ -126,7 +102,6 @@ void gfxInit()
   glDebugMessageCallback(debugOutputCallback, 0);
 
   initVertexFormats();
-  initScreenSpaceQuad();
 }
 
 uint32 gfxCreateVBO(void* data, uint32 size)
@@ -181,11 +156,6 @@ void gfxVertexFormat(uint8 vertexFormat) {
   }
 }
 
-void gfxBindSSQuadBuffers() {
-  gfxVertexFormat(VERT_POS_T0_STRIDED);
-  gfxBindVertexBuffer(ssquad.vbo, 0, 4 * sizeof(float));
-  gfxBindIndexBuffer(ssquad.ibo);
-}
 void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride) {
   glBindVertexBuffer(bindingPoint, vbo, 0, stride);
 }
@@ -419,8 +389,10 @@ void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format) 
 void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program) {
   for (uint8 i=0; i<numTextures; i++)
   {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, texs[i]);
-        glProgramUniform1i(program, 0, locations[i]);
+    if (locations[i] == -1) // Invalid location - uniform not active
+      continue;
+    glActiveTexture(GL_TEXTURE0 + i);
+    glBindTexture(GL_TEXTURE_2D, texs[i]);
+    glProgramUniform1i(program, 0, locations[i]);
   }
 }

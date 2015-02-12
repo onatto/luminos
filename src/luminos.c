@@ -20,14 +20,9 @@
 #include "gfx.h"
 #include "ui.h"
 #include "linmath.h"
-#include "primitives/primitives.h"
+#include "primitives.h"
 
 static bool quit = false;
-
-struct PosTexcoord0Vertex {
-    float pos[2];
-    float texcoord[2];
-};
 
 int main(int _argc, char** _argv)
 {
@@ -53,8 +48,11 @@ int main(int _argc, char** _argv)
     mat4x4_look_at(view, eye, center, up);
     cubeInit(&cube, "shaders/blinn.vert", "shaders/blinn.frag");
 
-    //uint32 tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
-    //uint32 location = glGetUniformLocation(fsh, "tex");
+    RenderPacket ssquad;
+    ssquadInit(&ssquad, "shaders/ssquad.vert", "shaders/ssquad.frag");
+
+    uint32 tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
+    uint32 location = glGetUniformLocation(ssquad.fsh, "tex");
 
     // Init core module
     coreInit();
@@ -100,6 +98,9 @@ int main(int _argc, char** _argv)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
+
+        gfxBindTextures2D(&tex, &location, 1, ssquad.fsh);
+        ssquadDraw(&ssquad);
 
         float aspect = (float)width/(float)height;
         mat4x4_perspective(proj, 1.57f * (9.f/16.f) / aspect, aspect, 0.1f, 400.f);
