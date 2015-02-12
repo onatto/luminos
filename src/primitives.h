@@ -34,3 +34,4 @@ void cubeDraw(CubeRenderPacket* cube);
 void cubeUpdate(CubeRenderPacket* cube, vec3 rot, float angle, float x, float y, float z, float* view, float* proj);
 void ssquadInit(RenderPacket* ssquad, const char* vsh_path, const char* fsh_path);
 void ssquadDraw(RenderPacket* ssquad);
+void ssquadResize(RenderPacket* ssquad, float* proj, float x, float y, float w, float h);

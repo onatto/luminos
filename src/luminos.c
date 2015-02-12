@@ -34,7 +34,7 @@ int main(int _argc, char** _argv)
     SDL_Window* wnd = wndInitSDL(width, height);
     wndInitGL(wnd);
 
-    glClearColor(0.3,0.3,0.3,1);
+    glClearColor(0.2,0.2,0.2,1);
     glClearStencil(0);
     glEnable(GL_STENCIL_FUNC);
     
@@ -49,7 +49,7 @@ int main(int _argc, char** _argv)
     cubeInit(&cube, "shaders/blinn.vert", "shaders/blinn.frag");
 
     RenderPacket ssquad;
-    ssquadInit(&ssquad, "shaders/ssquad.vert", "shaders/ssquad.frag");
+    ssquadInit(&ssquad, "shaders/quad.vert", "shaders/ssquad.frag");
 
     uint32 tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
     uint32 location = glGetUniformLocation(ssquad.fsh, "tex");
@@ -67,6 +67,7 @@ int main(int _argc, char** _argv)
     const char* server_ip = lua_tolstring(getLuaState(), -1, NULL);
     networkInit(getLuaState(), server_ip, 3333);
 
+    mat4x4 ortho;
 
     int64_t timeOffset = SDL_GetPerformanceCounter();
     SDL_Event event;
@@ -99,13 +100,15 @@ int main(int _argc, char** _argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
+        mat4x4_ortho(ortho, 0.f, (float)width, (float)height, 0.f, 0.f, 100.f);
         gfxBindTextures2D(&tex, &location, 1, ssquad.fsh);
+        ssquadResize(&ssquad, ortho, width-300, 0, 300, 300);
         ssquadDraw(&ssquad);
 
         float aspect = (float)width/(float)height;
         mat4x4_perspective(proj, 1.57f * (9.f/16.f) / aspect, aspect, 0.1f, 400.f);
 
-        vec3 rot = {sin(time), cos(time), 0.f};
+        vec3 rot = {sin(time), cos(time), sin(time)};
         cubeUpdate(&cube, rot, time, 0.f, 0.f, -4.f, (float*)view, (float*)proj);
         cubeDraw(&cube);
         

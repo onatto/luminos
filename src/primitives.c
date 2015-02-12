@@ -102,3 +102,11 @@ void ssquadDraw(RenderPacket* ssquad) {
   gfxBindPipeline(ssquad->pipe);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
+
+void ssquadResize(RenderPacket* ssquad, float* proj, float x, float y, float w, float h)
+{
+    uint32 proj_loc   = glGetUniformLocation(ssquad->vsh, "proj");
+    uint32 offset_loc = glGetUniformLocation(ssquad->vsh, "offset");
+    glProgramUniformMatrix4fv(ssquad->vsh, proj_loc, 1, false, proj);
+    glProgramUniform4f(ssquad->vsh, offset_loc, x, y, w, h);
+}
