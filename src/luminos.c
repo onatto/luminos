@@ -68,6 +68,8 @@ int main(int _argc, char** _argv)
     networkInit(getLuaState(), server_ip, 3333);
 
     mat4x4 ortho;
+    uint32 color_tex, depth_tex;
+    uint32 fbo = gfxCreateFramebuffer(300, 300, TEX_RGBA8, TEX_D24F, &color_tex, &depth_tex);
 
     int64_t timeOffset = SDL_GetPerformanceCounter();
     SDL_Event event;
@@ -100,18 +102,22 @@ int main(int _argc, char** _argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        mat4x4_ortho(ortho, 0.f, (float)width, (float)height, 0.f, 0.f, 100.f);
-        gfxBindTextures2D(&tex, &location, 1, ssquad.fsh);
-        ssquadResize(&ssquad, ortho, width-300, 0, 300, 300);
-        ssquadDraw(&ssquad);
-
         float aspect = (float)width/(float)height;
-        mat4x4_perspective(proj, 1.57f * (9.f/16.f) / aspect, aspect, 0.1f, 400.f);
+        //mat4x4_perspective(proj, 1.57f * (9.f/16.f) / aspect, aspect, 0.1f, 400.f);
+        mat4x4_perspective(proj, 1.57f, 1.f, 0.1f, 400.f);
 
+        gfxBindFramebuffer(fbo);
+        glClearColor(0,0,0,1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glViewport(0, 0, 300, 300);
         vec3 rot = {sin(time), cos(time), sin(time)};
         cubeUpdate(&cube, rot, time, 0.f, 0.f, -4.f, (float*)view, (float*)proj);
         cubeDraw(&cube);
-        
+
+        gfxBindFramebuffer(0);
+        glClearColor(0.2,0.2,0.2,1);
+        glViewport(0, 0, width, height);
         quit |= uiFrameStart(width, height);
         if (!s_errorPort)
             coreExecPort("portProgramStart");
@@ -119,6 +125,12 @@ int main(int _argc, char** _argv)
             coreExecPort(s_errorPort);
 
         uiFrameEnd();
+
+        mat4x4_ortho(ortho, 0.f, (float)width, (float)height, 0.f, 0.f, 100.f);
+        gfxBindTextures2D(&color_tex, &location, 1, ssquad.fsh);
+        ssquadResize(&ssquad, ortho, width-300, 0, 300, 300);
+        ssquadDraw(&ssquad);
+        
        
         networkUpdate();
         networkFlushWrites();

@@ -11,6 +11,7 @@ uint32 gfxCreateImage2D(uint16 w, uint16 h, uint8 texFormat);
 uint32 gfxCreateShader(const char* filename, uint8 shaderType);
 uint32 gfxCreateShaderSource(const char* src, uint8 shaderType);
 uint32 gfxCreatePipeline();
+uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint8 depthFormat, uint32* colorTex, uint32* depthTex);
 
 void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride);
 void gfxBindIndexBuffer(uint32 ibo);
