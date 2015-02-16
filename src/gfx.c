@@ -233,10 +233,21 @@ static const TextureFormatsGL s_textureFormats[TEXTURE_FORMATS] =
 uint32 gfxCreateImage2D(uint16 w, uint16 h, uint8 texFormat) {
     TextureFormatsGL format = s_textureFormats[texFormat];
     glBindTexture(GL_TEXTURE_2D, gctx.tex[gctx.texCnt]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, format.sizedInternalFormat, w, h);
+    glTexImage2D( GL_TEXTURE_2D, 
+                0,                                                      // level
+                s_textureFormats[texFormat].sizedInternalFormat,        // internalFormat
+                w,                                                  // width
+                h,                                                 // height
+                0,                                                      // border must be 0
+                s_textureFormats[texFormat].baseInternalFormat,         // format
+                GL_UNSIGNED_BYTE,                                       // type of pixel data
+                0);                                                     // data
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
     return gctx.tex[gctx.texCnt++];
 }
+
 uint32 gfxCreateTexture2D(const char* filename, uint16* w, uint16* h, uint8 texFormat, uint8 numMips)
 {
     ASSERT(texFormat < TEX_D16F);

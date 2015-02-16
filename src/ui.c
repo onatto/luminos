@@ -166,6 +166,7 @@ void uiResize(uint32 width, uint32 height)
 {
     gfxResizeTexture(data.blur.color, TEX_RGBA8, width, height);
     gfxResizeTexture(data.blur.depth, TEX_D24F, width, height);
+    gfxResizeTexture(data.blur.blurDst, TEX_RGBA16F, width, height);
 }
 void uiRenderBlur(uint32 width, uint32 height)
 {
