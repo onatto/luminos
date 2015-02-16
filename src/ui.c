@@ -26,8 +26,6 @@ static uint32 mouse_state;
 static uint32 mouse_state_prev;
 SDL_Window* sdl_wnd;
 
-static bool show_errorMsg = false;
-
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
 
@@ -94,7 +92,7 @@ int uiFrameStart(uint32 width, uint32 height)
 
     if (uiGetKeyboardState(SDL_SCANCODE_F4) == KeyEvent_Press)
     {
-        show_errorMsg = !show_errorMsg;
+        printf("%s", getErrorMsg());
     }
 
     if (uiGetKeyboardState(SDL_SCANCODE_F5) == KeyEvent_Press)
@@ -104,6 +102,7 @@ int uiFrameStart(uint32 width, uint32 height)
         uiInitGlobals();
         networkSetLua(getLuaState());
         coreExecPort("portProgramInit");
+        nw_send("Workspace");
         return false;
     }
 
