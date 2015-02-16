@@ -44,3 +44,4 @@ enum KeyEvent
 };
 
 extern struct SDL_Window* sdl_wnd;
+void uiVisualiserFrame(float x, float y, float w, float h);

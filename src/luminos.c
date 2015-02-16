@@ -34,7 +34,7 @@ int main(int _argc, char** _argv)
     SDL_Window* wnd = wndInitSDL(width, height);
     wndInitGL(wnd);
 
-    glClearColor(0.2,0.2,0.2,1);
+    glClearColor(0,0,0,1);
     glClearStencil(0);
     glEnable(GL_STENCIL_FUNC);
     
@@ -116,7 +116,6 @@ int main(int _argc, char** _argv)
         cubeDraw(&cube);
 
         gfxBindFramebuffer(0);
-        glClearColor(0.2,0.2,0.2,1);
         glViewport(0, 0, width, height);
         quit |= uiFrameStart(width, height);
         if (!s_errorPort)
@@ -130,7 +129,7 @@ int main(int _argc, char** _argv)
         gfxBindTextures2D(&color_tex, &location, 1, ssquad.fsh);
         ssquadResize(&ssquad, ortho, width-300, 0, 300, 300);
         ssquadDraw(&ssquad);
-        
+        uiVisualiserFrame((float)width-300.f, 0.f, 300.f, 300.f);
        
         networkUpdate();
         networkFlushWrites();

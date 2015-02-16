@@ -69,11 +69,12 @@ int uiInitGlobals()
     return 0;
 }
 
+static int mx,my; // Mouse X,Y
+
 int uiFrameStart(uint32 width, uint32 height)
 {
     nvgBeginFrame(nvg, width, height, 1.f);
 
-    int mx,my;
     uint32 mleft, mright, mmiddle, mmask;
 
     lua_State* L = getLuaState();
@@ -129,9 +130,28 @@ void uiFrameEnd()
     nvgEndFrame(nvg);
 }
 
+static inline bool AABBPointTest(float x, float y, float w, float h, float px, float py)
+{
+    if (x < px && y < py && px < x+w && py < y+h)
+        return true;
+    return false;
+}
+
 void uiDrawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
 {
-    bndNodeBackground(nvg, x, y, w, h, (BNDwidgetState)widgetState, BND_ICONID(5, 11), title, nvgRGBA(r, g, b, a));
+    bool mouseOverNode = AABBPointTest(x, y, w, h, (float)mx, (float)my);
+    // Outline
+    nvgBeginPath(nvg);
+    nvgRoundedRect(nvg, x, y, w, h, 10.f);
+    nvgStrokeColor(nvg, nvgRGBA(255, 0, 0, mouseOverNode ? 255 : 200));
+    nvgStrokeWidth(nvg, 1.2f);
+    nvgStroke(nvg);
+    // Text
+    nvgFillColor(nvg, nvgRGBA(255, 0, 0,150));
+    nvgFontFace(nvg, "header");
+    nvgFontSize(nvg, 20.f);
+    nvgTextAlign(nvg, NVG_ALIGN_CENTER);
+    nvgText(nvg, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
 }
 
 uint8 uiGetKeyboardState(uint16 key)
@@ -194,4 +214,12 @@ void uiTextInputEvent(SDL_Event* event)
 void uiShutdown()
 {
     nvgDeleteGL3(nvg);
+}
+
+void uiVisualiserFrame(float x, float y, float w, float h)
+{
+    nvgBeginPath(nvg);
+    nvgStrokeColor(nvg, nvgRGBA(255, 0, 30, 140));
+    nvgRect(nvg, x, y, w, h);
+    nvgStroke(nvg);
 }
