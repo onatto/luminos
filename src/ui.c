@@ -41,12 +41,19 @@ struct BlurFBO {
     uint32 fbo;
     uint32 color;
     uint32 depth;
+    uint32 compute;
+    uint32 pipe;
+    uint32 blurDst;
 };
 
 static void initBlurFBO(struct BlurFBO* blur, uint16 w, uint16 h)
 {
     blur->width = w; blur->height = h;
     blur->fbo = gfxCreateFramebuffer(w, h, TEX_RGBA8, TEX_D24F, &blur->color, &blur->depth);
+    blur->compute = gfxCreateShader("shaders/blur.cs", SHADER_COMP);
+    blur->pipe = gfxCreatePipeline();
+    gfxReplaceComputeShader(blur->pipe, blur->compute);
+    blur->blurDst = gfxCreateImage2D(BLUR_FBO_WIDTH, BLUR_FBO_HEIGHT, TEX_RGBA16F);
 }
 
 struct UIData
@@ -170,8 +177,21 @@ void uiRenderBlur(uint32 width, uint32 height)
     coreExecPort("portRenderNodes");
     nvgEndFrame(nvg_blur);
 
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    gfxBindPipeline(data.blur.pipe);
+    glProgramUniform1i(data.blur.compute, 1, 0);
+    gfxBindImage2D(data.blur.color, 0, GL_READ_ONLY, TEX_RGBA8);
+    glProgramUniform1i(data.blur.compute, 0, 1);
+    gfxBindImage2D(data.blur.blurDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
+    glDispatchCompute(width/16, height/16, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
     gfxBindFramebuffer(0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
     gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
+    gfxBlitTexture(data.blur.blurDst, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
+    //gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
 }
 
 static inline bool AABBPointTest(float x, float y, float w, float h, float px, float py)
@@ -191,7 +211,7 @@ void uiDrawNode(float x, float y, float w, float h, int widgetState, const char*
     nvgStrokeWidth(nvg_blur, 1.2f);
     nvgStroke(nvg_blur);
     // Text
-    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,150));
+    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,mouseOverNode ? 200 : 75));
     nvgFontFace(nvg_blur, "header");
     nvgFontSize(nvg_blur, 20.f);
     nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
