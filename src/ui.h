@@ -28,6 +28,7 @@ FFI_EXPORT void uiRestoreNVG();
 FFI_EXPORT void uiSetTextProperties(const char* font, float size, int align);
 FFI_EXPORT void uiSetTextColor(int r, int g, int b, int a);
 FFI_EXPORT void uiDrawText(float x, float y, const char* str);
+FFI_EXPORT void uiBlur(int toggle);
 
 int uiFrameStart(uint32 width, uint32 height);
 void uiFrameEnd();
@@ -45,3 +46,5 @@ enum KeyEvent
 
 extern struct SDL_Window* sdl_wnd;
 void uiVisualiserFrame(float x, float y, float w, float h);
+uint32 uiBlurColorTex();
+void uiRenderBlur(uint32 width, uint32 height);

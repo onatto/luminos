@@ -17,6 +17,7 @@ void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride);
 void gfxBindIndexBuffer(uint32 ibo);
 void gfxVertexFormat(uint8 vertexFormat);
 void gfxBindFramebuffer(uint32 fbo);
+void gfxResizeTexture(uint32 tex, uint8 format, uint32 width, uint32 height);
 void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
 void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format);
 void gfxBindSSQuadBuffers();
@@ -32,6 +33,7 @@ void gfxReplaceShadersGeom(uint32 pipeline, uint32 vert, uint32 frag, uint32 geo
 void gfxReplaceComputeShader(uint32 pipeline, uint32 comp);
 
 void gfxSetTransform(float* transform);
+void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
 
 enum TextureFormats {
   TEX_R8,

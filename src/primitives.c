@@ -86,8 +86,8 @@ static const uint32 ssquad_indices[] = {
 
 void ssquadInit(RenderPacket* ssquad, const char* vsh_path, const char* fsh_path)
 {
-    ssquad->vbo        = gfxCreateVBO((void*)ssquad_vertices, sizeof(ssquad_vertices));
-    ssquad->ibo        = gfxCreateIBO((void*)ssquad_indices, sizeof(ssquad_indices));
+    ssquad->vbo     = gfxCreateVBO((void*)ssquad_vertices, sizeof(ssquad_vertices));
+    ssquad->ibo     = gfxCreateIBO((void*)ssquad_indices, sizeof(ssquad_indices));
     ssquad->vsh     = gfxCreateShader(vsh_path, SHADER_VERT);
     ssquad->fsh     = gfxCreateShader(fsh_path, SHADER_FRAG);
     ssquad->pipe    = gfxCreatePipeline();

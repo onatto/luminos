@@ -13,6 +13,6 @@ uniform vec4 offset;
 
 out vec2 v_tex;
 void main() {
-    v_tex = vec2(a_tex.x,1 - a_tex.y);
+    v_tex = vec2(a_tex.x, a_tex.y);
     gl_Position = proj * vec4((a_pos * 0.5 + 0.5) * offset.zw + offset.xy, 0.0, 1.0);
 }

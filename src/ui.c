@@ -2,6 +2,7 @@
 
 #include "ui.h"
 #include "core.h"
+#include "gfx.h"
 
 #include "network.h"
 
@@ -16,6 +17,7 @@
 
 #define TABLE_ENTRIES 6
 static NVGcontext* nvg;
+static NVGcontext* nvg_blur;
 
 #include "SDL2/SDL.h"
 
@@ -29,14 +31,32 @@ SDL_Window* sdl_wnd;
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
 
+
+#define BLUR_FBO_WIDTH 1920
+#define BLUR_FBO_HEIGHT 1080
+
+struct BlurFBO {
+    uint16 width;
+    uint16 height;
+    uint32 fbo;
+    uint32 color;
+    uint32 depth;
+};
+
+static void initBlurFBO(struct BlurFBO* blur, uint16 w, uint16 h)
+{
+    blur->width = w; blur->height = h;
+    blur->fbo = gfxCreateFramebuffer(w, h, TEX_RGBA8, TEX_D24F, &blur->color, &blur->depth);
+}
+
 struct UIData
 {
     int fontHeader;
     int fontHeaderBold;
+    struct BlurFBO blur;
 };
 
 static struct UIData data;
-
 int uiInit()
 {
     nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
@@ -45,6 +65,10 @@ int uiInit()
 
     data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
     data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
+    nvg_blur = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    nvgCreateFont(nvg_blur, "header", "font/opensans.ttf");
+    nvgCreateFont(nvg_blur, "header-bold", "font/opensans-bold.ttf");
+    initBlurFBO(&data.blur, BLUR_FBO_WIDTH, BLUR_FBO_HEIGHT);
     uiInitGlobals();
     return 0;
 }
@@ -103,7 +127,6 @@ int uiFrameStart(uint32 width, uint32 height)
         uiInitGlobals();
         networkSetLua(getLuaState());
         coreExecPort("portProgramInit");
-        nw_send("Workspace");
         return false;
     }
 
@@ -121,13 +144,34 @@ int uiFrameStart(uint32 width, uint32 height)
     lua_setfield(L, -2, "right");
     lua_pop(L, 1);
 
+
     return 0;
 }
+
 void uiFrameEnd()
 {
     memcpy((void*)keyboard_state_prev, keyboard_state, 512);
     mouse_state_prev = mouse_state;
     nvgEndFrame(nvg);
+}
+
+void uiResize(uint32 width, uint32 height)
+{
+    gfxResizeTexture(data.blur.color, TEX_RGBA8, width, height);
+    gfxResizeTexture(data.blur.depth, TEX_D24F, width, height);
+}
+void uiRenderBlur(uint32 width, uint32 height)
+{
+    gfxBindFramebuffer(data.blur.fbo);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, width, height);
+
+    nvgBeginFrame(nvg_blur, width, height, 1.f);
+    coreExecPort("portRenderNodes");
+    nvgEndFrame(nvg_blur);
+
+    gfxBindFramebuffer(0);
+    gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
 }
 
 static inline bool AABBPointTest(float x, float y, float w, float h, float px, float py)
@@ -141,17 +185,17 @@ void uiDrawNode(float x, float y, float w, float h, int widgetState, const char*
 {
     bool mouseOverNode = AABBPointTest(x, y, w, h, (float)mx, (float)my);
     // Outline
-    nvgBeginPath(nvg);
-    nvgRoundedRect(nvg, x, y, w, h, 10.f);
-    nvgStrokeColor(nvg, nvgRGBA(255, 0, 0, mouseOverNode ? 255 : 200));
-    nvgStrokeWidth(nvg, 1.2f);
-    nvgStroke(nvg);
+    nvgBeginPath(nvg_blur);
+    nvgRoundedRect(nvg_blur, x, y, w, h, 10.f);
+    nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 0, mouseOverNode ? 255 : 200));
+    nvgStrokeWidth(nvg_blur, 1.2f);
+    nvgStroke(nvg_blur);
     // Text
-    nvgFillColor(nvg, nvgRGBA(255, 0, 0,150));
-    nvgFontFace(nvg, "header");
-    nvgFontSize(nvg, 20.f);
-    nvgTextAlign(nvg, NVG_ALIGN_CENTER);
-    nvgText(nvg, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
+    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,150));
+    nvgFontFace(nvg_blur, "header");
+    nvgFontSize(nvg_blur, 20.f);
+    nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
+    nvgText(nvg_blur, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
 }
 
 uint8 uiGetKeyboardState(uint16 key)
@@ -184,9 +228,9 @@ void uiRestoreNVGState()
 }
 void uiSetTextProperties(const char* font, float size, int align)
 {
-	nvgFontFace(nvg, font);
-	nvgFontSize(nvg, size);
-	nvgTextAlign(nvg, align);
+    nvgFontFace(nvg, font);
+    nvgFontSize(nvg, size);
+    nvgTextAlign(nvg, align);
 }
 void uiSetTextColor(int r, int g, int b, int a)
 {
@@ -214,6 +258,7 @@ void uiTextInputEvent(SDL_Event* event)
 void uiShutdown()
 {
     nvgDeleteGL3(nvg);
+    nvgDeleteGL3(nvg_blur);
 }
 
 void uiVisualiserFrame(float x, float y, float w, float h)
@@ -222,4 +267,8 @@ void uiVisualiserFrame(float x, float y, float w, float h)
     nvgStrokeColor(nvg, nvgRGBA(255, 0, 30, 140));
     nvgRect(nvg, x, y, w, h);
     nvgStroke(nvg);
+}
+
+void uiBlur(int toggle)
+{
 }

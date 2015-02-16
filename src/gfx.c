@@ -6,6 +6,8 @@
 #include "types.h"
 #include "gfx.h"
 #include "util.h"
+#include "primitives.h"
+#include "linmath.h"
 
 #include "gl44.h"
 
@@ -85,6 +87,17 @@ static void initVertexFormats()
   glBindVertexArray(0);
 }
 
+struct BlitTextureQuad {
+  RenderPacket rp;
+  int8 texLocation; // Uniform location in shader
+};
+static void initBlitTextureQuad(struct BlitTextureQuad* quad, const char* vsh, const char* fsh)
+{
+  ssquadInit(&quad->rp, vsh, fsh);
+  quad->texLocation = glGetUniformLocation(quad->rp.fsh, "tex");
+}
+
+static struct BlitTextureQuad s_blitQuad;
 void gfxInit()
 {
   memset(&gctx, 0, sizeof(GfxContext));
@@ -102,6 +115,7 @@ void gfxInit()
   glDebugMessageCallback(debugOutputCallback, 0);
 
   initVertexFormats();
+  initBlitTextureQuad(&s_blitQuad, "shaders/quad.vert", "shaders/ssquad.frag");
 }
 
 uint32 gfxCreateVBO(void* data, uint32 size)
@@ -369,6 +383,20 @@ void gfxBindFramebuffer(uint32 fbo) {
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
+void gfxResizeTexture(uint32 tex, uint8 format, uint32 width, uint32 height)
+{
+  glBindTexture(GL_TEXTURE_2D, tex);
+  glTexImage2D( GL_TEXTURE_2D, 
+                0,                                                      // level
+                s_textureFormats[format].sizedInternalFormat,           // internalFormat
+                width,                                                  // width
+                height,                                                 // height
+                0,                                                      // border must be 0
+                s_textureFormats[format].baseInternalFormat,            // format
+                GL_UNSIGNED_BYTE,                                       // type of pixel data
+                0);                                                     // data
+}
+
 void gfxShutdown() {
   glDeleteBuffers(MAX_VBOS, (uint32*)&gctx.vbo);
   glDeleteBuffers(MAX_IBOS, (uint32*)&gctx.ibo);
@@ -395,4 +423,13 @@ void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 
     glBindTexture(GL_TEXTURE_2D, texs[i]);
     glProgramUniform1i(program, 0, locations[i]);
   }
+}
+
+void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h)
+{
+    mat4x4 ortho;
+    mat4x4_ortho(ortho, 0.f, wnd_w, wnd_h, 0.f, 0.f, 100.f);
+    gfxBindTextures2D(&tex, &s_blitQuad.texLocation, 1, s_blitQuad.rp.fsh);
+    ssquadResize(&s_blitQuad.rp, ortho, x, y, w, h);
+    ssquadDraw(&s_blitQuad.rp);
 }
