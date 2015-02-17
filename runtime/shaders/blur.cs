@@ -15,7 +15,7 @@ void main() {
     color += imageLoad(srcTex, gid + ivec2( 1,  0)) * 0.118;
     color += imageLoad(srcTex, gid + ivec2(-1,  1)) * 0.094;
     color += imageLoad(srcTex, gid + ivec2( 0,  1)) * 0.118;
-    color += imageLoad(srcTex, gid + ivec2( 1,  1)) * 0.94;
+    color += imageLoad(srcTex, gid + ivec2( 1,  1)) * 0.094;
     //imageStore(dstTex, gid, vec4(color.r, 1.0, 0.0. 1.0));
     imageStore(dstTex, gid, color);
 }

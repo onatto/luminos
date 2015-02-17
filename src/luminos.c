@@ -118,7 +118,7 @@ int main(int _argc, char** _argv)
         cubeUpdate(&cube, rot, time, 0.f, 0.f, -4.f, (float*)view, (float*)proj);
         cubeDraw(&cube);
 
-        uiRenderBlur(width, height);
+        uiRenderBlur(width, height, tex);
         gfxBindFramebuffer(0);
         glViewport(0, 0, width, height);
         quit |= uiFrameStart(width, height);

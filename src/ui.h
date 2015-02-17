@@ -18,7 +18,7 @@ int uiInitGlobals();
 int uiUploadMouseGlobals(void*);
 
 // For the FFI, export these as C functions
-FFI_EXPORT void uiDrawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
+FFI_EXPORT uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* title, uint8 numInputs, uint8 numOutputs);
 FFI_EXPORT void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
 FFI_EXPORT void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
 FFI_EXPORT uint8 uiGetKeyboardState(uint16 key);
@@ -28,7 +28,6 @@ FFI_EXPORT void uiRestoreNVG();
 FFI_EXPORT void uiSetTextProperties(const char* font, float size, int align);
 FFI_EXPORT void uiSetTextColor(int r, int g, int b, int a);
 FFI_EXPORT void uiDrawText(float x, float y, const char* str);
-FFI_EXPORT void uiBlur(int toggle);
 
 int uiFrameStart(uint32 width, uint32 height);
 void uiFrameEnd();
@@ -47,4 +46,4 @@ enum KeyEvent
 extern struct SDL_Window* sdl_wnd;
 void uiVisualiserFrame(float x, float y, float w, float h);
 uint32 uiBlurColorTex();
-void uiRenderBlur(uint32 width, uint32 height);
+void uiRenderBlur(uint32 width, uint32 height, uint32 tex);

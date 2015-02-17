@@ -55,6 +55,8 @@ local function ParseTransform(def)
     -- Map inputs/outputs idx to input/output name
     xform.input_map = {}
     xform.output_map = {}
+    xform.input_name_map = {}
+    xform.output_name_map = {}
     xform.cache = {}
     for line in def:gmatch("[^\r\n]+") do
         tokens = SplitWhitespace(line)
@@ -67,10 +69,12 @@ local function ParseTransform(def)
             end
             table.insert(xform.inputs, input)
             table.insert(xform.input_map, input.name)
+            xform.input_name_map[input.name] = #xform.inputs
         elseif tokens[1] == 'out' then
             local output = { type = tokens[2], name = tokens[3] }
             table.insert(xform.outputs, output)
             table.insert(xform.output_map, output.name)
+            xform.output_name_map[output.name] = #xform.outputs
         elseif tokens[1] == 'module' then
             xform.module = tokens[2]
         elseif tokens[1] == 'viz' then

@@ -1,6 +1,7 @@
 package.path = ";./scripts/?.lua"
 
-serverIP = "188.166.27.157"
+--serverIP = "188.166.27.157"
+serverIP = "localhost"
 local ffi =   require 'ffi'
 local core =  require "core"
 local ui =    require 'ui'
@@ -37,7 +38,6 @@ local function loadTransforms()
         for idx, node in pairs(core.nodes) do
             if node then
                 node.xform = lexer.xform(node.module, node.submodule)
-                ui.initPorts(node)
             end
         end
 end
@@ -45,32 +45,35 @@ end
 loadTransforms()
 
 function portProgramInit()
+    C.nw_send("Workspace")
 end
 
 function portProgramShutdown()
+end
+
+function portRenderNodes()
 end
 
 function portDisplayRuntimeError(error_msg)
     debugger.print("Error!")
     debugger.print(error_msg)
     local x, y = 2, 0
-    C.ui_setTextProperties("header-bold", 25, 9)
-    C.ui_setTextColor(255, 255, 255, 200)
-    C.ui_drawText(x, y, g_statusMsg)
-    C.ui_setTextProperties("header", 25, 9)
+    C.uiSetTextProperties("header-bold", 25, 9)
+    C.uiSetTextColor(255, 255, 255, 200)
+    C.uiDrawText(x, y, g_statusMsg)
+    C.uiSetTextProperties("header", 25, 9)
     y = y + 25
     if error_msg then
-        C.ui_drawText(x, y, error_msg)
+        C.uiDrawText(x, y, error_msg)
     end
     local traceback = debug.traceback()
     for line in traceback:gmatch("[^\r\n]+") do
         y = y + 25
-        C.ui_drawText(x, y, line)
+        C.uiDrawText(x, y, line)
     end
 end
 
 function portProgramStart()
-    debugger.print("Hello")
     core.programStart()
 
     local selected_nodes = ui.getSelectedNodes()
@@ -84,10 +87,10 @@ function portProgramStart()
 
     ui.start()
     ui.dragWorkspace()
+    ui.drawNodes()
     ui.selectNodes()
     ui.dragNodes()
     ui.dragConnectors()
-    ui.drawNodes()
     ui.drawWorkspace()
     ui.update()
 
@@ -96,5 +99,4 @@ function portProgramStart()
     if CurrentNode then
         core.execNode(CurrentNode)
     end
-
 end

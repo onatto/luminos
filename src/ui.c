@@ -105,6 +105,7 @@ static int mx,my; // Mouse X,Y
 int uiFrameStart(uint32 width, uint32 height)
 {
     nvgBeginFrame(nvg, width, height, 1.f);
+    nvgBeginFrame(nvg_blur, width, height, 1.f);
 
     uint32 mleft, mright, mmiddle, mmask;
 
@@ -168,21 +169,17 @@ void uiResize(uint32 width, uint32 height)
     gfxResizeTexture(data.blur.depth, TEX_D24F, width, height);
     gfxResizeTexture(data.blur.blurDst, TEX_RGBA16F, width, height);
 }
-void uiRenderBlur(uint32 width, uint32 height)
+void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
 {
     gfxBindFramebuffer(data.blur.fbo);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0, 0, width, height);
 
-    nvgBeginFrame(nvg_blur, width, height, 1.f);
-    coreExecPort("portRenderNodes");
     nvgEndFrame(nvg_blur);
 
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
     gfxBindPipeline(data.blur.pipe);
-    glProgramUniform1i(data.blur.compute, 1, 0);
     gfxBindImage2D(data.blur.color, 0, GL_READ_ONLY, TEX_RGBA8);
-    glProgramUniform1i(data.blur.compute, 0, 1);
     gfxBindImage2D(data.blur.blurDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
     glDispatchCompute(width/16, height/16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -202,21 +199,73 @@ static inline bool AABBPointTest(float x, float y, float w, float h, float px, f
     return false;
 }
 
-void uiDrawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
+/*void uiDrawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
 {
-    bool mouseOverNode = AABBPointTest(x, y, w, h, (float)mx, (float)my);
+    bool mouseOverNode = AABBPointTest(x, y, w, h, (float)mx, (float)my) || widgetState == 2;
     // Outline
     nvgBeginPath(nvg_blur);
-    nvgRoundedRect(nvg_blur, x, y, w, h, 10.f);
-    nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 0, mouseOverNode ? 255 : 200));
-    nvgStrokeWidth(nvg_blur, 1.2f);
+    nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
+    nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 0, mouseOverNode ? 180 : 130));
+    nvgStrokeWidth(nvg_blur, 1.5f);
     nvgStroke(nvg_blur);
     // Text
-    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,mouseOverNode ? 200 : 75));
+    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,mouseOverNode ? 190 : 140));
     nvgFontFace(nvg_blur, "header");
     nvgFontSize(nvg_blur, 20.f);
     nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
     nvgText(nvg_blur, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
+}
+*/
+
+//
+enum NodeState {
+    NODE_DEFAULT,
+    NODE_HOVER,
+    NODE_SELECTED,
+};
+uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* title, uint8 numInputs, uint8 numOutputs)
+{
+    float mouseX = (float)mx;
+    float mouseY = (float)my;
+    bool mouseOverNode = AABBPointTest(x, y, w, h, mouseX, mouseY);
+    bool brighter = mouseOverNode || state == NODE_SELECTED;
+    // Outline
+    nvgBeginPath(nvg_blur);
+    nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
+    nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 0, brighter ? 180 : 130));
+    nvgStrokeWidth(nvg_blur, 1.5f);
+    nvgStroke(nvg_blur);
+    // Text
+    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,brighter ? 190 : 140));
+    nvgFontFace(nvg_blur, "header");
+    nvgFontSize(nvg_blur, 20.f);
+    nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
+    nvgText(nvg_blur, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
+
+    // Ports
+    uint8 mouseOverInput  = 0;
+    uint8 mouseOverOutput = 0;
+    float spacing = w / (float)(numInputs+1);
+    float portY = y + h;
+    for (uint8 i=1; i <= numInputs; i++)
+    {
+        float portX = x + spacing * i;
+        bool mouseOver = AABBPointTest(portX - 8.f, portY - 8.f, 16.f, 16.f, mouseX, mouseY);
+        mouseOverInput = mouseOver ? i : mouseOverInput;
+        uiDrawPort(portX, portY, 0, 0, 100, 255, mouseOver ? 150 : 90);
+    }
+
+    spacing = w / (float)(numOutputs+1);
+    portY = y;
+    for (uint8 i=1; i <= numOutputs; i++)
+    {
+        float portX = x + spacing * i;
+        bool mouseOver = AABBPointTest(portX - 8.f, portY - 8.f, 16.f, 16.f, mouseX, mouseY);
+        mouseOverOutput = mouseOver ? i : mouseOverOutput;
+        uiDrawPort(portX, portY, 0, 255, 0, 0, mouseOver ? 150 : 90);
+    }
+
+    return (mouseOverInput << 16) | (mouseOverOutput << 8)  | (mouseOverNode << 0);
 }
 
 uint8 uiGetKeyboardState(uint16 key)
@@ -226,12 +275,29 @@ uint8 uiGetKeyboardState(uint16 key)
 
 void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char a)
 {
-    bndNodePort(nvg, x, y, (BNDwidgetState)widgetState, nvgRGBA(r,g,b,a));
+    nvgBeginPath(nvg_blur);
+    nvgCircle(nvg_blur, x, y, 5.f);
+    nvgStrokeColor(nvg_blur, bnd_theme.nodeTheme.wiresColor);
+    nvgStrokeWidth(nvg_blur,1.0f);
+    nvgStroke(nvg_blur);
+    nvgFillColor(nvg_blur, nvgRGBA(r,g,b,a));
+    nvgFill(nvg_blur);
 }
 
 void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state)
 {
-    bndNodeWire(nvg, px, py, qx, qy, (BNDwidgetState)start_state, (BNDwidgetState)end_state);
+    float length = fmax(abs(qy - py),abs(qx - px));
+    float curving = 3.f; // between 0,10
+    float delta = length * curving * 0.1f;
+    nvgBeginPath(nvg_blur);
+    nvgMoveTo(nvg_blur, px, py);
+    nvgBezierTo(nvg_blur, 
+        px + delta, py,
+        qx - delta, qy,
+        qx, qy);
+    nvgStrokeColor(nvg_blur, nvgRGBA(200, 0, 0, 180));
+    nvgStrokeWidth(nvg_blur, 0.9f);
+    nvgStroke(nvg_blur);
 }
 void uiWarpMouseInWindow(int x, int y)
 {
@@ -288,8 +354,4 @@ void uiVisualiserFrame(float x, float y, float w, float h)
     nvgStrokeColor(nvg, nvgRGBA(255, 0, 30, 140));
     nvgRect(nvg, x, y, w, h);
     nvgStroke(nvg);
-}
-
-void uiBlur(int toggle)
-{
 }

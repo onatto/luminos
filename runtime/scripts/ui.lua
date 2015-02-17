@@ -11,7 +11,7 @@ local lexer = require 'lexer'
 
 ffi.cdef
 [[
-    void uiDrawNode(float x, float y, float w, float h, int widget_state, const char* title, char r, char g, char b, char a);
+    uint32_t uiDrawNode(float x, float y, float w, float h, uint8_t state, const char* title, uint8_t numInputs, uint8_t numOutputs);
     void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
     void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
     uint8_t uiGetKeyboardState(uint16_t key);
@@ -33,42 +33,6 @@ ui.warpMouse = ffi.C.uiWarpMouseInWindow
 
 local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
 
-function ui.initPorts(node)
-    node.ports = {}
-    -- Calculate input port locations
-    local i = 1
-    local input_cnt = #(node.xform.inputs)
-    for input_idx, input in ipairs(node.xform.inputs) do
-        local port = { name = input.name, type = input.type }
-        port.x = (1/(input_cnt+1)) * i
-        port.y = 0.85
-        port.bndWidgetState = BNDWidgetState.Default
-        port.is_input = true
-        port.is_output = false
-        node.ports[input.name] = port
-        i = i+1
-    end
-
-    -- Calculate output port locations
-    i = 1
-    local output_cnt = #(node.xform.outputs)
-    for output_idx, output in ipairs(node.xform.outputs) do
-        local port = { name = output.name, type = output.type}
-        port.x = (1/(output_cnt+1)) * i
-        port.y = 0.2
-        port.bndWidgetState = BNDWidgetState.Default
-        port.is_input = false
-        port.is_output = true
-        node.ports[output.name] = port
-        i = i+1
-        
-        -- Initialize output tables to {}
-        if lexer.generaliseType(output.type) == lexer.Types.Table then
-           node.output_values[output.name] = {}
-        end
-    end
-end
-
 function ui.createNode(id, x, y, w, h, module, submodule)
     local node = {}
     node.sx = x
@@ -84,7 +48,13 @@ function ui.createNode(id, x, y, w, h, module, submodule)
     node.xform = lexer.xform(module,submodule)
     node.input_values = {}
     node.output_values = {}
-    ui.initPorts(node)
+
+    -- Initialise table values to {} so that their contents can be set inside the xform
+    for idx, output in ipairs(node.xform.outputs) do
+       if (lexer.generaliseType(output.type) == lexer.Types.Table) then
+          node.output_values[output.name] = {}
+       end
+    end
 
     core.nodes[id] = node
     --table.insert(core.nodes, node)
@@ -94,50 +64,6 @@ end
 function ui.shutdown()
 end
 
-local function DrawNode(node)
-    ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, node.xform.dispname, 255, 50, 100, 255)
-    for name, port in pairs(node.ports) do
-        if port.is_input then
-            ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 100, 255, 255)
-        else
-            ui.drawPort(node.x + port.x * node.w, node.y + port.y * node.h, port.bndWidgetState, 0, 255, 100, 255)
-        end
-    end
-    -- Draw the input connections
-    for inport_name, connection in pairs(node.connections) do
-        local node_in = node
-        local node_out = core.nodes[connection.out_node_id]
-        if node_out then
-           local port_in = node.ports[inport_name]
-           local port_out = node_out.ports[connection.port_name]
-           local node_inx = node_in.x + port_in.x * node_in.w
-           local node_iny = node_in.y + port_in.y * node_in.h
-           local node_outx = node_out.x + port_out.x * node_out.w
-           local node_outy = node_out.y + port_out.y * node_out.h
-           if node_inx < node_outx then
-              ui.drawWire(node_inx,
-              node_iny,
-              node_outx,
-              node_outy,
-              BNDWidgetState.Active, BNDWidgetState.Active)
-           else
-              ui.drawWire(node_outx,
-              node_outy,
-              node_inx,
-              node_iny,
-              BNDWidgetState.Active, BNDWidgetState.Active)
-           end
-        end
-    end
-end
-
-local function max(a,b)
-    if a > b then
-        return a
-    end
-    return b
-end
-
 local zooming = {
     -- Center x,y
     cx = 0,
@@ -145,59 +71,6 @@ local zooming = {
     zoom = 1,
     aspect = 1600 / 900
 }
-function ui.drawNodes()
-    for idx, node in pairs(core.nodes) do
-       if node then
-          DrawNode(node)
-       end
-    end
-end
-
-local function pt_pt_dist2(px, py, qx, qy)
-    local dx = px-qx
-    local dy = py-qy
-    return dx*dx + dy*dy
-end
-local function pt_aabb_test(minx, miny, w, h, px, py)
-    if minx < px and px < minx + w and miny < py and py < miny + h then
-        return true
-    end
-    return false
-end
-local function pt_aabb_relative(minx, miny, w, h, px, py)
-    return (px - minx) / w, (py - miny) / h
-end
-
-local function ports_pt_intersect(node, px, py)
-    local isect = nil
-    local radius = 0.006
-    for _k, port in pairs(node.ports) do
-        local dist2 = pt_pt_dist2(px, py, port.x, port.y)
-        if dist2 < radius then
-            port.bndWidgetState = BNDWidgetState.Hover
-            isect = port
-        else
-            port.bndWidgetState = BNDWidgetState.Default
-        end
-    end
-    return isect
-end
-
-local function nodes_pt_intersect(px, py)
-    local isect = nil
-    for _k, node in pairs(core.nodes) do
-       if node then
-          insideAABB = pt_aabb_test(node.x, node.y, node.w, node.h, px, py)
-          if insideAABB and not isect then
-             node.bndWidgetState = BNDWidgetState.Hover
-             isect = node
-          else
-             node.bndWidgetState = BNDWidgetState.Default
-          end
-       end
-    end
-    return isect
-end
 
 -- Holds data for dragging
 local MouseDrag =
@@ -207,7 +80,6 @@ local MouseDrag =
     anchorx = {},  -- Starting(Anchor) point of the node before dragging, new_pos = anchor + delta
     anchory = {},
 }
-local HoveredNode
 local SelectedNodes = {}
 
 -- States
@@ -253,125 +125,77 @@ function ui.start()
     IHoldPageDown = ui.getKeyboardState(SDL.Key.PAGEDOWN) == KeyEvent.Hold
 end
 
-local InputNode, OutputNode, InputPort, OutputPort
-local PortStart, PortEnd, NodeStart, NodeEnd
-
+-- This is one of the most complex parts of the code
+-- InputNode, OutputNode, HoveredInput, HoveredOutput are set by DrawNode function
+-- Every connection is made from NodeStart->NodeEnd, NodeStart being the node that provides the input
+-- to NodeEnd's output at PortStart and PortEnd respectively
+-- So NodeStart is the cache for the node that we start dragging the connector from
+local InputNode, OutputNode, HoveredInput, HoveredOutput
+local PortStart, PortEnd, NodeStart, NodeEnd, NodeStartID, NodeEndID
+local NodeStartIsInput
 function ui.dragConnectors()
-    local MouseOnPort = PortStart
-
-    local Types = { Float = 0, Integer = 1, String = 2, VecN = 3, Table = 4}
-    local GeneraliseType = function(Type)
-        if Type == 'f16' or Type == 'f32' or Type == 'f64' then
-            return Types.Float
-        elseif Type == 'i8' or Type == 'i16' or Type == 'i32' or Type == 'i64' or  Type == 'u8' or Type == 'u16' or Type == 'u32' or Type == 'u64' then
-            return Types.Float
-        elseif Type == 'str' then
-            return Types.String
-        elseif Type == 'vec2' or Type == 'vec3' or Type == 'vec4' then
-            return Types.VecN
-        else
-            return Types.Table
-        end
-    end
-    local PortTypesMatch = function (TypeA, TypeB)
-        local GenA = GeneraliseType(TypeA)
-        local GenB = GeneraliseType(TypeB)
-        if GenA == Types.Other or GenB == Types.Other then
-            return TypeA == TypeB
-        elseif GenA == GenB then
-            return true
-        else
-            return false
-        end
-    end
-
-    local FindConnection = function ()
-        local relx, rely = pt_aabb_relative(HoveredNode.x, HoveredNode.y, HoveredNode.w, HoveredNode.h, MouseX, MouseY)
-        -- not drag_connector ==> node_from == nil
-        -- drag_connector ==> node_from ~= nil
-        if not HoveredNode then
-            return
-        end
-
-        -- If not dragging connectors, cache the node/port tuple
-        if not DraggingConnectors then
-            NodeStart = HoveredNode
-            PortStart = ports_pt_intersect(HoveredNode, relx, rely)
-            if PortStart and PortStart.is_input then
-                InputNode = NodeStart
-                InputPort = PortStart
-            end
-        else
-            NodeEnd = HoveredNode
-            PortEnd = ports_pt_intersect(HoveredNode, relx, rely)
-            if InputPort then
-                OutputNode = NodeEnd
-                OutputPort = PortEnd
-            else
-                OutputNode = NodeStart
-                OutputPort = PortStart
-                InputNode = NodeEnd
-                InputPort = PortEnd
-            end
-        end
-    end
+    local MouseOnPort = HoveredInput or HoveredOutput
 
     local StartDraggingConnector = function ()
         MouseDrag.mx = MouseX
         MouseDrag.my = MouseY
-        MouseDrag.canchorx = NodeStart.x + NodeStart.w * PortStart.x
-        MouseDrag.canchory = NodeStart.y + NodeStart.h * PortStart.y
+        MouseDrag.canchorx = HoveredPortX
+        MouseDrag.canchory = HoveredPortY
+        NodeStartID = (InputNode or OutputNode).id
+        NodeStart = core.nodes[NodeStartID]
+        PortStart = HoveredInput or HoveredOutput
+        if NodeStart == InputNode then
+           NodeStartIsInput = true
+        else
+           NodeStartIsInput = false
+        end
+        NodeEnd = nil
+        NodeEndID = nil
+        PortEnd = nil
         DraggingConnectors = true
     end
     local StopDraggingConnector = function ()
         DraggingConnectors = false
-        DraggingExistingConnection = false
         NodeStart = nil
+        NodeStartID = nil
         PortStart = nil
         NodeEnd = nil
+        NodeEndID = nil
         PortEnd = nil
     end
-    local DragExistingConnection = function ()
-        -- If it is an input port and a binding exists
-        if NodeStart.connections[PortStart.name] then
-            DraggingExistingConnection = true
-            -- Then, it is as if we're dragging from that OutputNode's output
-            OutputNode = core.nodes[InputNode.connections[InputPort.name].out_node_id]
-            OutputPort = OutputNode.ports[InputNode.connections[InputPort.name].port_name]
-            -- New NodeStart is the input NodeStart's connection node
-            NodeStart = OutputNode
-            PortStart = OutputPort
-            InputNode.connections[InputPort.name] = nil
-            C.nw_send("DeleteConn " .. tostring(InputNode.id) .. " " .. InputPort.name)
-        end
-    end
-    local CreateConnection = function ()
-        if not (NodeStart == NodeEnd) and not (PortStart.is_input == PortEnd.is_input) then
-            -- Lets connect those ports = Make the xform input/output connections
-            InputNode, OutputNode = NodeStart, NodeEnd
-            InputPort, OutputPort = PortStart, PortEnd
-            -- Swap inputs if PortEnd is an input
-            if PortEnd.is_input then
-                InputNode, OutputNode = NodeEnd, NodeStart
-                InputPort, OutputPort = PortEnd, PortStart
-            end
-            --if PortTypesMatch(InputPort.type, OutputPort.type) then
-                -- Connect the port that is an input of a node to the output port
-                InputNode.connections[InputPort.name] = {out_node_id = OutputNode.id, port_name = OutputPort.name}
-                C.nw_send("UpdateConn " .. tostring(InputNode.id) .. " " .. InputPort.name .. " " .. tostring(OutputNode.id) .. " " .. OutputPort.name)
-            --end
-        end
+
+    if DraggingConnectors then
+       NodeStart = core.nodes[NodeStartID]
+       NodeEnd   = core.nodes[NodeEndID]
     end
 
-    if not DraggingNodes and HoveredNode then
-        FindConnection()
+    local CreateConnection = function ()
+       if not NodeStartIsInput then
+          NodeStart, PortStart, NodeEnd, PortEnd, NodeStartID, NodeEndID = NodeEnd, PortEnd, NodeStart, PortStart, NodeEndID, NodeStartID
+       end
+       NodeStart.connections[NodeStart.xform.input_map[PortStart]] = {out_node_id = NodeEnd.id, port_name = NodeEnd.xform.output_map[PortEnd]}
+       C.nw_send("UpdateConn " .. tostring(NodeStart.id) .. " " .. NodeStart.xform.input_map[PortStart] .. " " .. tostring(NodeEnd.id) .. " " .. NodeEnd.xform.output_map[PortEnd])
     end
-    if IPressLMB and MouseOnPort and HoveredNode then
-        DragExistingConnection()
-        StartDraggingConnector()
+
+    if IPressLMB and MouseOnPort then
+       StartDraggingConnector()
+       -- Delete existing connection if there is any
+       if NodeStartIsInput and NodeStart.connections[NodeStart.xform.input_map[PortStart]] then
+          NodeStart.connections[NodeStart.xform.input_map[PortStart]] = nil
+          C.nw_send("DeleteConn " .. tostring(NodeStart.id) .. " " .. NodeStart.xform.inputs[PortStart].name)
+       end
     end
 
     if IHoldLMB and DraggingConnectors then
+        -- Set NodeEnd if intersecting an Input/Output port
+        if NodeStartIsInput and OutputNode then
+           NodeEndID = OutputNode.id
+           PortEnd = HoveredOutput
+        elseif not NodeStartIsInput and InputNode then
+           NodeEndID = InputNode.id
+           PortEnd = HoveredInput
+        end
+        -- Draw the dragged wire
         if MouseDrag.canchorx < MouseX then
             ui.drawWire(MouseDrag.canchorx, MouseDrag.canchory, MouseX, MouseY, BNDWidgetState.Active, BNDWidgetState.Active)
         else
@@ -380,11 +204,76 @@ function ui.dragConnectors()
     end
 
     if IReleaseLMB and DraggingConnectors then
-        if NodeEnd and PortEnd then
+        -- NodeStartIsInput and HoveredInput check is to not connect two inputs together
+        -- NodeStartID and NodeEndID cannot be equal => Can't connect inputs/outputs of same node as it would introduce cycles
+        if NodeStart and NodeEnd and not(NodeStartID == NodeEndID) and not (NodeStartIsInput and HoveredInput) then
             CreateConnection()
         end
         StopDraggingConnector()
     end
+end
+
+local function DrawNode(node)
+    local numInputs = #node.xform.inputs
+    local numOutputs = #node.xform.outputs
+    nodeStatus = ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, 
+    node.xform.dispname, numInputs, numOutputs)
+
+    local selectedInput = bit.rshift(nodeStatus, 16)
+    local selectedOutput = bit.rshift(nodeStatus, 8)
+    local nodeHovered = not(bit.lshift(nodeStatus, 31) == 0)
+
+    -- Draw wires
+    for inputName, connection in pairs(node.connections) do
+       local inputNode = node -- Node providing the input
+       local outputNode = core.nodes[connection.out_node_id]  -- Node providing the output to the input
+       if outputNode then
+           local outNodeOutputs = #outputNode.xform.outputs
+           local inputPortIdx   = inputNode.xform.input_name_map[inputName]
+           local outputPortIdx  = outputNode.xform.output_name_map[connection.port_name]
+           local inputPortX  = inputNode.x + (inputPortIdx * inputNode.w / (numInputs+1))
+           local inputPortY  = inputNode.y + inputNode.h
+           local outputPortX = outputNode.x + (outputPortIdx * outputNode.w / (outNodeOutputs+1))
+           local outputPortY = outputNode.y
+           if inputPortX > outputPortX then
+              inputPortX, outputPortX, inputPortY, outputPortY = outputPortX, inputPortX, outputPortY, inputPortY
+           end
+           ui.drawWire(inputPortX, inputPortY, outputPortX, outputPortY,
+           BNDWidgetState.Active, BNDWidgetState.Active)
+        end
+     end
+
+     if nodeHovered and selectedInput == 0 and selectedOutput == 0 then
+        if not DraggingNodes then
+           HoveredNode = node
+        end
+     end
+
+     if selectedOutput > 0 then
+        OutputNode = node
+        HoveredOutput = selectedOutput
+        HoveredPortX = node.x + (selectedOutput * node.w / (numOutputs+1))
+        HoveredPortY = node.y
+     end
+     if selectedInput > 0 then
+        InputNode = node
+        HoveredInput = selectedInput
+        HoveredPortX = node.x + (selectedInput * node.w / (numInputs+1))
+        HoveredPortY = node.y + node.h
+     end
+end
+
+function ui.drawNodes()
+   HoveredNode = nil
+   InputNode = nil
+   OutputNode = nil
+   HoveredInput = nil
+   HoveredOutput = nil
+   for idx, node in pairs(core.nodes) do
+      if node then
+         DrawNode(node)
+      end
+   end
 end
 
 local function SearchInSelectedNodes(snode)
@@ -396,30 +285,23 @@ local function SearchInSelectedNodes(snode)
     return nil
 end
 
-local function FindHoveredNode(MouseX, MouseY)
-    return nodes_pt_intersect(MouseX, MouseY)
-end
-
 function ui.selectNodes()
     -- This is the behaviour expected for holding CTRL, can override
     local SelectNodeCTRL = function ()
         FoundNode = SearchInSelectedNodes(HoveredNode)
         if FoundNode then
-            table.remove(SelectedNodes, FoundNode)
+            local removedNode = table.remove(SelectedNodes, FoundNode)
+            removedNode .bndWidgetState = BNDWidgetState.Default
         else
             table.insert(SelectedNodes, HoveredNode)
         end
     end
 
     local SelectNodeWithoutCTRL = function ()
-        FoundNode = SearchInSelectedNodes(HoveredNode)
-        if not FoundNode then
-            SelectedNodes = {HoveredNode}
-        end
-    end
-
-    if not DraggingNodes then
-        HoveredNode = FindHoveredNode(MouseX, MouseY)
+       for i, node in ipairs(SelectedNodes) do
+          node.bndWidgetState = BNDWidgetState.Default
+       end
+       SelectedNodes = {HoveredNode}
     end
 
     if IPressLMB and HoveredNode then
@@ -431,18 +313,15 @@ function ui.selectNodes()
     end
 
     if IPressLMB and not HoveredNode then
+       for i, node in ipairs(SelectedNodes) do
+          node.bndWidgetState = BNDWidgetState.Default
+       end
         SelectedNodes = {}
-    end
-
-    -- This behavior is for handling the CTRL
-    if IReleaseLMB and HoveredNode then
-        SelectNodeWithoutCTRL()
     end
 
     for i, node in ipairs(SelectedNodes) do
         node.bndWidgetState = BNDWidgetState.Active
     end
-    return SelectedNodes
 end
 
 function ui.dragNodes()
@@ -465,7 +344,6 @@ function ui.dragNodes()
         for i, node in ipairs(SelectedNodes) do
             node.sx = MouseDrag.anchorx[i] + (MouseX - MouseDrag.mx) / zooming.zoom
             node.sy = MouseDrag.anchory[i] + (MouseY - MouseDrag.my) / zooming.zoom
-            node.bndWidgetState = BNDWidgetState.Active
         end
     end
 
