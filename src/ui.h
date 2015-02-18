@@ -29,7 +29,7 @@ FFI_EXPORT void uiSetTextProperties(const char* font, float size, int align);
 FFI_EXPORT void uiSetTextColor(int r, int g, int b, int a);
 FFI_EXPORT void uiDrawText(float x, float y, const char* str);
 
-int uiFrameStart(uint32 width, uint32 height);
+int uiFrameStart(uint32 width, uint32 height, float time);
 void uiFrameEnd();
 
 union SDL_Event;

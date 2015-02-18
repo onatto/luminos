@@ -27,7 +27,12 @@ static const Uint8 *keyboard_state;
 static uint32 mouse_state;
 static uint32 mouse_state_prev;
 SDL_Window* sdl_wnd;
-
+// uint32 lastNodeID
+// Used in DrawNode, counter assuming nodes are passed in the same order as last frame
+// Set to 0 at ui_start
+// prevNodeID is the node ID from previous frame
+static uint32 lastNodeID;               
+static uint32 prevNodeID;               
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
 
@@ -101,11 +106,15 @@ int uiInitGlobals()
 }
 
 static int mx,my; // Mouse X,Y
+static float s_time;
 
-int uiFrameStart(uint32 width, uint32 height)
+int uiFrameStart(uint32 width, uint32 height, float time)
 {
     nvgBeginFrame(nvg, width, height, 1.f);
     nvgBeginFrame(nvg_blur, width, height, 1.f);
+
+    lastNodeID = 0;
+    s_time = time;
 
     uint32 mleft, mright, mmiddle, mmask;
 
@@ -223,11 +232,22 @@ enum NodeState {
     NODE_HOVER,
     NODE_SELECTED,
 };
+
+static float timeSinceLastNode = 0.f;
 uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* title, uint8 numInputs, uint8 numOutputs)
 {
     float mouseX = (float)mx;
     float mouseY = (float)my;
     bool mouseOverNode = AABBPointTest(x, y, w, h, mouseX, mouseY);
+    lastNodeID++;
+    if (mouseOverNode)
+    {
+        if (lastNodeID != prevNodeID)
+        {
+           timeSinceLastNode = s_time;
+           prevNodeID = lastNodeID;
+        }
+    }
     bool brighter = mouseOverNode || state == NODE_SELECTED;
     // Outline
     nvgBeginPath(nvg_blur);
@@ -238,7 +258,16 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     // Text
     nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,brighter ? 190 : 140));
     nvgFontFace(nvg_blur, "header");
-    nvgFontSize(nvg_blur, 20.f);
+    nvgFontSize(nvg_blur, 20.f * w / 200.0f);
+    if (mouseOverNode) {
+        const float scale = 0.25f;
+        const float freq = 3.14f * 100.f / 60.f;
+        float mult = w / 200.f * (1.0f + sin(freq * (s_time-timeSinceLastNode)) * scale );
+        nvgFontSize(nvg_blur, 20.f * mult);
+    }
+    else {
+        nvgFontSize(nvg_blur, 20.f * w / 200.0f);
+    }
     nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
     nvgText(nvg_blur, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
 

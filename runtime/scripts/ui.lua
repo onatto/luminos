@@ -11,7 +11,7 @@ local lexer = require 'lexer'
 
 ffi.cdef
 [[
-    uint32_t uiDrawNode(float x, float y, float w, float h, uint8_t state, const char* title, uint8_t numInputs, uint8_t numOutputs);
+    uint32_t uiDrawNode(float x, float y, float w, float h, uint8_t state, const char* title, uint8_t numInputs, uint8_t numOutputs, float time);
     void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
     void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
     uint8_t uiGetKeyboardState(uint16_t key);
@@ -217,7 +217,7 @@ local function DrawNode(node)
     local numInputs = #node.xform.inputs
     local numOutputs = #node.xform.outputs
     nodeStatus = ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, 
-    node.xform.dispname, numInputs, numOutputs)
+    node.xform.dispname, numInputs, numOutputs, g_time)
 
     local selectedInput = bit.rshift(nodeStatus, 16)
     local selectedOutput = bit.rshift(nodeStatus, 8)

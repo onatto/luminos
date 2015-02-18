@@ -121,7 +121,7 @@ int main(int _argc, char** _argv)
         uiRenderBlur(width, height, tex);
         gfxBindFramebuffer(0);
         glViewport(0, 0, width, height);
-        quit |= uiFrameStart(width, height);
+        quit |= uiFrameStart(width, height, time);
         if (!s_errorPort)
             coreExecPort("portProgramStart");
         else
