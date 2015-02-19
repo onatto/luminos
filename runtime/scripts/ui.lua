@@ -196,11 +196,7 @@ function ui.dragConnectors()
            PortEnd = HoveredInput
         end
         -- Draw the dragged wire
-        if MouseDrag.canchorx < MouseX then
-            ui.drawWire(MouseDrag.canchorx, MouseDrag.canchory, MouseX, MouseY, BNDWidgetState.Active, BNDWidgetState.Active)
-        else
-            ui.drawWire(MouseX, MouseY, MouseDrag.canchorx, MouseDrag.canchory, BNDWidgetState.Active, BNDWidgetState.Active)
-        end
+        ui.drawWire(MouseDrag.canchorx, MouseDrag.canchory, MouseX, MouseY, BNDWidgetState.Active, BNDWidgetState.Active)
     end
 
     if IReleaseLMB and DraggingConnectors then
@@ -235,7 +231,7 @@ local function DrawNode(node)
            local inputPortY  = inputNode.y + inputNode.h
            local outputPortX = outputNode.x + (outputPortIdx * outputNode.w / (outNodeOutputs+1))
            local outputPortY = outputNode.y
-           if inputPortX > outputPortX then
+           if inputPortX < outputPortX then
               inputPortX, outputPortX, inputPortY, outputPortY = outputPortX, inputPortX, outputPortY, inputPortY
            end
            ui.drawWire(inputPortX, inputPortY, outputPortX, outputPortY,

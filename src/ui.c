@@ -258,7 +258,7 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     // Text
     nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,brighter ? 190 : 140));
     nvgFontFace(nvg_blur, "header");
-    nvgFontSize(nvg_blur, 20.f * w / 200.0f);
+    nvgFontSize(nvg_blur, 20.f * w / 180.0f);
     if (mouseOverNode) {
         const float scale = 0.25f;
         const float freq = 3.14f * 100.f / 60.f;
@@ -315,6 +315,15 @@ void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char 
 
 void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state)
 {
+    float tmp;
+    if (py<qy) {
+        tmp = px;
+        px = qx;
+        qx = tmp;
+        tmp = py;
+        py = qy;
+        qy = tmp;
+    }
     float length = fmax(abs(qy - py),abs(qx - px));
     float curving = 3.f; // between 0,10
     float delta = length * curving * 0.1f;
@@ -324,9 +333,28 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
         px + delta, py,
         qx - delta, qy,
         qx, qy);
+
     nvgStrokeColor(nvg_blur, nvgRGBA(200, 0, 0, 180));
     nvgStrokeWidth(nvg_blur, 0.9f);
     nvgStroke(nvg_blur);
+
+    float time_int_part;
+    float speed = 0.73f + sin((float)lastNodeID * 3.53 + s_time) * 0.5;
+    float time = s_time*speed + (float)lastNodeID * 0.373;
+    float t = modf(time, &time_int_part);
+    float t_1 = (1.0f-t);
+    float b0 = (t_1)*(t_1)*(t_1);
+    float b1 = 3.f*(t_1)*(t_1)*t;
+    float b2 = 3.f*(t_1)*t*t;
+    float b3 = t*t*t;
+
+    float x = b0*px + b1*(px+delta) + b2*(qx-delta) + b3*qx;
+    float y = b0*py + b1*(py) + b2*(qy) + b3*qy;
+
+    nvgBeginPath(nvg_blur);
+    nvgCircle(nvg_blur, x, y, 2.f);
+    nvgFillColor(nvg_blur, nvgRGBA(255,0,0,200));
+    nvgFill(nvg_blur);
 }
 void uiWarpMouseInWindow(int x, int y)
 {
