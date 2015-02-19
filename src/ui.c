@@ -46,19 +46,22 @@ struct BlurFBO {
     uint32 fbo;
     uint32 color;
     uint32 depth;
-    uint32 compute;
+    uint32 blurv;
+    uint32 blurh;
     uint32 pipe;
-    uint32 blurDst;
+    uint32 blurvDst;
+    uint32 blurhDst;
 };
 
 static void initBlurFBO(struct BlurFBO* blur, uint16 w, uint16 h)
 {
     blur->width = w; blur->height = h;
-    blur->fbo = gfxCreateFramebuffer(w, h, TEX_RGBA8, TEX_D24F, &blur->color, &blur->depth);
-    blur->compute = gfxCreateShader("shaders/blur.cs", SHADER_COMP);
+    blur->fbo = gfxCreateFramebuffer(w, h, TEX_RGBA16F, TEX_D24F, &blur->color, &blur->depth);
+    blur->blurv = gfxCreateShader("shaders/blur_v.cs", SHADER_COMP);
+    blur->blurh = gfxCreateShader("shaders/blur_h.cs", SHADER_COMP);
     blur->pipe = gfxCreatePipeline();
-    gfxReplaceComputeShader(blur->pipe, blur->compute);
-    blur->blurDst = gfxCreateImage2D(BLUR_FBO_WIDTH, BLUR_FBO_HEIGHT, TEX_RGBA16F);
+    blur->blurvDst = gfxCreateImage2D(w, h, TEX_RGBA16F);
+    blur->blurhDst = gfxCreateImage2D(w, h, TEX_RGBA16F);
 }
 
 struct UIData
@@ -174,9 +177,10 @@ void uiFrameEnd()
 
 void uiResize(uint32 width, uint32 height)
 {
-    gfxResizeTexture(data.blur.color, TEX_RGBA8, width, height);
+    gfxResizeTexture(data.blur.color, TEX_RGBA16F, width, height);
     gfxResizeTexture(data.blur.depth, TEX_D24F, width, height);
-    gfxResizeTexture(data.blur.blurDst, TEX_RGBA16F, width, height);
+    gfxResizeTexture(data.blur.blurvDst, TEX_RGBA16F, width, height);
+    gfxResizeTexture(data.blur.blurhDst, TEX_RGBA16F, width, height);
 }
 void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
 {
@@ -187,9 +191,18 @@ void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
     nvgEndFrame(nvg_blur);
 
     glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
+    // Vertical Blur
+    gfxReplaceComputeShader(data.blur.pipe, data.blur.blurv);
     gfxBindPipeline(data.blur.pipe);
-    gfxBindImage2D(data.blur.color, 0, GL_READ_ONLY, TEX_RGBA8);
-    gfxBindImage2D(data.blur.blurDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
+    gfxBindImage2D(data.blur.color,   0, GL_READ_ONLY,  TEX_RGBA16F);
+    gfxBindImage2D(data.blur.blurvDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
+    glDispatchCompute(width/16, height/16, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    // Horizontal blur
+    gfxReplaceComputeShader(data.blur.pipe, data.blur.blurh);
+    gfxBindImage2D(data.blur.blurvDst, 0, GL_READ_ONLY,  TEX_RGBA16F);
+    gfxBindImage2D(data.blur.blurhDst,   1, GL_WRITE_ONLY, TEX_RGBA16F);
     glDispatchCompute(width/16, height/16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -197,7 +210,7 @@ void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
     gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
-    gfxBlitTexture(data.blur.blurDst, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
+    gfxBlitTexture(data.blur.blurhDst, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
     //gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
 }
 
@@ -207,24 +220,6 @@ static inline bool AABBPointTest(float x, float y, float w, float h, float px, f
         return true;
     return false;
 }
-
-/*void uiDrawNode(float x, float y, float w, float h, int widgetState, const char* title, char r, char g, char b, char a)
-{
-    bool mouseOverNode = AABBPointTest(x, y, w, h, (float)mx, (float)my) || widgetState == 2;
-    // Outline
-    nvgBeginPath(nvg_blur);
-    nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
-    nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 0, mouseOverNode ? 180 : 130));
-    nvgStrokeWidth(nvg_blur, 1.5f);
-    nvgStroke(nvg_blur);
-    // Text
-    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,mouseOverNode ? 190 : 140));
-    nvgFontFace(nvg_blur, "header");
-    nvgFontSize(nvg_blur, 20.f);
-    nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
-    nvgText(nvg_blur, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
-}
-*/
 
 //
 enum NodeState {
@@ -239,34 +234,31 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     float mouseX = (float)mx;
     float mouseY = (float)my;
     bool mouseOverNode = AABBPointTest(x, y, w, h, mouseX, mouseY);
-    lastNodeID++;
-    if (mouseOverNode)
-    {
-        if (lastNodeID != prevNodeID)
-        {
-           timeSinceLastNode = s_time;
-           prevNodeID = lastNodeID;
-        }
-    }
     bool brighter = mouseOverNode || state == NODE_SELECTED;
+
+    lastNodeID++;
+    if (mouseOverNode && lastNodeID != prevNodeID)
+    {
+       timeSinceLastNode = s_time;
+       prevNodeID = lastNodeID;
+    }
     // Outline
     nvgBeginPath(nvg_blur);
     nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
     nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 0, brighter ? 180 : 130));
-    nvgStrokeWidth(nvg_blur, 1.5f);
+    nvgStrokeWidth(nvg_blur, 1.f);
     nvgStroke(nvg_blur);
     // Text
     nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,brighter ? 190 : 140));
     nvgFontFace(nvg_blur, "header");
-    nvgFontSize(nvg_blur, 20.f * w / 180.0f);
     if (mouseOverNode) {
         const float scale = 0.25f;
         const float freq = 3.14f * 100.f / 60.f;
         float mult = w / 200.f * (1.0f + sin(freq * (s_time-timeSinceLastNode)) * scale );
-        nvgFontSize(nvg_blur, 20.f * mult);
+        nvgFontSize(nvg_blur, 26.f * mult);
     }
     else {
-        nvgFontSize(nvg_blur, 20.f * w / 200.0f);
+        nvgFontSize(nvg_blur, 26.f * w / 200.0f);
     }
     nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
     nvgText(nvg_blur, x + w*0.5f, y + h*0.5f + 5.f, title, NULL);
@@ -341,9 +333,10 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
     float time_int_part;
     float speed = 0.90f + sin((float)lastNodeID * 3.53f) * 0.5f;
     float tt = modf(s_time, &time_int_part);
-    float time = 1.0f*tt*speed + (float)lastNodeID * 0.373f;
+    float time = tt*speed + (float)lastNodeID * 0.373f;
     float t = modf(time, &time_int_part);
     float t_1 = (1.0f-t);
+    // Coefficients for the Bezier
     float b0 = (t_1)*(t_1)*(t_1);
     float b1 = 3.f*(t_1)*(t_1)*t;
     float b2 = 3.f*(t_1)*t*t;

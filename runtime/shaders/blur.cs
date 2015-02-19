@@ -1,5 +1,5 @@
 #version 440 core
-restrict readonly layout(rgba8, binding = 0) uniform image2D srcTex;
+restrict readonly layout(rgba16f, binding = 0) uniform image2D srcTex;
 restrict writeonly layout(rgba16f, binding = 1) uniform image2D dstTex;
 
 layout (local_size_x = 16, local_size_y = 16) in;
