@@ -339,8 +339,9 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
     nvgStroke(nvg_blur);
 
     float time_int_part;
-    float speed = 0.73f + sin((float)lastNodeID * 3.53 + s_time) * 0.5;
-    float time = s_time*speed + (float)lastNodeID * 0.373;
+    float speed = 0.90f + sin((float)lastNodeID * 3.53f) * 0.5f;
+    float tt = modf(s_time, &time_int_part);
+    float time = 1.0f*tt*speed + (float)lastNodeID * 0.373f;
     float t = modf(time, &time_int_part);
     float t_1 = (1.0f-t);
     float b0 = (t_1)*(t_1)*(t_1);
