@@ -23,10 +23,11 @@ CurrentNode = nil
 
 
 local function loadTransforms()
-    local modules = {"core", "math", "util"}
+    local modules = {"core", "math", "util", "gfx"}
     local transforms = { {"mouse", "concat", "time"},
                          {"sin", "cos", "add", "multiply", "divide", "mod"},
-                         {"print", "posws", "textprops"}
+                         {"print", "posws", "textprops"},
+                         {"loadtex2d"}
                         }
         for modidx,module in ipairs(modules) do
             for xformidx,transform in ipairs(transforms[modidx]) do
@@ -97,5 +98,15 @@ function portProgramStart()
 
     if CurrentNode then
         core.execNode(CurrentNode)
+        local vizFunc = lexer.xformFunc[CurrentNode.xform.module][CurrentNode.xform.name].viz
+        if vizFunc then
+            vizFunc(CurrentNode.input_values, CurrentNode.output_values)
+        end
+        if (ui.getKeyboardState(SDL.Key.F2) == KeyEvent.Press) then
+            local cacheFunc = lexer.xformFunc[CurrentNode.xform.module][CurrentNode.xform.name].cache
+            if cacheFunc then
+                cacheFunc(CurrentNode.input_values, CurrentNode.output_values)
+            end
+        end
     end
 end
