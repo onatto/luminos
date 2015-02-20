@@ -60,7 +60,6 @@ local function ParseInput(tokens, line)
        input.default = ""
     end
     if tokens[4] then
-       print("Parsing default: " .. tokens[4])
        local s, e = string.find(line, '[%s+]=[%s+]')
        local default = string.sub(line, e+1)
        input.default = lexer.convertFromString(default, tokens[1])
@@ -77,7 +76,6 @@ local function ParseOutput(tokens, line)
 end
 
 Keywords.xform = function(tokens)
-   print("Defining xform: " .. tokens[2])
    currentDef = {}
    currentDef.name = tokens[2]
    currentDef.inputs = {}
@@ -116,6 +114,11 @@ local function ParseTransform(def)
    for line in def:gmatch("[^\r\n]+") do
       tokens = SplitWhitespace(line)
       if tokens[1] == "func" then
+         if currentFunc then
+            head = string.find(def, line, head)
+            currentFunc.ends = head - 1
+            currentFunc = nil
+         end
          funcName = tokens[2]
          currentDef.funcs[funcName] = {}
          currentFunc = currentDef.funcs[funcName]
@@ -127,7 +130,7 @@ local function ParseTransform(def)
       elseif Keywords[tokens[1]] then
          if currentFunc then
             head = string.find(def, line, head)
-            currentFunc.ends = head + string.len(line)
+            currentFunc.ends = head - 1
             currentFunc = nil
          end
          Keywords[tokens[1]](tokens, head)
@@ -176,8 +179,8 @@ lexer.lex = function(module, submodule)
        end
        lexer.xformTable[xform.module][xform.name] = xform
 
-       if xform.funcs.eval then
-          local funcBody = string.sub(def, xform.funcs.eval.starts, xform.funcs.eval.ends)
+       for funcName, funcDef in pairs(xform.funcs) do
+          local funcBody = string.sub(def, funcDef.starts, funcDef.ends)
           local func = "local ffi = require 'ffi'\n"
           func = func .. "local C = ffi.C\n"
           func = func .. "local debugger = require 'debugger'\n"
@@ -195,7 +198,10 @@ lexer.lex = function(module, submodule)
              if not lexer.xformFunc[xform.module] then
                 lexer.xformFunc[xform.module] = {}
              end
-             lexer.xformFunc[xform.module][xform.name] = xformFunc()
+             if not lexer.xformFunc[xform.module][xform.name] then
+                lexer.xformFunc[xform.module][xform.name] = {}
+             end
+             lexer.xformFunc[xform.module][xform.name][funcName] = xformFunc()
           end
        end
     end

@@ -33,7 +33,7 @@ function core.execNode(node)
   end
 
   -- All inputs are ready at this point, evaluate the xform which sets up any outputs it can too
-  lexer.xformFunc[xform.module][xform.name](node.input_values, node.output_values)
+  lexer.xformFunc[xform.module][xform.name].eval(node.input_values, node.output_values)
   xform.visited = true
   -- The outputs of this xform are ready, maybe they're there, maybe not
   return node

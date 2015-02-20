@@ -15,3 +15,4 @@ if props then
     C.uiSetTextProperties(props.font, math.floor(props.fontSize), 9)
 end
 C.uiDrawText(inp.x, inp.y, tostring(inp.text))
+

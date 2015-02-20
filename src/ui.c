@@ -184,13 +184,14 @@ void uiResize(uint32 width, uint32 height)
 }
 void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
 {
+    /* Submit primitives to GPU after binding the framebuffer */
     gfxBindFramebuffer(data.blur.fbo);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0, 0, width, height);
-
     nvgEndFrame(nvg_blur);
 
     glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
+
     // Vertical Blur
     gfxReplaceComputeShader(data.blur.pipe, data.blur.blurv);
     gfxBindPipeline(data.blur.pipe);
@@ -211,7 +212,6 @@ void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
     glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
     gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
     gfxBlitTexture(data.blur.blurhDst, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
-    //gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
 }
 
 static inline bool AABBPointTest(float x, float y, float w, float h, float px, float py)
@@ -249,7 +249,7 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     nvgBeginPath(nvg_blur);
     nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
     nvgStrokeColor(nvg_blur, nvgRGBA(180, 0, 0, brighter ? 180 : 130));
-    nvgStrokeWidth(nvg_blur, 1.f);
+    nvgStrokeWidth(nvg_blur, brighter ? 1.1f : 1.f);
     nvgStroke(nvg_blur);
     // Text
     nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,brighter ? 190 : 140));

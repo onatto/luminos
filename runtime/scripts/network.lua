@@ -56,9 +56,10 @@ end
 local function DeleteNodeCmd(args)
   local id = tonumber(args[1])
   local node = core.nodes[id]
-  local deleteFunc = lexer.xformFunc[node.xform.module][node.xform.name](node.input_values,node.output_values)
+  local deleteFunc = lexer.xformFunc[node.xform.module][node.xform.name].delete
+  
   if deleteFunc then
-    deleteFunc()
+    deleteFunc(node.input_values,node.output_values)
   end
   core.nodes[id] = nil
 
