@@ -194,7 +194,7 @@ void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
     // Vertical Blur
     gfxReplaceComputeShader(data.blur.pipe, data.blur.blurv);
     gfxBindPipeline(data.blur.pipe);
-    gfxBindImage2D(data.blur.color,   0, GL_READ_ONLY,  TEX_RGBA16F);
+    gfxBindImage2D(data.blur.color,    0, GL_READ_ONLY,  TEX_RGBA16F);
     gfxBindImage2D(data.blur.blurvDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
     glDispatchCompute(width/16, height/16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -202,7 +202,7 @@ void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
     // Horizontal blur
     gfxReplaceComputeShader(data.blur.pipe, data.blur.blurh);
     gfxBindImage2D(data.blur.blurvDst, 0, GL_READ_ONLY,  TEX_RGBA16F);
-    gfxBindImage2D(data.blur.blurhDst,   1, GL_WRITE_ONLY, TEX_RGBA16F);
+    gfxBindImage2D(data.blur.blurhDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
     glDispatchCompute(width/16, height/16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -229,12 +229,15 @@ enum NodeState {
 };
 
 static float timeSinceLastNode = 0.f;
+static float s_zoom = 1.0;
 uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* title, uint8 numInputs, uint8 numOutputs)
 {
     float mouseX = (float)mx;
     float mouseY = (float)my;
     bool mouseOverNode = AABBPointTest(x, y, w, h, mouseX, mouseY);
     bool brighter = mouseOverNode || state == NODE_SELECTED;
+
+    s_zoom = w / 180.f;
 
     lastNodeID++;
     if (mouseOverNode && lastNodeID != prevNodeID)
@@ -245,7 +248,7 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     // Outline
     nvgBeginPath(nvg_blur);
     nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
-    nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 0, brighter ? 180 : 130));
+    nvgStrokeColor(nvg_blur, nvgRGBA(180, 0, 0, brighter ? 180 : 130));
     nvgStrokeWidth(nvg_blur, 1.f);
     nvgStroke(nvg_blur);
     // Text
@@ -299,7 +302,7 @@ void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char 
     nvgBeginPath(nvg_blur);
     nvgCircle(nvg_blur, x, y, 5.f);
     nvgStrokeColor(nvg_blur, bnd_theme.nodeTheme.wiresColor);
-    nvgStrokeWidth(nvg_blur,1.0f);
+    nvgStrokeWidth(nvg_blur,1.0f * s_zoom);
     nvgStroke(nvg_blur);
     nvgFillColor(nvg_blur, nvgRGBA(r,g,b,a));
     nvgFill(nvg_blur);
@@ -327,14 +330,15 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
         qx, qy);
 
     nvgStrokeColor(nvg_blur, nvgRGBA(200, 0, 0, 180));
-    nvgStrokeWidth(nvg_blur, 0.9f);
+    nvgStrokeWidth(nvg_blur, 0.9f * s_zoom);
     nvgStroke(nvg_blur);
 
     float time_int_part;
     float speed = 0.90f + sin((float)lastNodeID * 3.53f) * 0.5f;
     float tt = modf(s_time, &time_int_part);
     float time = tt*speed + (float)lastNodeID * 0.373f;
-    float t = modf(time, &time_int_part);
+    //float t = modf(time, &time_int_part);
+    float t = modf(s_time * speed, &time_int_part);
     float t_1 = (1.0f-t);
     // Coefficients for the Bezier
     float b0 = (t_1)*(t_1)*(t_1);
@@ -346,7 +350,7 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
     float y = b0*py + b1*(py) + b2*(qy) + b3*qy;
 
     nvgBeginPath(nvg_blur);
-    nvgCircle(nvg_blur, x, y, 2.f);
+    nvgCircle(nvg_blur, x, y, 2.f * s_zoom);
     nvgFillColor(nvg_blur, nvgRGBA(255,0,0,200));
     nvgFill(nvg_blur);
 }
@@ -405,4 +409,9 @@ void uiVisualiserFrame(float x, float y, float w, float h)
     nvgStrokeColor(nvg, nvgRGBA(255, 0, 30, 140));
     nvgRect(nvg, x, y, w, h);
     nvgStroke(nvg);
+}
+
+void uiParseTransforms()
+{
+
 }

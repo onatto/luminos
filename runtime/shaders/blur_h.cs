@@ -14,5 +14,5 @@ void main() {
         color += imageLoad(srcTex, gid + ivec2( i, 0)) * weights[i];
         color += imageLoad(srcTex, gid + ivec2(-i, 0)) * weights[i];
     }
-    imageStore(dstTex, gid, color * 2.0);
+    imageStore(dstTex, gid, color * 2.8);
 }

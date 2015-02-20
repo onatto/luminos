@@ -180,7 +180,8 @@ function ui.dragConnectors()
     if IPressLMB and MouseOnPort then
        StartDraggingConnector()
        -- Delete existing connection if there is any
-       if NodeStartIsInput and NodeStart.connections[NodeStart.xform.input_map[PortStart]] then
+       connection = NodeStart.connections[NodeStart.xform.input_map[PortStart]]
+       if NodeStartIsInput and connection then
           NodeStart.connections[NodeStart.xform.input_map[PortStart]] = nil
           C.nw_send("DeleteConn " .. tostring(NodeStart.id) .. " " .. NodeStart.xform.inputs[PortStart].name)
        end
