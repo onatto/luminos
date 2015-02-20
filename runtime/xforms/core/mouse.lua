@@ -1,8 +1,11 @@
+xform mouse
 module core
+dispname Mouse
 
-out u32 mx
-out u32 my
+outputs
+u32 mx
+u32 my
 
-xform Mouse
+func eval
 out.mx = g_mouseState.mx
 out.my = g_mouseState.my

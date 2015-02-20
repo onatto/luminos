@@ -1,9 +1,13 @@
+xform add
 module math
+dispname Add
 
-in f32 a = 0
-in f32 b = 0
+inputs
+f32 a = 0
+f32 b = 0
 
-out f32 c
+outputs
+f32 c
 
-xform Add
+func eval
 out.c = inp.a + inp.b

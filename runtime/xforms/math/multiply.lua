@@ -1,9 +1,13 @@
+xform multiply
 module math
+dispname Multiply
 
-in f32 a = 1
-in f32 b = 1
+inputs
+f32 a = 1
+f32 b = 1
 
-out f32 c
+outputs
+f32 c
 
-xform Multiply
+func eval
 out.c = inp.a * inp.b

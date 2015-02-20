@@ -1,9 +1,13 @@
+xform divide
 module math
+dispname Divide
 
-in f32 num = 1
-in f32 dem = 1
+inputs
+f32 num = 1
+f32 dem = 1
 
-out f32 quot
+outputs
+f32 quot
 
-xform Divide
+func eval
 out.quot = inp.num / inp.dem

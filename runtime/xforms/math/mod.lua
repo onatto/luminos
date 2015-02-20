@@ -1,9 +1,13 @@
+xform mod
 module math
+dispname Mod
 
-in f32 num = 1
-in f32 dem = 1
+inputs
+f32 num = 1
+f32 dem = 1
 
-out f32 rest
+outputs
+f32 rest
 
-xform Mod
+func eval
 out.rest = inp.num % inp.dem

@@ -1,16 +1,19 @@
+xform textprops
 module util
-
-in u8 r = 255
-in u8 g = 255
-in u8 b = 255
-in u8 a = 255
-in str font = header
-in u8 fontSize = 32
-
-out textProps textProps
 dispname Text Properties
 
-xform textProps
+inputs
+u8 r = 255
+u8 g = 255
+u8 b = 255
+u8 a = 255
+str font = header
+u8 fontSize = 32
+
+outputs
+textProps textProps
+
+func eval
 out.textProps.r = inp.r
 out.textProps.g = inp.g
 out.textProps.b = inp.b

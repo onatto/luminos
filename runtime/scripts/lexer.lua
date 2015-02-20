@@ -48,52 +48,100 @@ lexer.convertToString = function(Val, Type)
     end
 end
 
+local Keywords = {}
+local currentDef
+local currentFunc
+local definitions = {}
+local ParsingFunc
+
+local function ParseInput(tokens, line)
+    local input = { type = tokens[1], name = tokens[2] }
+    if input.type == "str" then
+       input.default = ""
+    end
+    if tokens[4] then
+       print("Parsing default: " .. tokens[4])
+       local s, e = string.find(line, '[%s+]=[%s+]')
+       local default = string.sub(line, e+1)
+       input.default = lexer.convertFromString(default, tokens[1])
+    end
+    table.insert(currentDef.inputs, input)
+    table.insert(currentDef.input_map, input.name)
+    currentDef.input_name_map[input.name] = #currentDef.inputs
+end
+local function ParseOutput(tokens, line)
+    local output = { type = tokens[1], name = tokens[2] }
+    table.insert(currentDef.outputs, output)
+    table.insert(currentDef.output_map, output.name)
+    currentDef.output_name_map[output.name] = #currentDef.outputs
+end
+
+Keywords.xform = function(tokens)
+   print("Defining xform: " .. tokens[2])
+   currentDef = {}
+   currentDef.name = tokens[2]
+   currentDef.inputs = {}
+   currentDef.outputs = {}
+   -- Map inputs/outputs idx to input/output name
+   currentDef.input_map = {}
+   currentDef.output_map = {}
+   currentDef.input_name_map = {}
+   currentDef.output_name_map = {}
+   currentDef.funcs = {}
+   currentDef.cache = {}
+   definitions[currentDef.name] = currentDef
+   ParsingFunc = nil
+   end
+Keywords.module = function(tokens)
+   currentDef.module = tokens[2]
+   ParsingFunc = nil
+   end
+Keywords.inputs = function(tokens)
+   ParsingFunc = ParseInput 
+   end
+Keywords.outputs = function(tokens)
+    ParsingFunc = ParseOutput
+   end
+Keywords.func = function(tokens, head)
+   funcName = tokens[2]
+   currentDef.funcs[funcName] = {}
+   currentFunc = currentDef.funcs[funcName]
+   currentFunc.starts = head
+   ParsingFunc =nil
+end
+
 local function ParseTransform(def)
-    local xform = {}
-    xform.inputs = {}
-    xform.outputs = {}
-    -- Map inputs/outputs idx to input/output name
-    xform.input_map = {}
-    xform.output_map = {}
-    xform.input_name_map = {}
-    xform.output_name_map = {}
-    xform.cache = {}
-    for line in def:gmatch("[^\r\n]+") do
-        tokens = SplitWhitespace(line)
-        if tokens[1] == 'in' then
-            local input = { type = tokens[2], name = tokens[3] }
-            if tokens[4] then
-                local s, e = string.find(line, '[%s+]=[%s+]')
-                local default = string.sub(line, e+1)
-                input.default = lexer.convertFromString(default, tokens[2])
-            end
-            table.insert(xform.inputs, input)
-            table.insert(xform.input_map, input.name)
-            xform.input_name_map[input.name] = #xform.inputs
-        elseif tokens[1] == 'out' then
-            local output = { type = tokens[2], name = tokens[3] }
-            table.insert(xform.outputs, output)
-            table.insert(xform.output_map, output.name)
-            xform.output_name_map[output.name] = #xform.outputs
-        elseif tokens[1] == 'module' then
-            xform.module = tokens[2]
-        elseif tokens[1] == 'viz' then
-            xform.viz = tokens[2]
-        elseif tokens[1] == 'dispname' then
-            xform.dispname = string.sub(line, 9)
-        elseif tokens[1] == 'xform' then
-            xform.name = tokens[2]
-            break
-        end
-    end
+   definitions = {}
+   head = 1
+   for line in def:gmatch("[^\r\n]+") do
+      tokens = SplitWhitespace(line)
+      if tokens[1] == "func" then
+         funcName = tokens[2]
+         currentDef.funcs[funcName] = {}
+         currentFunc = currentDef.funcs[funcName]
+         head = string.find(def, line, head)
+         currentFunc.starts = head + string.len(line)
+         ParsingFunc =nil
+      elseif tokens[1] == "dispname" then
+         currentDef.dispname = string.sub(line, 9)
+      elseif Keywords[tokens[1]] then
+         if currentFunc then
+            head = string.find(def, line, head)
+            currentFunc.ends = head + string.len(line)
+            currentFunc = nil
+         end
+         Keywords[tokens[1]](tokens, head)
+      elseif ParsingFunc then
+         ParsingFunc(tokens, line)
+      end
+      head = head + string.len(line)
+   end
+   if currentFunc then
+      currentFunc.ends = string.len(def) + 1
+      currentFunc = nil
+   end
 
-    local s, e = string.find(def, 'xform[%s+]' .. xform.name)
-    xform.func_str = string.sub(def, e+1)
-
-    if not xform.dispname then
-        xform.dispname = xform.name
-    end
-    return xform
+   return definitions
 end
 
 lexer.xformFunc = {}
@@ -116,29 +164,40 @@ lexer.lex = function(module, submodule)
         return nil
     end
 
-    local xform  = ParseTransform(def)
-    if not lexer.xformTable[xform.module] then
-        lexer.xformTable[xform.module] = {}
-    end
-    lexer.xformTable[xform.module][xform.name] = xform
+    local definitions  = ParseTransform(def)
 
-    func = "local ffi = require 'ffi'\n"
-    func = func .. "local C = ffi.C\n"
-    func = func .. "local debugger = require 'debugger'\n"
-    func = func .. "local SDL = require 'sdlkeys'\n"
-    func = func .. "return function(inp, out)\n" 
-    func = func .. xform.func_str .. "\nend"
+    for name, xform in pairs(definitions) do
+       if not lexer.xformTable[xform.module] then
+          lexer.xformTable[xform.module] = {}
+       end
 
-    local xformFunc, err = loadstring(func)
-    if not xformFunc then
-        debugger.print(err)
-        return nil
-    else
-        if not lexer.xformFunc[xform.module] then
-            lexer.xformFunc[xform.module] = {}
-        end
-        lexer.xformFunc[xform.module][xform.name] = xformFunc()
-        return xform
+       if not xform.dispname then
+          xform.dispname = xform.name
+       end
+       lexer.xformTable[xform.module][xform.name] = xform
+
+       if xform.funcs.eval then
+          local funcBody = string.sub(def, xform.funcs.eval.starts, xform.funcs.eval.ends)
+          local func = "local ffi = require 'ffi'\n"
+          func = func .. "local C = ffi.C\n"
+          func = func .. "local debugger = require 'debugger'\n"
+          func = func .. "local SDL = require 'sdlkeys'\n"
+          func = func .. "return function(inp, out)\n" 
+          func = func .. funcBody .. "\nend"
+
+          local xformFunc, err = loadstring(func)
+          if not xformFunc then
+             debugger.print(err)
+             debugger.print("----------------")
+             debugger.print(func)
+             return nil
+          else
+             if not lexer.xformFunc[xform.module] then
+                lexer.xformFunc[xform.module] = {}
+             end
+             lexer.xformFunc[xform.module][xform.name] = xformFunc()
+          end
+       end
     end
 end
 
@@ -147,11 +206,9 @@ lexer.xform = function(module, xform_name)
         return nil
     end
     if not lexer.xformFunc[module][xform_name] then
-        local xformTable = lexer.lex(module,xform_name)
-        return xformTable
-    else
-        return lexer.xformTable[module][xform_name]
-    end
+        lexer.lex(module,xform_name)
+     end
+     return lexer.xformTable[module][xform_name]
 end
 
 return lexer

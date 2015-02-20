@@ -1,12 +1,14 @@
+xform print
 module util
-
-in f32 x = 0
-in f32 y = 0
-in textProps textProps
-in str text = Hello
-
 dispname Print String
-xform Print
+
+inputs
+f32 x = 0
+f32 y = 0
+textProps textProps
+str text = Hello
+
+func eval
 local props = inp.textProps
 if props then
     C.uiSetTextColor(props.r, props.g, props.b, props.a)

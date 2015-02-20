@@ -1,6 +1,9 @@
+xform time
 module core
+dispname Time
 
-out f32 time
+outputs
+f32 time
 
-xform Time
+func eval
 out.time = g_time

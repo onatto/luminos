@@ -1,14 +1,14 @@
+xform concat
 module core
+dispname Concat
 
-in str str_left = Hello
-in str str_right =  World!
-in str seperator = 
+inputs
+str str_left = Hello
+str str_right =  World!
+str seperator
 
-out str str_concat
+outputs
+str str_concat
 
-xform Concat
+func eval
 out.str_concat = inp.str_left .. inp.seperator .. inp.str_right
-
-return function ()
-    debugger.print("Deleting concat with " .. inp.str_left)
-end
