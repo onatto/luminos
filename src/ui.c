@@ -405,10 +405,10 @@ void uiShutdown()
 
 void uiVisualiserFrame(float x, float y, float w, float h)
 {
-    nvgBeginPath(nvg);
-    nvgStrokeColor(nvg, nvgRGBA(255, 0, 30, 140));
-    nvgRect(nvg, x, y, w, h);
-    nvgStroke(nvg);
+    nvgBeginPath(nvg_blur);
+    nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 30, 140));
+    nvgRect(nvg_blur, x, y, w, h);
+    nvgStroke(nvg_blur);
 }
 
 void uiParseTransforms()
