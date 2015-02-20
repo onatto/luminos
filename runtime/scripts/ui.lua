@@ -9,21 +9,9 @@ local SDL =   require 'sdlkeys'
 local bit = require 'bit'
 local lexer = require 'lexer'
 
-ffi.cdef
-[[
-    uint32_t uiDrawNode(float x, float y, float w, float h, uint8_t state, const char* title, uint8_t numInputs, uint8_t numOutputs, float time);
-    void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
-    void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
-    uint8_t uiGetKeyboardState(uint16_t key);
-    void uiWarpMouseInWindow(int x, int y);
-    void uiSaveNVGState();
-    void uiRestoreNVG();
-    void uiSetTextProperties(const char* font, float size, int align);
-    void uiSetTextColor(int r, int g, int b, int a);
-    void uiDrawText(float x, float y, const char* str);
-]]
-
 local C = ffi.C
+
+helpers.cdef(ffi, "ui.h")
 
 ui.drawNode = ffi.C.uiDrawNode
 ui.drawPort = ffi.C.uiDrawPort

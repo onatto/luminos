@@ -1,4 +1,5 @@
 local lexer = {}
+local helpers  = require 'helpers'
 local debugger = require 'debugger'
 
 local function SplitWhitespace(str)
@@ -87,6 +88,8 @@ Keywords.xform = function(tokens)
    currentDef.output_name_map = {}
    currentDef.funcs = {}
    currentDef.cache = {}
+   currentDef.imports = {}
+
    definitions[currentDef.name] = currentDef
    ParsingFunc = nil
    end
@@ -106,6 +109,16 @@ Keywords.func = function(tokens, head)
    currentFunc = currentDef.funcs[funcName]
    currentFunc.starts = head
    ParsingFunc =nil
+end
+Keywords.import = function(tokens)
+   local import = tokens[2]
+   local importAs
+   if tokens[3] == "as" and tokens[4] then
+      importAs = tokens[4]
+   else
+      importAs = import
+   end
+   currentDef.imports[importAs] = import
 end
 
 local function ParseTransform(def)
@@ -150,19 +163,10 @@ end
 lexer.xformFunc = {}
 lexer.xformTable = {}
 
-local function ReadFile(path)
-    local f = io.open(path, "r")
-    if not f then
-        return nil
-    end
-    local content = f:read("*all")
-    f:close()
-    return content
-end
 
 lexer.lex = function(module, submodule)
     local path = "xforms/" .. module .. "/" .. submodule .. ".lua"
-    local def = ReadFile(path)
+    local def = helpers.readFile(path)
     if not def then
         return nil
     end
@@ -183,8 +187,10 @@ lexer.lex = function(module, submodule)
           local funcBody = string.sub(def, funcDef.starts, funcDef.ends)
           local func = "local ffi = require 'ffi'\n"
           func = func .. "local C = ffi.C\n"
-          func = func .. "local debugger = require 'debugger'\n"
           func = func .. "local SDL = require 'sdlkeys'\n"
+          for importAs, import in pairs(xform.imports) do
+             func = func .. "local " .. importAs .. " = require '" .. import .. "'\n"
+          end
           func = func .. "return function(inp, out)\n" 
           func = func .. funcBody .. "\nend"
 
