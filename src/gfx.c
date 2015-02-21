@@ -97,7 +97,8 @@ static void initBlitTextureQuad(struct BlitTextureQuad* quad, const char* vsh, c
   quad->texLocation = glGetUniformLocation(quad->rp.fsh, "tex");
 }
 
-static struct BlitTextureQuad s_blitQuad;
+static struct BlitTextureQuad s_blitQuadTEX;
+static struct BlitTextureQuad s_blitQuadFBO;
 void gfxInit()
 {
   memset(&gctx, 0, sizeof(GfxContext));
@@ -115,7 +116,8 @@ void gfxInit()
   glDebugMessageCallback(debugOutputCallback, 0);
 
   initVertexFormats();
-  initBlitTextureQuad(&s_blitQuad, "shaders/quad.vert", "shaders/ssquad.frag");
+  initBlitTextureQuad(&s_blitQuadTEX, "shaders/quad_tex.vert", "shaders/ssquad.frag");
+  initBlitTextureQuad(&s_blitQuadFBO, "shaders/quad_fbo.vert", "shaders/ssquad.frag");
 }
 
 uint32 gfxCreateVBO(void* data, uint32 size)
@@ -436,11 +438,20 @@ void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 
   }
 }
 
+void gfxBlitFramebuffer(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h)
+{
+    mat4x4 ortho;
+    mat4x4_ortho(ortho, 0.f, wnd_w, wnd_h, 0.f, 0.f, 100.f);
+    gfxBindTextures2D(&tex, &s_blitQuadFBO.texLocation, 1, s_blitQuadFBO.rp.fsh);
+    ssquadResize(&s_blitQuadFBO.rp, ortho, x, y, w, h);
+    ssquadDraw(&s_blitQuadFBO.rp);
+}
+
 void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h)
 {
     mat4x4 ortho;
     mat4x4_ortho(ortho, 0.f, wnd_w, wnd_h, 0.f, 0.f, 100.f);
-    gfxBindTextures2D(&tex, &s_blitQuad.texLocation, 1, s_blitQuad.rp.fsh);
-    ssquadResize(&s_blitQuad.rp, ortho, x, y, w, h);
-    ssquadDraw(&s_blitQuad.rp);
+    gfxBindTextures2D(&tex, &s_blitQuadTEX.texLocation, 1, s_blitQuadTEX.rp.fsh);
+    ssquadResize(&s_blitQuadTEX.rp, ortho, x, y, w, h);
+    ssquadDraw(&s_blitQuadTEX.rp);
 }

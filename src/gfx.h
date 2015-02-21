@@ -34,6 +34,7 @@ void gfxReplaceComputeShader(uint32 pipeline, uint32 comp);
 
 void gfxSetTransform(float* transform);
 void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
+void gfxBlitFramebuffer(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
 
 enum TextureFormats {
   TEX_R8,

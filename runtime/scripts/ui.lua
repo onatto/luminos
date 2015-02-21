@@ -560,9 +560,6 @@ function ui.update()
       end
    end
 
-   local function ReloadWorkspaceMsg()
-      C.nw_send("Workspace")
-   end
     local SelectNextInput = function (CurrentNode)
         SelectedInput = ((SelectedInput) % #(CurrentNode.xform.inputs)) + 1
     end
@@ -589,6 +586,15 @@ function ui.update()
       if NewConst then
          CurrentNode.constants[InputName] = NewConst
          C.nw_send("UpdateConst " .. tostring(CurrentNode.id) .. " " .. InputName .. " " .. tostring(NewConst))
+      end
+   end
+   local function RecacheAllNodes()
+      for idx, node in pairs(core.nodes) do
+         core.execNode(node)
+         local cacheFunc = lexer.xformFunc[node.xform.module][node.xform.name].cache
+         if cacheFunc then
+            cacheFunc(node.input_values, node.output_values)
+         end
       end
    end
    local function SelectedInputIsTable()
@@ -640,8 +646,9 @@ function ui.update()
     if IPressDelete and SelectedNodes then
        DeleteNodesMsg(SelectedNodes)
     end
+    
     if IPressHome then
-       ReloadWorkspaceMsg()
+       RecacheAllNodes()
     end
 
     if IPressTab then

@@ -14,8 +14,6 @@ struct SDL_Window;
 
 int uiInit();
 void uiShutdown();
-int uiInitGlobals();
-int uiUploadMouseGlobals(void*);
 
 // For the FFI, export these as C functions
 FFI_EXPORT uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* title, uint8 numInputs, uint8 numOutputs);
@@ -28,6 +26,7 @@ FFI_EXPORT void uiRestoreNVG();
 FFI_EXPORT void uiSetTextProperties(const char* font, float size, int align);
 FFI_EXPORT void uiSetTextColor(int r, int g, int b, int a);
 FFI_EXPORT void uiDrawText(float x, float y, const char* str);
+FFI_EXPORT void uiVisualiserFrame(float x, float y, float w, float h);
 
 int uiFrameStart(uint32 width, uint32 height, float time);
 void uiFrameEnd();
@@ -44,6 +43,5 @@ enum KeyEvent
 };
 
 extern struct SDL_Window* sdl_wnd;
-void uiVisualiserFrame(float x, float y, float w, float h);
-uint32 uiBlurColorTex();
-void uiRenderBlur(uint32 width, uint32 height, uint32 tex);
+void uiRenderBlur(uint32 width, uint32 height);
+void uiResize(uint32 width, uint32 height);

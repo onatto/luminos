@@ -100,8 +100,6 @@ int main(int _argc, char** _argv)
         const double freq = SDL_GetPerformanceFrequency();
         float time = (float)( (now-timeOffset)/freq);
 
-        coreUpdateGlobals(time);
-
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
@@ -118,7 +116,7 @@ int main(int _argc, char** _argv)
         cubeUpdate(&cube, rot, time, 0.f, 0.f, -4.f, (float*)view, (float*)proj);
         cubeDraw(&cube);
 
-        uiRenderBlur(width, height, tex);
+        uiRenderBlur(width, height);
         gfxBindFramebuffer(0);
         glViewport(0, 0, width, height);
         quit |= uiFrameStart(width, height, time);
@@ -129,7 +127,7 @@ int main(int _argc, char** _argv)
 
         uiFrameEnd();
 
-        gfxBlitTexture(color_tex, (float)width-300.f, 0.f, 300.f, 300.f, width, height);
+        gfxBlitFramebuffer(color_tex, (float)width-300.f, 0.f, 300.f, 300.f, width, height);
         uiVisualiserFrame((float)width-300.f, 0.f, 300.f, 300.f);
        
         networkUpdate();

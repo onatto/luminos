@@ -8,3 +8,4 @@ void uiRestoreNVG();
 void uiSetTextProperties(const char* font, float size, int align);
 void uiSetTextColor(int r, int g, int b, int a);
 void uiDrawText(float x, float y, const char* str);
+void uiVisualiserFrame(float x, float y, float w, float h);

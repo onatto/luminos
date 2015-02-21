@@ -93,10 +93,3 @@ int coreExecPort(const char* port_name)
     int nresults = lua_gettop(L) - top;
     return nresults;
 }
-
-void coreUpdateGlobals(float time)
-{
-	lua_State* L = getLuaState();
-	lua_pushnumber(L, time);
-	lua_setglobal(L, "g_time");
-}

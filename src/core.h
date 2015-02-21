@@ -4,7 +4,6 @@ void coreInit();
 void coreStart(const char* program_lua, char* error_msg_out);
 /* Execute Lua function <port_name> */
 int coreExecPort(const char* port_name);
-void coreUpdateGlobals(float time);
 void coreShutdown();
 
 #ifdef MSVC

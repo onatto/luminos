@@ -71,24 +71,7 @@ struct UIData
     struct BlurFBO blur;
 };
 
-static struct UIData data;
-int uiInit()
-{
-    nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
-    bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png", 0));
-
-    data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
-    data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
-    nvg_blur = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    nvgCreateFont(nvg_blur, "header", "font/opensans.ttf");
-    nvgCreateFont(nvg_blur, "header-bold", "font/opensans-bold.ttf");
-    initBlurFBO(&data.blur, BLUR_FBO_WIDTH, BLUR_FBO_HEIGHT);
-    uiInitGlobals();
-    return 0;
-}
-
-int uiInitGlobals()
+static int uiInitGlobals()
 {
     lua_State* L = getLuaState();
     lua_createtable(L, 0, TABLE_ENTRIES);
@@ -105,6 +88,28 @@ int uiInitGlobals()
     lua_setfield(L, -2, "right");
     lua_setglobal(L, "g_mouseState");
 
+    lua_pushnumber(L, 1920);
+    lua_setglobal(L, "g_windowWidth");
+    lua_pushnumber(L, 1080);
+    lua_setglobal(L, "g_windowHeight");
+
+    return 0;
+}
+
+static struct UIData data;
+int uiInit()
+{
+    nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
+    bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png", 0));
+
+    data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
+    data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
+    nvg_blur = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    nvgCreateFont(nvg_blur, "header", "font/opensans.ttf");
+    nvgCreateFont(nvg_blur, "header-bold", "font/opensans-bold.ttf");
+    initBlurFBO(&data.blur, BLUR_FBO_WIDTH, BLUR_FBO_HEIGHT);
+    uiInitGlobals();
     return 0;
 }
 
@@ -150,6 +155,12 @@ int uiFrameStart(uint32 width, uint32 height, float time)
         return false;
     }
 
+    lua_pushnumber(L, width);
+    lua_setglobal(L, "g_windowWidth");
+    lua_pushnumber(L, height);
+    lua_setglobal(L, "g_windowHeight");
+    lua_pushnumber(L, time);
+    lua_setglobal(L, "g_time");
     lua_getglobal(L, "g_mouseState");
     lua_pushnumber(L, mx);
     lua_setfield(L, -2, "mx");
@@ -182,7 +193,7 @@ void uiResize(uint32 width, uint32 height)
     gfxResizeTexture(data.blur.blurvDst, TEX_RGBA16F, width, height);
     gfxResizeTexture(data.blur.blurhDst, TEX_RGBA16F, width, height);
 }
-void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
+void uiRenderBlur(uint32 width, uint32 height)
 {
     /* Submit primitives to GPU after binding the framebuffer */
     gfxBindFramebuffer(data.blur.fbo);
@@ -210,8 +221,8 @@ void uiRenderBlur(uint32 width, uint32 height, uint32 tex)
     gfxBindFramebuffer(0);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-    gfxBlitTexture(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
-    gfxBlitTexture(data.blur.blurhDst, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
+    gfxBlitFramebuffer(data.blur.color, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
+    gfxBlitFramebuffer(data.blur.blurhDst, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
 }
 
 static inline bool AABBPointTest(float x, float y, float w, float h, float px, float py)

@@ -18,10 +18,14 @@ if #inp.path > 0 and not out.tex.hnd then
     out.tex.w = w
     out.tex.h = h
 end
+
+import viz
 func viz
-if out.tex.hnd then
-    C.gfxBlitTexture(out.tex.hnd, 0, 500, 300, 300, 1920, 1080)
-end
+viz.set {
+    hnd = out.tex.hnd,
+    mip = 0,
+    viz = viz.texture2D,
+}
 
 func eval
 out.tex = out.tex

@@ -9,6 +9,7 @@ local SDL =   require 'sdlkeys'
 local debugger = require 'debugger'
 local lexer = require 'lexer'
 local network = require 'network'
+local viz   = require 'viz'
 
 debugger.init()
 
@@ -95,6 +96,7 @@ function portProgramStart()
     ui.update()
 
     ui.drawNodeInfo(CurrentNode)
+    viz.showVisualisations()
 
     if CurrentNode then
         core.execNode(CurrentNode)
