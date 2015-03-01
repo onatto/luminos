@@ -19,7 +19,8 @@ void gfxVertexFormat(uint8 vertexFormat);
 void gfxBindFramebuffer(uint32 fbo);
 void gfxResizeTexture(uint32 tex, uint8 format, uint32 width, uint32 height);
 void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
-void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format);
+void gfxBindImage2D(uint32 image, uint32 img_unit, uint8 format);
+void gfxSetImageUnit(uint32 program, uint32 imageLocation, int32 imgUnit);
 void gfxBindSSQuadBuffers();
 void gfxUniformBindingPoint(uint32 shader, const char* uniformBlockName, uint32 bindingPoint);
 void gfxBindUniformBuffer(uint32 ubo, void* data, size_t size, uint32 bindingPoint);
@@ -31,6 +32,7 @@ void gfxReplaceVertexShader(uint32 pipeline, uint32 vert);
 void gfxReplaceShaders(uint32 pipeline, uint32 vert, uint32 frag);
 void gfxReplaceShadersGeom(uint32 pipeline, uint32 vert, uint32 frag, uint32 geom);
 void gfxReplaceComputeShader(uint32 pipeline, uint32 comp);
+int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBufferSize, uint8* types, uint8* locations);
 
 void gfxSetTransform(float* transform);
 void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
@@ -74,4 +76,23 @@ enum VertexFormats {
   VERT_POS_NOR_T0,
   VERT_POS_NOR_T0_STRIDED,
   VERTEX_FORMATS,
+};
+
+enum UniformTypes {
+  UNIFORM_FLOAT,
+  UNIFORM_VEC2,
+  UNIFORM_VEC3,
+  UNIFORM_VEC4,
+  UNIFORM_MAT2,
+  UNIFORM_MAT3,
+  UNIFORM_MAT4,
+  UNIFORM_SAMPLER1D,
+  UNIFORM_SAMPLER2D,
+  UNIFORM_SAMPLER3D,
+  UNIFORM_SAMPLER_CUBE,
+  UNIFORM_IMAGE1D,
+  UNIFORM_IMAGE2D,
+  UNIFORM_IMAGE2D_ARRAY,
+  UNIFORM_IMAGE3D,
+  UNIFORM_TYPES,
 };

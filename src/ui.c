@@ -206,15 +206,15 @@ void uiRenderBlur(uint32 width, uint32 height)
     // Vertical Blur
     gfxReplaceComputeShader(data.blur.pipe, data.blur.blurv);
     gfxBindPipeline(data.blur.pipe);
-    gfxBindImage2D(data.blur.color,    0, GL_READ_ONLY,  TEX_RGBA16F);
-    gfxBindImage2D(data.blur.blurvDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
+    gfxBindImage2D(data.blur.color,    0, TEX_RGBA16F);
+    gfxBindImage2D(data.blur.blurvDst, 1, TEX_RGBA16F);
     glDispatchCompute(width/16, height/16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     // Horizontal blur
     gfxReplaceComputeShader(data.blur.pipe, data.blur.blurh);
-    gfxBindImage2D(data.blur.blurvDst, 0, GL_READ_ONLY,  TEX_RGBA16F);
-    gfxBindImage2D(data.blur.blurhDst, 1, GL_WRITE_ONLY, TEX_RGBA16F);
+    gfxBindImage2D(data.blur.blurvDst, 0, TEX_RGBA16F);
+    gfxBindImage2D(data.blur.blurhDst, 1, TEX_RGBA16F);
     glDispatchCompute(width/16, height/16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -315,7 +315,7 @@ void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char 
     nvgStrokeColor(nvg_blur, bnd_theme.nodeTheme.wiresColor);
     nvgStrokeWidth(nvg_blur,1.0f * s_zoom);
     nvgStroke(nvg_blur);
-    nvgFillColor(nvg_blur, nvgRGBA(r,g,b,a));
+    nvgFillColor(nvg_blur, nvgRGBA(r,g,b,a*s_zoom));
     nvgFill(nvg_blur);
 }
 

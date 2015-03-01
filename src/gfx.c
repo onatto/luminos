@@ -309,6 +309,7 @@ uint32 gfxCreateShader(const char* filename, uint8 shaderType) {
     return 0;
   }
   gctx.programs[gctx.shaderCnt++] = program;
+          
   return program;
 }
 
@@ -423,8 +424,9 @@ void gfxShutdown() {
   }
 }
 
-void gfxBindImage2D(uint32 image, uint32 img_unit, uint32 access, uint8 format) {
-    glBindImageTexture(img_unit, image, 0, GL_FALSE, 0, access, s_textureFormats[format].sizedInternalFormat);
+void gfxBindImage2D(uint32 image, uint32 img_unit, uint8 format) {
+  // Shaders themselves specify usage
+  glBindImageTexture(img_unit, image, 0, GL_FALSE, 0, GL_READ_WRITE, s_textureFormats[format].sizedInternalFormat);
 }
 
 void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program) {
@@ -454,4 +456,72 @@ void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w,
     gfxBindTextures2D(&tex, &s_blitQuadTEX.texLocation, 1, s_blitQuadTEX.rp.fsh);
     ssquadResize(&s_blitQuadTEX.rp, ortho, x, y, w, h);
     ssquadDraw(&s_blitQuadTEX.rp);
+}
+
+int32 s_uniformTypeMap[UNIFORM_TYPES] = {
+  GL_FLOAT,
+  GL_FLOAT_VEC2,
+  GL_FLOAT_VEC3,
+  GL_FLOAT_VEC4,
+  GL_FLOAT_MAT2,
+  GL_FLOAT_MAT3,
+  GL_FLOAT_MAT4,
+  GL_SAMPLER_1D,
+  GL_SAMPLER_2D,
+  GL_SAMPLER_3D,
+  GL_SAMPLER_CUBE,
+  GL_IMAGE_1D,
+  GL_IMAGE_2D,
+  GL_IMAGE_2D_ARRAY,
+  GL_IMAGE_3D,
+};
+
+int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBufferSize, uint8* types, uint8* locations) {
+  uint32 namesBufferOffset = 0;
+  GLint numUniforms = 0;
+  glGetProgramInterfaceiv(program, GL_UNIFORM, GL_ACTIVE_RESOURCES, &numUniforms);
+  const GLenum properties[4] = {GL_BLOCK_INDEX, GL_TYPE, GL_NAME_LENGTH, GL_LOCATION};
+   
+  for(int ii = 0; ii < numUniforms; ++ii)
+  {
+    GLint values[4];
+    glGetProgramResourceiv(program, GL_UNIFORM, ii, 4, properties, 4, NULL, values);
+
+    //Skip any iiorms that are in a block.
+    // values[0] = GL_BLOCK_INDEX
+    if(values[0] != -1)
+      continue;
+
+
+    // values[2] = GL_NAME_LENGTH
+    int32 len = values[2] + 1;
+    if (namesBufferOffset + len > namesBufferSize) {
+      break;
+    }
+    char name[len];
+    glGetProgramResourceName(program, GL_UNIFORM, ii, len, NULL, name);
+    
+    // Write to out buffers
+    memcpy(namesBuffer+namesBufferOffset, name, len);
+    namesBufferOffset += len;
+    locations[ii] = (uint8)values[3];
+
+    printf("Uniform %s of type %x, location %d\n", name, values[1], values[3]);
+
+    uint8 type = UNIFORM_TYPES;
+    for (uint8 t=0; t < UNIFORM_TYPES; t++) {
+      if (values[1] == s_uniformTypeMap[t]) {
+        type = t;
+        break;
+      }
+    }
+    types[ii] = type;
+  }
+  return numUniforms;
+}
+
+void gfxSetImageUnit(uint32 program, uint32 imageLocation, int32 imgUnit)
+{
+  printf("SetImageUnit %d %d\n", imageLocation, imgUnit);
+  glProgramUniform1i(program, imageLocation, imgUnit);
 }
