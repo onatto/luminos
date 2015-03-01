@@ -30,6 +30,7 @@ void gfxUniformBindingPoint(uint32 shader, const char* uniformBlockName, uint32 
 void gfxBindUniformBuffer(uint32 ubo, void* data, size_t size, uint32 bindingPoint);
 
 void gfxBindPipeline(uint32 pipeline);
+void gfxDispatchCompute(uint32 x, uint32 y, uint32 z);
 void gfxReplaceGeomShader(uint32 pipeline, uint32 geom);
 void gfxReplaceFragShader(uint32 pipeline, uint32 frag);
 void gfxReplaceVertexShader(uint32 pipeline, uint32 vert);

@@ -28,7 +28,7 @@ local function loadTransforms()
     local transforms = { {"mouse", "concat", "time"},
                          {"sin", "cos", "add", "multiply", "divide", "mod"},
                          {"print", "posws", "textprops"},
-                         {"loadtex2d"}
+                         {"loadtex2d", "image2d"}
                         }
         for modidx,module in ipairs(modules) do
             for xformidx,transform in ipairs(transforms[modidx]) do
@@ -58,7 +58,7 @@ end
 function portDisplayRuntimeError(error_msg)
     debugger.print("Error!")
     debugger.print(error_msg)
-    local x, y = 2, 0
+    local x, y = 2, g_windowHeight - 200
     C.uiSetTextProperties("header-bold", 25, 9)
     C.uiSetTextColor(255, 255, 255, 200)
     C.uiDrawText(x, y, g_statusMsg)

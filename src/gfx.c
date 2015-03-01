@@ -506,8 +506,6 @@ int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBuffe
     namesBufferOffset += len;
     locations[ii] = (uint8)values[3];
 
-    printf("Uniform %s of type %x, location %d\n", name, values[1], values[3]);
-
     uint8 type = UNIFORM_TYPES;
     for (uint8 t=0; t < UNIFORM_TYPES; t++) {
       if (values[1] == s_uniformTypeMap[t]) {
@@ -522,6 +520,10 @@ int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBuffe
 
 void gfxSetImageUnit(uint32 program, uint32 imageLocation, int32 imgUnit)
 {
-  printf("SetImageUnit %d %d\n", imageLocation, imgUnit);
   glProgramUniform1i(program, imageLocation, imgUnit);
+}
+
+void gfxDispatchCompute(uint32 x, uint32 y, uint32 z)
+{
+    glDispatchCompute(x,y,z);
 }

@@ -36,6 +36,9 @@ UniformTypes[C.UNIFORM_IMAGE2D_ARRAY] = "img2DArr"
 UniformTypes[C.UNIFORM_IMAGE3D] = "img3D"
 UniformTypes[C.UNIFORM_TYPES] = "undef"
 
+lexer.xformFunc.shaders = {}
+lexer.xformTable.shaders = {}
+
 local BindFunc = {}
 BindFunc[C.UNIFORM_IMAGE2D] = function(img_unit, img)
     C.gfxBindImage2D(img.hnd, img_unit, img.format)
@@ -61,15 +64,15 @@ function gfx.shaderDef(name, path, program, shaderType, uniforms)
    local samplerCount = 0
    local imageCount   = 0
    for idx, uniform in ipairs(uniforms) do
-      --print("Uniform " .. uniform.name .. " of type " .. UniformTypes[uniform.type] .. ", location: " .. uniform.location)
+      print("Uniform " .. uniform.name .. " of type " .. UniformTypes[uniform.type] .. ", location: " .. uniform.location)
       local input = { type = UniformTypes[uniform.type], name = uniform.name, uniformType = uniform.type}
       if uniform.type > C.UNIFORM_MAT4  and uniform.type < C.UNIFORM_IMAGE1D then
         input.location = samplerCount
-        --C.gfxSetImageUnit(program, uniform.location, samplerCount)
+        C.gfxSetImageUnit(program, uniform.location, samplerCount)
         samplerCount = samplerCount + 1
       elseif uniform.type > C.UNIFORM_SAMPLER_CUBE then
         input.location = imageCount
-        --C.gfxSetImageUnit(program, uniform.location, imageCount)
+        C.gfxSetImageUnit(program, uniform.location, imageCount)
         imageCount = imageCount + 1
       else
         input.location = uniform.location
@@ -81,15 +84,21 @@ function gfx.shaderDef(name, path, program, shaderType, uniforms)
    end
 
    -- Output for the shader
-   shaderDef.outputs[1] = { type = shaderType, name = "hnd" }
+   shaderDef.outputs[1] = { type = ShaderTypes[shaderType], name = "hnd" }
    shaderDef.output_map[1] = "hnd"
    shaderDef.output_name_map.hnd = 1
+   shaderDef.dispname = name
+   shaderDef.module = "shaders"
 
    -- Funcs
-   shaderDef.funcs.eval = function(inp, out)
-     for idx, input in pairs(inp) do
-       BindFunc[shaderDef.inputs[idx].uniformType](shaderDef.inputs[idx].location, input_value)
+   lexer.xformTable.shaders[name] = shaderDef
+   lexer.xformFunc.shaders[name] = {}
+   lexer.xformFunc.shaders[name].eval = function(inp, out)
+     for inputName, input in pairs(inp) do
+       local idx = shaderDef.input_name_map[inputName]
+       BindFunc[shaderDef.inputs[idx].uniformType](shaderDef.inputs[idx].location, input)
      end
+     out.hnd = shaderDef.program
    end
 end
 
@@ -99,8 +108,6 @@ function gfx.loadShader(name, path, type)
     return
   end
   local uniformCount = C.gfxGetShaderUniforms(program, uniformNames, maxUniforms * 32, uniformTypes, uniformLocations)
-  tt = ffi.string(uniformNames)
-  print(tt)
   local nameOffset = 0
   local uniforms = {}
   for i=0,uniformCount-1 do
@@ -109,13 +116,13 @@ function gfx.loadShader(name, path, type)
     uniform.type = uniformTypes[i]
     uniform.location = uniformLocations[i]
     table.insert(uniforms, uniform)
-    nameOffset = nameOffset + #name + 1 -- +1 for the NULL terminator
+    nameOffset = nameOffset + #uniform.name + 1 -- +1 for the NULL terminator
   end
   gfx.shaderDef(name, path, program, ShaderTypes[type], uniforms)
 end
 
-gfx.loadShader("SSQUAD", "shaders/quad_tex.vert", C.SHADER_VERT)
-gfx.loadShader("BLUR", "shaders/blur_h.cs", C.SHADER_COMP)
-gfx.loadShader("SSQUAD FRAG", "shaders/ssquad.frag", C.SHADER_FRAG)
+gfx.loadShader("ssquadvs", "shaders/quad_tex.vert", C.SHADER_VERT)
+gfx.loadShader("testcs", "shaders/test.cs", C.SHADER_COMP)
+gfx.loadShader("ssquadfs", "shaders/ssquad.frag", C.SHADER_FRAG)
 
 return gfx

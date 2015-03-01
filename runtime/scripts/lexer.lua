@@ -165,6 +165,9 @@ lexer.xformTable = {}
 
 
 lexer.lex = function(module, submodule)
+   if module == "shaders" then
+      return 
+   end
     local path = "xforms/" .. module .. "/" .. submodule .. ".lua"
     local def = helpers.readFile(path)
     if not def then
