@@ -13,7 +13,6 @@
 #include "nanovg/nanovg.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg/nanovg_gl.h"
-#include "blendish.h"
 
 #define TABLE_ENTRIES 6
 static NVGcontext* nvg;
@@ -33,8 +32,6 @@ SDL_Window* sdl_wnd;
 // prevNodeID is the node ID from previous frame
 static uint32 lastNodeID;               
 static uint32 prevNodeID;               
-#define BLENDISH_IMPLEMENTATION
-#include "blendish.h"
 
 
 #define BLUR_FBO_WIDTH 1920
@@ -100,8 +97,6 @@ static struct UIData data;
 int uiInit()
 {
     nvg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    bndSetFont(nvgCreateFont(nvg, "droidsans", "font/droidsans.ttf"));
-    bndSetIconImage(nvgCreateImage(nvg, "images/blender_icons16.png", 0));
 
     data.fontHeader = nvgCreateFont(nvg, "header", "font/opensans.ttf");
     data.fontHeaderBold = nvgCreateFont(nvg, "header-bold", "font/opensans-bold.ttf");
@@ -225,7 +220,7 @@ void uiRenderBlur(uint32 width, uint32 height)
     gfxBlitFramebuffer(data.blur.blurhDst, 0.f, 0.f, (float)width, (float)height, (float)width, (float)height);
 }
 
-static inline bool AABBPointTest(float x, float y, float w, float h, float px, float py)
+static LUMINOS_INLINE bool AABBPointTest(float x, float y, float w, float h, float px, float py)
 {
     if (x < px && y < py && px < x+w && py < y+h)
         return true;
@@ -312,7 +307,7 @@ void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char 
 {
     nvgBeginPath(nvg_blur);
     nvgCircle(nvg_blur, x, y, 5.f);
-    nvgStrokeColor(nvg_blur, bnd_theme.nodeTheme.wiresColor);
+    nvgStrokeColor(nvg_blur, nvgRGBA(0,0,0,0));
     nvgStrokeWidth(nvg_blur,1.0f * s_zoom);
     nvgStroke(nvg_blur);
     nvgFillColor(nvg_blur, nvgRGBA(r,g,b,a*s_zoom));
@@ -344,7 +339,7 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
     nvgStrokeWidth(nvg_blur, 0.9f * s_zoom);
     nvgStroke(nvg_blur);
 
-    float time_int_part;
+    double time_int_part;
     float speed = 0.90f + sin((float)lastNodeID * 3.53f) * 0.5f;
     float tt = modf(s_time, &time_int_part);
     float time = tt*speed + (float)lastNodeID * 0.373f;

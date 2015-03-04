@@ -295,6 +295,7 @@ uint32 gfxCreateShaderSource(const char* src, uint8 shaderType) {
   gctx.programs[gctx.shaderCnt++] = program;
   return program;
 }
+
 uint32 gfxCreateShader(const char* filename, uint8 shaderType) {
   char* shaderSrc;
   size_t srcSize;
@@ -476,6 +477,7 @@ int32 s_uniformTypeMap[UNIFORM_TYPES] = {
   GL_IMAGE_3D,
 };
 
+static uint8 s_uniformName[128];
 int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBufferSize, uint8* types, uint8* locations) {
   uint32 namesBufferOffset = 0;
   GLint numUniforms = 0;
@@ -498,11 +500,10 @@ int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBuffe
     if (namesBufferOffset + len > namesBufferSize) {
       break;
     }
-    char name[len];
-    glGetProgramResourceName(program, GL_UNIFORM, ii, len, NULL, name);
+    glGetProgramResourceName(program, GL_UNIFORM, ii, 128, NULL, s_uniformName);
     
     // Write to out buffers
-    memcpy(namesBuffer+namesBufferOffset, name, len);
+    memcpy(namesBuffer+namesBufferOffset, s_uniformName, len);
     namesBufferOffset += len;
     locations[ii] = (uint8)values[3];
 

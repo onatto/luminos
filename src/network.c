@@ -1,3 +1,4 @@
+#ifndef MSVC
 #include "network.h"
 
 #include <stdio.h>
@@ -117,3 +118,4 @@ void networkSetLua(struct lua_State* l)
 {
     L = l;
 }
+#endif

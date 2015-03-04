@@ -4,8 +4,8 @@
 -- License: http://www.opensource.org/licenses/BSD-2-Clause
 
 LUMINOS_DIR = path.getabsolute("./../") .. "/"
-LUA_DIR = os.getenv("LUAJIT_DIR") or LUMINOS_DIR .. "../luajit-2.0"
-SDL2_DIR = os.getenv("SDL2_DIR") or LUMINOS_DIR .. "../SDL"
+LUA_DIR = os.getenv("LUAJIT_DIR") or LUMINOS_DIR .. "../luajit-2.0/"
+SDL2_DIR = os.getenv("SDL2_DIR") or LUMINOS_DIR .. "../SDL/"
 
 solution "luminos"
 	configurations {
@@ -44,18 +44,14 @@ includedirs {
     LUA_DIR .. "/src",
 }
 
--- Required for FFI
-linkoptions { "-rdynamic" }
 
 files {
     LUMINOS_DIR .. "/src/**.c",
     LUMINOS_DIR .. "/src/**.h",
     LUMINOS_DIR .. "/3rdparty/nanovg/*.c",
-    LUMINOS_DIR .. "/3rdparty/linmath_lua.c",
 }
 
 links {
-    "luajit-5.1",
     "SDL2",
 }
 
@@ -71,9 +67,19 @@ libdirs {
 }
 
 configuration { "x32", "linux" }
+-- Required for FFI
+linkoptions { "-rdynamic" }
 libdirs {
 }
+links {
+    "luajit-5.1",
+}
 configuration { "x64", "linux" }
+-- Required for FFI
+linkoptions { "-rdynamic" }
+links {
+    "luajit-5.1",
+}
 libdirs {
 }
 
@@ -87,11 +93,18 @@ configuration { "vs*" }
     linkoptions {
         "/ignore:4199", -- LNK4199: /DELAYLOAD:*.dll ignored; no imports found from *.dll
     }
+    links {
+	    "lua51",
+	    "opengl32"
+    }
 
 configuration { "vs201*" }
     linkoptions { -- this is needed only for testing with GLES2/3 on Windows with VS201x
         "/DELAYLOAD:\"libEGL.dll\"",
         "/DELAYLOAD:\"libGLESv2.dll\"",
+    }
+    defines {
+	"MSVC"
     }
 
 configuration { "windows" }

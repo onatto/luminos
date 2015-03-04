@@ -6,13 +6,11 @@ local ffi = require 'ffi'
 
 core.nodes = {}
 function core.execNode(node)
-  -- xform.visited means that the output table for that xform was calculated(cached) from an earlier xform
-  -- that is, that this vertex has been visited in the DAG traversal before
-
-  local xform = node.xform
-  if xform.visited or xform.cached then
+  if node.visited or node.cached then
     return node
   end
+
+  local xform = node.xform
   -- This is the data binding stage for the xform
   local inputs = xform.inputs
   local connections = node.connections
@@ -36,7 +34,7 @@ function core.execNode(node)
   -- All inputs are ready at this point, evaluate the xform which sets up any outputs it can too
 
   lexer.xformFunc[xform.module][xform.name].eval(node.input_values, node.output_values)
-  xform.visited = true
+  node.visited = true
   -- The outputs of this xform are ready, maybe they're there, maybe not
   return node
 end
@@ -44,7 +42,7 @@ end
 function core.programStart()
     for _k,node in pairs(core.nodes) do
       if node then
-        node.xform.visited = false
+        node.visited = false
       end
     end
 end

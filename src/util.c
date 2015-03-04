@@ -31,8 +31,7 @@ int load_file(const char *filename, char** data, size_t* size_out)
     return FILELOAD_SUCCESS;
 }
 
-void debugOutputCallback(unsigned int src, unsigned int type, unsigned int id, 
-        unsigned int severity, int len, const char* msg, const void* userParam )
+void APIENTRY debugOutputCallback(GLenum src, GLenum type, GLuint id, GLenum severity, GLsizei len, const GLchar *msg, const void *userParam)
 {
   UNUSED(id); UNUSED(userParam);
   char* srcStr, *typeStr, *sevStr;

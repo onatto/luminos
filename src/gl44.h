@@ -2625,6 +2625,8 @@ int ogl_GetMinorVersion();
 int ogl_GetMajorVersion();
 int ogl_IsVersionGEQ(int majorVersion, int minorVersion);
 
+void APIENTRY debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
+
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/

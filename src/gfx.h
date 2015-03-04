@@ -1,43 +1,49 @@
 #pragma once
 
+#ifdef MSVC
+#define FFI_EXPORT __declspec(dllexport)
+#else
+#define FFI_EXPORT __attribute__((visibility("default")))
+#endif
+
 void gfxInit();
 void gfxShutdown();
 
-uint32 gfxCreateVBO(void* data, uint32 size);
-uint32 gfxCreateIBO(void* data, uint32 size);
-uint32 gfxCreateUBO(uint32 size);
-uint32 gfxCreateTexture2D(const char* filename, uint16* w, uint16* h, uint8 texFormat, uint8 numMips);
-uint32 gfxCreateImage2D(uint16 w, uint16 h, uint8 texFormat);
-uint32 gfxCreateShader(const char* filename, uint8 shaderType);
-uint32 gfxCreateShaderSource(const char* src, uint8 shaderType);
-uint32 gfxCreatePipeline();
-uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint8 depthFormat, uint32* colorTex, uint32* depthTex);
+FFI_EXPORT uint32 gfxCreateVBO(void* data, uint32 size);
+FFI_EXPORT uint32 gfxCreateIBO(void* data, uint32 size);
+FFI_EXPORT uint32 gfxCreateUBO(uint32 size);
+FFI_EXPORT uint32 gfxCreateTexture2D(const char* filename, uint16* w, uint16* h, uint8 texFormat, uint8 numMips);
+FFI_EXPORT uint32 gfxCreateImage2D(uint16 w, uint16 h, uint8 texFormat);
+FFI_EXPORT uint32 gfxCreateShader(const char* filename, uint8 shaderType);
+FFI_EXPORT uint32 gfxCreateShaderSource(const char* src, uint8 shaderType);
+FFI_EXPORT uint32 gfxCreatePipeline();
+FFI_EXPORT uint32 gfxCreateFramebuffer(uint16 width, uint16 height, uint8 colorFormat, uint8 depthFormat, uint32* colorTex, uint32* depthTex);
 
-void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride);
-void gfxBindIndexBuffer(uint32 ibo);
-void gfxVertexFormat(uint8 vertexFormat);
-void gfxBindFramebuffer(uint32 fbo);
-void gfxResizeTexture(uint32 tex, uint8 format, uint32 width, uint32 height);
-void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
-void gfxBindImage2D(uint32 image, uint32 img_unit, uint8 format);
-void gfxSetImageUnit(uint32 program, uint32 imageLocation, int32 imgUnit);
-void gfxBindSSQuadBuffers();
-void gfxUniformBindingPoint(uint32 shader, const char* uniformBlockName, uint32 bindingPoint);
-void gfxBindUniformBuffer(uint32 ubo, void* data, size_t size, uint32 bindingPoint);
+FFI_EXPORT void gfxBindVertexBuffer(uint32 vbo, uint8 bindingPoint, uint8 stride);
+FFI_EXPORT void gfxBindIndexBuffer(uint32 ibo);
+FFI_EXPORT void gfxVertexFormat(uint8 vertexFormat);
+FFI_EXPORT void gfxBindFramebuffer(uint32 fbo);
+FFI_EXPORT void gfxResizeTexture(uint32 tex, uint8 format, uint32 width, uint32 height);
+FFI_EXPORT void gfxBindTextures2D(uint32* texs, int8* locations, uint8 numTextures, uint32 program); 
+FFI_EXPORT void gfxBindImage2D(uint32 image, uint32 img_unit, uint8 format);
+FFI_EXPORT void gfxSetImageUnit(uint32 program, uint32 imageLocation, int32 imgUnit);
+FFI_EXPORT void gfxBindSSQuadBuffers();
+FFI_EXPORT void gfxUniformBindingPoint(uint32 shader, const char* uniformBlockName, uint32 bindingPoint);
+FFI_EXPORT void gfxBindUniformBuffer(uint32 ubo, void* data, size_t size, uint32 bindingPoint);
 
-void gfxBindPipeline(uint32 pipeline);
-void gfxDispatchCompute(uint32 x, uint32 y, uint32 z);
-void gfxReplaceGeomShader(uint32 pipeline, uint32 geom);
-void gfxReplaceFragShader(uint32 pipeline, uint32 frag);
-void gfxReplaceVertexShader(uint32 pipeline, uint32 vert);
-void gfxReplaceShaders(uint32 pipeline, uint32 vert, uint32 frag);
-void gfxReplaceShadersGeom(uint32 pipeline, uint32 vert, uint32 frag, uint32 geom);
-void gfxReplaceComputeShader(uint32 pipeline, uint32 comp);
-int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBufferSize, uint8* types, uint8* locations);
+FFI_EXPORT void gfxBindPipeline(uint32 pipeline);
+FFI_EXPORT void gfxDispatchCompute(uint32 x, uint32 y, uint32 z);
+FFI_EXPORT void gfxReplaceGeomShader(uint32 pipeline, uint32 geom);
+FFI_EXPORT void gfxReplaceFragShader(uint32 pipeline, uint32 frag);
+FFI_EXPORT void gfxReplaceVertexShader(uint32 pipeline, uint32 vert);
+FFI_EXPORT void gfxReplaceShaders(uint32 pipeline, uint32 vert, uint32 frag);
+FFI_EXPORT void gfxReplaceShadersGeom(uint32 pipeline, uint32 vert, uint32 frag, uint32 geom);
+FFI_EXPORT void gfxReplaceComputeShader(uint32 pipeline, uint32 comp);
+FFI_EXPORT int32 gfxGetShaderUniforms(uint32 program, uint8* namesBuffer, uint32 namesBufferSize, uint8* types, uint8* locations);
 
-void gfxSetTransform(float* transform);
-void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
-void gfxBlitFramebuffer(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
+FFI_EXPORT void gfxSetTransform(float* transform);
+FFI_EXPORT void gfxBlitTexture(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
+FFI_EXPORT void gfxBlitFramebuffer(uint32 tex, float x, float y, float w, float h, float wnd_w, float wnd_h);
 
 enum TextureFormats {
   TEX_R8,

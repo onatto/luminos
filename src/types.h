@@ -15,3 +15,9 @@
 #define f64 double 
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
+
+#ifdef MSVC
+#define LUMINOS_INLINE __inline
+#else
+#define LUMINOS_INLINE inline
+#endif
