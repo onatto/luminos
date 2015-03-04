@@ -2,8 +2,11 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
+#include "types.h"
 #include "core.h"
 #include "string.h"
+
+#include "stdlib.h"
 
 struct lua_State* s_luaState;
 char s_statusMsg[256] = {0};
@@ -92,4 +95,198 @@ int coreExecPort(const char* port_name)
 
     int nresults = lua_gettop(L) - top;
     return nresults;
+}
+
+
+struct Node
+{
+    uint32 id;
+    int32 x;
+    int32 y;
+    uint16 w;
+    uint16 h;
+    uint32 moduleOffset;
+    uint32 xformOffset;
+};
+struct Connection
+{
+    uint32 inputNodeID;
+    uint32 outputNodeID;
+    uint32 inputNameOffset;
+    uint32 outputNameOffset;
+};
+struct Constant
+{
+    uint32 id;
+    uint32 inputNameOffset;
+    union {
+        double val;
+        uint32 strOffset;
+    };
+};
+typedef struct Node Node;
+typedef struct Connection Connection;
+typedef struct Constant Constant;
+#define STRING_POOL_SIZE 1024*1024
+#define MAX_NODES 1024
+
+typedef struct Buffer {
+    uint8* data;
+    uint32 offset;
+} Buffer;
+
+static void initBuffer(Buffer* b, size_t size) {
+    b->data = malloc(size);
+    b->offset = 0;
+    memset(b->data, 0, size);
+}
+static void deleteBuffer(Buffer* b) {
+    free(b->data);
+    memset(b, 0, sizeof(Buffer));
+}
+static void writeBuffer(Buffer* b, const void* data, uint32 size) {
+    memcpy(b->data + b->offset, data, size);
+    b->offset += size;
+}
+
+static Buffer s_strPool;
+static Buffer s_nodePool;
+static Buffer s_constNumberPool;
+static Buffer s_constStrPool;
+static Buffer s_connectionPool;
+
+static uint16 nodeCnt = 0;
+static uint16 connCnt = 0;
+static uint16 constNumberCnt = 0;
+static uint16 constStrCnt = 0;
+void coreDumpData()
+{
+    int ii;
+    for (ii = 0; ii < nodeCnt; ii++) {
+        Node* n = (Node*)(s_nodePool.data + ii*sizeof(Node));
+        uint16 len_mod = (uint16)s_strPool.data[n->moduleOffset];
+        uint16 len_xform = (uint16)s_strPool.data[n->xformOffset];
+        uint8* mod = s_strPool.data + n->moduleOffset+2;
+        uint8* xform = s_strPool.data + n->xformOffset+2;
+        printf("Node %d, with x:%d y:%d w:%d h:%d ", n->id, n->x, n->y, n->w, n->h);
+        printf(" module: %.*s xform: %.*s\n", len_mod, mod, len_xform, xform);
+    }
+    for (ii = 0; ii < connCnt; ii++) {
+        Connection* c = (Connection*)(s_connectionPool.data + ii*sizeof(Connection));
+        uint16 len_in = (uint16)s_strPool.data[c->inputNameOffset];
+        uint16 len_out = (uint16)s_strPool.data[c->outputNameOffset];
+        uint8* inp = s_strPool.data + c->inputNameOffset + 2;
+        uint8* out = s_strPool.data + c->outputNameOffset + 2;
+        printf("Connection %d -> %d  %.*s -> %.*s\n", 
+                c->inputNodeID, 
+                c->outputNodeID,
+                len_in,
+                inp,
+                len_out,
+                out);
+    }
+    for (ii = 0; ii < constStrCnt; ii++) {
+        Constant* c = (Constant*)(s_constStrPool.data + ii * sizeof(Constant));
+        uint16 len_inp = s_strPool.data[c->inputNameOffset];
+        uint16 len_constant = s_strPool.data[c->strOffset];
+        uint8* inp = s_strPool.data + c->inputNameOffset + 2;
+        uint8* constant = s_strPool.data + c->strOffset + 2;
+        printf("Const for id:%d -- %.*s: %.*s\n", c->id, len_inp, inp, len_constant, constant);
+    }
+    for (ii = 0; ii < constNumberCnt; ii++) {
+        Constant* c = (Constant*)(s_constNumberPool.data + ii * sizeof(Constant));
+        uint16 len_inp = s_strPool.data[c->inputNameOffset];
+        uint8* inp = s_strPool.data + c->inputNameOffset + 2;
+        printf("Const for id:%d -- %.*s: %f\n", c->id, len_inp, inp, c->val);
+    }
+}
+
+
+void coreNewWorkspace()
+{
+    initBuffer(&s_strPool, STRING_POOL_SIZE);
+    initBuffer(&s_nodePool, MAX_NODES       * sizeof(Node));
+    initBuffer(&s_constStrPool, MAX_NODES * 10 * sizeof(Constant));
+    initBuffer(&s_constNumberPool, MAX_NODES * 10 * sizeof(Constant));
+    initBuffer(&s_connectionPool, MAX_NODES * 10 * sizeof(Connection));
+    nodeCnt = 0;
+    connCnt = 0;
+    constNumberCnt = 0;
+    constStrCnt = 0;
+}
+
+void coreStoreWorkspace()
+{
+    coreDumpData();
+    deleteBuffer(&s_strPool);
+    deleteBuffer(&s_nodePool);
+    deleteBuffer(&s_constNumberPool);
+    deleteBuffer(&s_constStrPool);
+    deleteBuffer(&s_connectionPool);
+}
+
+void coreStoreNode(uint32_t id, int32_t x, int32_t y, uint16_t w, uint16_t h, const char* module, const char* xform)
+{
+    Node n;
+    n.id = id;
+    n.x = x;
+    n.y = y;
+    n.w = h;
+    n.h = w;
+    uint16 len_mod = (uint16)strlen(module);
+    uint16 len_xform = (uint16)strlen(xform);
+    n.moduleOffset = s_strPool.offset;
+    writeBuffer(&s_strPool, &len_mod, 2);
+    writeBuffer(&s_strPool, module, len_mod);
+    n.xformOffset = s_strPool.offset;
+    writeBuffer(&s_strPool, &len_xform, 2);
+    writeBuffer(&s_strPool, xform, len_xform);
+    writeBuffer(&s_nodePool, &n, sizeof(Node));
+    nodeCnt++;
+}
+
+void coreStoreConstNumber(uint32_t id, const char* inputName, double constant)
+{
+    Constant c;
+    c.id = id;
+    c.val = constant;
+    c.inputNameOffset = s_strPool.offset;
+    uint16 len_inputName = (uint16)strlen(inputName);
+    writeBuffer(&s_strPool, &len_inputName, 2);
+    writeBuffer(&s_strPool, inputName, len_inputName);
+    writeBuffer(&s_constNumberPool, &c, sizeof(Constant));
+    constNumberCnt++;
+}
+
+void coreStoreConstStr(uint32_t id, const char* inputName, const char* constant, uint16_t size)
+{
+    Constant c;
+    c.id = id;
+    c.strOffset = s_strPool.offset;
+    writeBuffer(&s_strPool, &size, 2);
+    writeBuffer(&s_strPool, constant, size);
+    c.inputNameOffset = s_strPool.offset;
+    uint16 len_inputName = (uint16)strlen(inputName);
+    writeBuffer(&s_strPool, &len_inputName, 2);
+    writeBuffer(&s_strPool, inputName, len_inputName);
+    writeBuffer(&s_constStrPool, &c, sizeof(Constant));
+    constStrCnt++;
+}
+
+void coreStoreConnection(uint32_t inpID, uint32_t outID, const char* inpName, const char* outName)
+{
+    Connection c;
+    c.inputNodeID = inpID;
+    c.outputNodeID = outID;
+    uint16 len_inpName = (uint16)strlen(inpName);
+    uint16 len_outName = (uint16)strlen(outName);
+
+    c.inputNameOffset = s_strPool.offset;
+    writeBuffer(&s_strPool, &len_inpName, 2);
+    writeBuffer(&s_strPool, inpName, len_inpName);
+    c.outputNameOffset = s_strPool.offset;
+    writeBuffer(&s_strPool, &len_outName, 2);
+    writeBuffer(&s_strPool, outName, len_outName);
+    writeBuffer(&s_connectionPool, &c, sizeof(Connection));
+    connCnt++;
 }

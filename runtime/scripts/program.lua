@@ -86,6 +86,10 @@ function portProgramStart()
         loadTransforms()
     end
 
+    if (ui.getKeyboardState(SDL.Key.P) == KeyEvent.Press) then
+        core.saveWorkspace()
+    end
+
     ui.start()
     ui.dragWorkspace()
     ui.drawNodes()

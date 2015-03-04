@@ -4,6 +4,10 @@ local helpers = require 'helpers'
 local lexer = require 'lexer'
 local ffi = require 'ffi'
 
+local C = ffi.C
+
+helpers.cdef(ffi, "core.h")
+
 core.nodes = {}
 function core.execNode(node)
   if node.visited or node.cached then
@@ -45,6 +49,31 @@ function core.programStart()
         node.visited = false
       end
     end
+end
+
+
+function core.saveWorkspace()
+  C.coreNewWorkspace()
+  for _, node in pairs(core.nodes) do
+    if node then
+      -- Store node
+      C.coreStoreNode(node.id, node.x, node.y, node.w, node.h, node.xform.module, node.xform.name)
+      -- Store connection
+      for inputName, connection in pairs(node.connections) do
+        C.coreStoreConnection(node.id, connection.out_node_id, inputName, connection.port_name)
+      end
+      -- Store consts
+      for inputName, constant in pairs(node.constants) do
+        local type = lexer.generaliseType(node.xform.inputs[node.xform.input_name_map[inputName]].type)
+        if type == lexer.Types.Float then
+          C.coreStoreConstNumber(node.id, inputName, constant)
+        elseif type == lexer.Types.String then
+          C.coreStoreConstStr(node.id, inputName, constant, string.len(constant))
+        end
+      end
+    end
+  end
+  C.coreStoreWorkspace()
 end
 
 return core
