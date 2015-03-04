@@ -24,6 +24,19 @@
 
 static bool quit = false;
 
+int restartGraphics(RenderPacket* ssquad, CubeRenderPacket* cube, uint32* tex, uint32* fbo, uint32* loc, uint32* ctex, uint32* dtex)
+{
+    gfxInit();
+    cubeInit(cube, "shaders/blinn.vert", "shaders/blinn.frag");
+    ssquadInit(ssquad, "shaders/quad.vert", "shaders/ssquad.frag");
+    uint16 fbo_width = 1200;
+    uint16 fbo_height = 1200;
+    *fbo = gfxCreateFramebuffer(fbo_width, fbo_height, TEX_RGBA8, TEX_D24F, ctex, dtex);
+
+    *tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
+    *loc = glGetUniformLocation(ssquad->fsh, "tex");
+}
+
 int main(int _argc, char** _argv)
 {
     UNUSED(_argc);
@@ -51,6 +64,12 @@ int main(int _argc, char** _argv)
     RenderPacket ssquad;
     ssquadInit(&ssquad, "shaders/quad.vert", "shaders/ssquad.frag");
 
+    mat4x4 ortho;
+    uint32 color_tex, depth_tex;
+    uint16 fbo_width = 1200;
+    uint16 fbo_height = 1200;
+    uint32 fbo = gfxCreateFramebuffer(fbo_width, fbo_height, TEX_RGBA8, TEX_D24F, &color_tex, &depth_tex);
+
     uint32 tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
     uint32 location = glGetUniformLocation(ssquad.fsh, "tex");
 
@@ -67,12 +86,6 @@ int main(int _argc, char** _argv)
     const char* server_ip = lua_tolstring(getLuaState(), -1, NULL);
     networkInit(getLuaState(), server_ip, 3333);
 
-    mat4x4 ortho;
-    uint32 color_tex, depth_tex;
-    uint16 fbo_width = 1200;
-    uint16 fbo_height = 1200;
-    uint32 fbo = gfxCreateFramebuffer(fbo_width, fbo_height, TEX_RGBA8, TEX_D24F, &color_tex, &depth_tex);
-
     int64_t timeOffset = SDL_GetPerformanceCounter();
     SDL_Event event;
     while (!quit)
@@ -84,11 +97,15 @@ int main(int _argc, char** _argv)
             else if (event.type == SDL_WINDOWEVENT) {
                 switch (event.window.event) {
                     case SDL_WINDOWEVENT_RESIZED:
-                    width = event.window.data1;
-                    height = event.window.data2;
-                    wndResizeWindow(width, height);
-                    uiResize(width, height);
-                    break;
+                        width = event.window.data1;
+                        height = event.window.data2;
+                        wndResizeWindow(width, height);
+                        gfxShutdown();
+                        uiShutdown();
+                        restartGraphics(&ssquad, &cube, &tex, &fbo, &location, &color_tex, &depth_tex);
+                        uiInit();
+                        uiResize(width, height);
+                        break;
                 }
             }
             else if (event.type == SDL_TEXTINPUT) {
@@ -98,7 +115,7 @@ int main(int _argc, char** _argv)
 
         int64 now = SDL_GetPerformanceCounter();
         const double freq = SDL_GetPerformanceFrequency();
-        float time = (float)( (now-timeOffset)/freq);
+        double time = ( (now-timeOffset)/freq);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
