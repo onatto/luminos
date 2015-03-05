@@ -76,4 +76,15 @@ function core.saveWorkspace()
   C.coreStoreWorkspace()
 end
 
+function core.cacheNode(node)
+  for inputName, conn in pairs(node.connections) do
+    core.cacheNode(core.nodes[conn.out_node_id])
+  end
+  core.execNode(node)
+  local cacheFunc = lexer.xformFunc[node.xform.module][node.xform.name].cache
+  if cacheFunc then
+    cacheFunc(node.input_values, node.output_values)
+  end
+end
+
 return core

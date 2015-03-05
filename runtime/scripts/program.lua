@@ -103,16 +103,13 @@ function portProgramStart()
     viz.showVisualisations()
 
     if CurrentNode then
-        core.execNode(CurrentNode)
         local vizFunc = lexer.xformFunc[CurrentNode.xform.module][CurrentNode.xform.name].viz
         if vizFunc then
             vizFunc(CurrentNode.input_values, CurrentNode.output_values)
         end
         if (ui.getKeyboardState(SDL.Key.F2) == KeyEvent.Press) then
-            local cacheFunc = lexer.xformFunc[CurrentNode.xform.module][CurrentNode.xform.name].cache
-            if cacheFunc then
-                cacheFunc(CurrentNode.input_values, CurrentNode.output_values)
-            end
+            core.cacheNode(CurrentNode)
         end
+        core.execNode(CurrentNode)
     end
 end

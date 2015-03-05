@@ -116,13 +116,14 @@ function gfx.loadShader(name, path, type)
     uniform.type = uniformTypes[i]
     uniform.location = uniformLocations[i]
     table.insert(uniforms, uniform)
-    nameOffset = nameOffset + #uniform.name + 1 -- +1 for the NULL terminator
+    nameOffset = nameOffset + #uniform.name + 2 -- +1 for the NULL terminator
   end
   gfx.shaderDef(name, path, program, ShaderTypes[type], uniforms)
 end
 
 gfx.loadShader("ssquadvs", "shaders/quad_tex.vert", C.SHADER_VERT)
 gfx.loadShader("testcs", "shaders/test.cs", C.SHADER_COMP)
+gfx.loadShader("blur", "shaders/blur.cs", C.SHADER_COMP)
 gfx.loadShader("ssquadfs", "shaders/ssquad.frag", C.SHADER_FRAG)
 
 return gfx

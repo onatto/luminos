@@ -10,6 +10,7 @@ u8 texFormat = 10
 
 outputs
 texture tex
+u16 hnd
 
 func cache
 if #inp.path > 0 and not out.tex.hnd then
@@ -17,6 +18,7 @@ if #inp.path > 0 and not out.tex.hnd then
     out.tex.hnd = C.gfxCreateTexture2D(inp.path, w, h, inp.texFormat, inp.numMips)
     out.tex.w = w
     out.tex.h = h
+    out.tex.format = inp.texFormat
 end
 
 import viz
@@ -29,3 +31,4 @@ viz.set {
 
 func eval
 out.tex = out.tex
+out.hnd = out.tex.hnd

@@ -112,7 +112,7 @@ void gfxInit()
   glGenVertexArrays(VERTEX_FORMATS, (uint32*)&gctx.vtxformats);
 
   // Enable debug output
-  //glEnable(GL_DEBUG_OUTPUT);
+  glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(debugOutputCallback, 0);
 
   initVertexFormats();
