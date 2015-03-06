@@ -8,7 +8,7 @@
 
 #include "stdlib.h"
 
-struct lua_State* s_luaState;
+struct lua_State* s_luaState = NULL;
 char s_statusMsg[256] = {0};
 char s_errorMsg[2048] = {0};
 const char* s_errorPort = NULL;
@@ -17,13 +17,8 @@ struct lua_State* getLuaState(){ return s_luaState; }
 char* getStatusMsg() { return s_statusMsg; }
 char* getErrorMsg() { return s_errorMsg; }
 
-void coreInit()
-{
-    s_luaState = NULL;
-}
-
 /* Start running the program @path = program_lua */
-void coreStart(const char* program_lua, char* error_msg)
+void coreInit(const char* program_lua, char* error_msg)
 {
     if (s_luaState ) {
         lua_close(s_luaState);
@@ -200,7 +195,6 @@ void coreDumpData()
         printf("Const for id:%d -- %.*s: %f\n", c->id, len_inp, inp, c->val);
     }
 }
-
 
 void coreNewWorkspace()
 {

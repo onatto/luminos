@@ -143,7 +143,7 @@ int uiFrameStart(uint32 width, uint32 height, float time)
     if (uiGetKeyboardState(SDL_SCANCODE_F5) == KeyEvent_Press)
     {
         coreShutdown();
-        coreStart("scripts/program.lua", getErrorMsg());
+        coreInit("scripts/program.lua", getErrorMsg());
         uiInitGlobals();
         networkSetLua(getLuaState());
         coreExecPort("portProgramInit");

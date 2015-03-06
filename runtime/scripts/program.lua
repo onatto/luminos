@@ -28,7 +28,7 @@ local function loadTransforms()
     local transforms = { {"mouse", "concat", "time"},
                          {"sin", "cos", "add", "multiply", "divide", "mod"},
                          {"print", "posws", "textprops"},
-                         {"loadtex2d", "image2d"}
+                         {"loadtex2d", "image2d", "dispatchcs"}
                         }
         for modidx,module in ipairs(modules) do
             for xformidx,transform in ipairs(transforms[modidx]) do
