@@ -74,8 +74,7 @@ int main(int _argc, char** _argv)
     uint32 location = glGetUniformLocation(ssquad.fsh, "tex");
 
     // Init core module
-    coreInit();
-    coreStart("scripts/program.lua", getErrorMsg());
+    coreInit("scripts/program.lua", getErrorMsg());
     coreExecPort("portProgramInit");
 
     // Init UI module - depends on core
