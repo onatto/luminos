@@ -302,11 +302,15 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     // Outline
     nvgBeginPath(nvg_blur);
     nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
-    nvgStrokeColor(nvg_blur, nvgRGBA(180, 0, 0, brighter ? 180 : 130));
-    nvgStrokeWidth(nvg_blur, brighter ? 1.1f : 1.f);
+    if (brighter)
+        nvgStrokeColor(nvg_blur, nvgRGBA(220, 0, 220, 180));
+    else
+        nvgStrokeColor(nvg_blur, nvgRGBA(200, 30, 130, 150));
+
+    nvgStrokeWidth(nvg_blur, brighter ? 2.7f : 1.3f);
     nvgStroke(nvg_blur);
     // Text
-    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,brighter ? 190 : 140));
+    nvgFillColor(nvg_blur, nvgRGBA(255, 255, 255,(brighter ? 160  : 0) + (int)(sin(s_time) * 50.f)));
     nvgFontFace(nvg_blur, "header");
     if (mouseOverNode) {
         const float scale = 0.25f;
@@ -383,7 +387,7 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
         qx - delta, qy,
         qx, qy);
 
-    nvgStrokeColor(nvg_blur, nvgRGBA(200, 0, 0, 180));
+    nvgStrokeColor(nvg_blur, nvgRGBA(50, 50, 190, 180));
     nvgStrokeWidth(nvg_blur, 0.9f * s_zoom);
     nvgStroke(nvg_blur);
 
@@ -405,7 +409,7 @@ void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end
 
     nvgBeginPath(nvg_blur);
     nvgCircle(nvg_blur, x, y, 2.f * s_zoom);
-    nvgFillColor(nvg_blur, nvgRGBA(255,0,0,200));
+    nvgFillColor(nvg_blur, nvgRGBA(50, 50, 225, 220));
     nvgFill(nvg_blur);
 }
 void uiWarpMouseInWindow(int x, int y)
