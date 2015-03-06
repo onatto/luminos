@@ -23,6 +23,7 @@ struct SDL_Window* wndInitSDL(uint32_t width, uint32_t height)
                     , SDL_WINDOW_SHOWN
                     | SDL_WINDOW_RESIZABLE
                     | SDL_WINDOW_OPENGL
+                    | SDL_WINDOW_FULLSCREEN
                     );
 
     if (wnd == NULL) {
