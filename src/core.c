@@ -5,6 +5,7 @@
 #include "types.h"
 #include "core.h"
 #include "string.h"
+#include "util.h"
 
 #include "stdlib.h"
 
@@ -143,6 +144,18 @@ static void writeBuffer(Buffer* b, const void* data, uint32 size) {
     memcpy(b->data + b->offset, data, size);
     b->offset += size;
 }
+static void writeBufferFile(Buffer* b, FILE* f)
+{
+    fwrite(&b->offset, 4, 1, f);
+    fwrite(b->data, b->offset, 1, f);
+}
+static void readBufferFile(Buffer* b, FILE* f)
+{
+    uint32 bytesToRead = 0;
+    fread(&bytesToRead, 4, 1, f);
+    fread(b->data, bytesToRead, 1, f);
+    b->offset = bytesToRead;
+}
 
 static Buffer s_strPool;
 static Buffer s_nodePool;
@@ -209,7 +222,7 @@ void coreNewWorkspace()
     constStrCnt = 0;
 }
 
-void coreStoreWorkspace()
+void coreDumpWorkspace()
 {
     coreDumpData();
     deleteBuffer(&s_strPool);
@@ -217,6 +230,42 @@ void coreStoreWorkspace()
     deleteBuffer(&s_constNumberPool);
     deleteBuffer(&s_constStrPool);
     deleteBuffer(&s_connectionPool);
+}
+
+void coreSaveWorkspace()
+{
+    FILE* f = fopen("workspace.data", "wb");
+    if (f == NULL)
+        return;
+    fwrite(&nodeCnt, sizeof(uint16_t), 1, f);
+    fwrite(&connCnt, sizeof(uint16_t), 1, f);
+    fwrite(&constNumberCnt, sizeof(uint16_t), 1, f);
+    fwrite(&constStrCnt, sizeof(uint16_t), 1, f);
+    writeBufferFile(&s_strPool, f);
+    writeBufferFile(&s_nodePool, f);
+    writeBufferFile(&s_constNumberPool, f);
+    writeBufferFile(&s_constStrPool, f);
+    writeBufferFile(&s_connectionPool, f);
+    fclose(f);
+    coreDumpWorkspace();
+}
+
+void coreLoadWorkspace()
+{
+    FILE* f = fopen("workspace.data", "rb");
+    if (f == NULL)
+        return;
+    fread(&nodeCnt, sizeof(uint16_t), 1, f);
+    fread(&connCnt, sizeof(uint16_t), 1, f);
+    fread(&constNumberCnt, sizeof(uint16_t), 1, f);
+    fread(&constStrCnt, sizeof(uint16_t), 1, f);
+    readBufferFile(&s_strPool, f);
+    readBufferFile(&s_nodePool, f);
+    readBufferFile(&s_constNumberPool, f);
+    readBufferFile(&s_constStrPool, f);
+    readBufferFile(&s_connectionPool, f);
+    fclose(f);
+    coreDumpWorkspace();
 }
 
 void coreStoreNode(uint32_t id, int32_t x, int32_t y, uint16_t w, uint16_t h, const char* module, const char* xform)

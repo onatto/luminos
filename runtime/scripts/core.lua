@@ -73,7 +73,7 @@ function core.saveWorkspace()
       end
     end
   end
-  C.coreStoreWorkspace()
+  C.coreSaveWorkspace()
 end
 
 function core.cacheNode(node)

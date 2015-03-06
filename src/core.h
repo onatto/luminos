@@ -12,7 +12,8 @@ void coreShutdown();
 #endif
 
 FFI_EXPORT void coreNewWorkspace();
-FFI_EXPORT void coreStoreWorkspace();
+FFI_EXPORT void coreSaveWorkspace();
+FFI_EXPORT void coreLoadWorkspace();
 FFI_EXPORT void coreStoreNode(uint32_t id, int32_t x, int32_t y, uint16_t w, uint16_t h, const char* module, const char* xform);
 FFI_EXPORT void coreStoreConstNumber(uint32_t id, const char* inputName, double constant);
 FFI_EXPORT void coreStoreConstStr(uint32_t id, const char* inputName, const char* constant, uint16_t size);
