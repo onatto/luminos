@@ -9,3 +9,5 @@ void uiSetTextProperties(const char* font, float size, int align);
 void uiSetTextColor(int r, int g, int b, int a);
 void uiDrawText(float x, float y, const char* str);
 void uiVisualiserFrame(float x, float y, float w, float h);
+int32_t uiDrawNodeListFrame(float x, float y, float w, uint16_t numElems);
+int32_t uiDrawNodeListElement(float x, float y, float w, uint16_t elem, const char* str);

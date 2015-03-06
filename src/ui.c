@@ -234,6 +234,51 @@ enum NodeState {
     NODE_SELECTED,
 };
 
+int32_t uiDrawNodeListFrame(float x, float y, float w, uint16_t numElems)
+{
+    float mouseX = (float)mx;
+    float mouseY = (float)my;
+    nvgStrokeWidth(nvg_blur, 1.f);
+    nvgStrokeColor(nvg_blur, nvgRGBA(180, 0, 0, 130));
+    const int numBars = 4;
+    const float elemSize = 26.f;
+    const float barSpacing = 3.f;
+    const float yOffset = 8.f;
+    float h = (float)numElems*elemSize;
+    for (int i=0; i<numBars;i++)
+    {
+        nvgBeginPath(nvg_blur);
+        nvgMoveTo(nvg_blur, x+1.f,   y-(float)i*barSpacing - yOffset);
+        nvgLineTo(nvg_blur, x+w-1.f, y-(float)i*barSpacing - yOffset);
+        nvgStroke(nvg_blur);
+    }
+    for (int i=0; i<numBars;i++)
+    {
+        nvgBeginPath(nvg_blur);
+        nvgMoveTo(nvg_blur, x+1.f,   y-(float)i*barSpacing+h + yOffset);
+        nvgLineTo(nvg_blur, x+w-1.f, y-(float)i*barSpacing+h + yOffset);
+        nvgStroke(nvg_blur);
+    }
+    bool mouseOver = AABBPointTest(x - 40.f, y - (float)numBars*3.f - 10.f, w + 40.f, h + (float)numBars * barSpacing * 2.f, mouseX, mouseY);
+    if (mouseOver) 
+    {
+        return (int32)((mouseY-y) / elemSize);
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+int32_t uiDrawNodeListElement(float x, float y, float w, uint16_t elem, const char* str)
+{
+    nvgFillColor(nvg_blur, nvgRGBA(255, 0, 0,130));
+    nvgFontFace(nvg_blur, "header");
+    nvgFontSize(nvg_blur, 26.f * w / 150.f);
+    nvgTextAlign(nvg_blur, NVG_ALIGN_CENTER);
+    nvgText(nvg_blur, x + w*0.5f, y + (float)elem*26.f - 12.f, str, NULL);
+}
+
 static float timeSinceLastNode = 0.f;
 static float s_zoom = 1.0;
 uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* title, uint8 numInputs, uint8 numOutputs)
@@ -244,6 +289,9 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     bool brighter = mouseOverNode || state == NODE_SELECTED;
 
     s_zoom = w / 180.f;
+    nvgStrokeWidth(nvg_blur, brighter ? 1.1f : 1.f);
+    nvgStrokeColor(nvg_blur, nvgRGBA(180, 0, 0, brighter ? 180 : 130));
+    nvgLineCap(nvg_blur, NVG_SQUARE);
 
     lastNodeID++;
     if (mouseOverNode && lastNodeID != prevNodeID)
@@ -415,9 +463,4 @@ void uiVisualiserFrame(float x, float y, float w, float h)
     nvgStrokeColor(nvg_blur, nvgRGBA(255, 0, 30, 140));
     nvgRect(nvg_blur, x, y, w, h);
     nvgStroke(nvg_blur);
-}
-
-void uiParseTransforms()
-{
-
 }

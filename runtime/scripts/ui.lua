@@ -660,6 +660,65 @@ function ui.update()
     end
 end
 
+local XformListX, XformListY
+local DrawingXformList
+local MenuStack = {}
+
+function ui.xformList()
+   local function StartDrawingList()
+      XformListX = g_mouseState.mx
+      XformListY = g_mouseState.my
+      DrawingXformList = true
+   end
+   local function StopDrawingList()
+      DrawingXformList = false
+   end
+    if IHoldLMB and IPressRMB then
+       StartDrawingList()
+    end
+    local function DrawList(list, x, y, depth)
+       local ii = 1
+       local cache = {}
+       if list and type(list) == "table" then
+          for name, table in pairs(list) do
+             C.uiDrawNodeListElement(x, y, 150, ii, tostring(name))
+             cache[ii] = table
+             ii = ii+1
+          end
+
+          local mouseOver = C.uiDrawNodeListFrame(x, y, 150, ii-1)
+          if depth > #MenuStack-1 then
+             MenuStack[depth] = mouseOver+1
+          end
+          return cache[MenuStack[depth]]
+       else
+          C.uiDrawNodeListElement(x, y, 150, 1, tostring(list))
+       end
+     end
+
+    if DrawingXformList then
+       local x,y = XformListX, XformListY
+       local currentStack = lexer.xformTable
+       local ii = 1
+       while 1 do
+          currentStack = DrawList(currentStack, x, y, ii)
+          if currentStack then
+             y = y + (MenuStack[ii]-1) * 26
+             ii = ii+1
+             x = x+150
+          else
+             break
+          end
+       end
+       if #MenuStack > 0 and MenuStack[#MenuStack] == 0 then
+          table.remove(MenuStack)
+       end
+    end
+    if #MenuStack == 0 then
+       StopDrawingList()
+    end
+end
+
 function portTextEdit(text)
     if ui.ReceivingTextInput then
        ui.TextInput = ui.TextInput .. text

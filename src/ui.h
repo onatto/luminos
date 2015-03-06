@@ -27,6 +27,8 @@ FFI_EXPORT void uiSetTextProperties(const char* font, float size, int align);
 FFI_EXPORT void uiSetTextColor(int r, int g, int b, int a);
 FFI_EXPORT void uiDrawText(float x, float y, const char* str);
 FFI_EXPORT void uiVisualiserFrame(float x, float y, float w, float h);
+FFI_EXPORT int32_t uiDrawNodeListFrame(float x, float y, float w, uint16_t numElems);
+FFI_EXPORT int32_t uiDrawNodeListElement(float x, float y, float w, uint16_t elem, const char* str);
 
 int uiFrameStart(uint32 width, uint32 height, float time);
 void uiFrameEnd();

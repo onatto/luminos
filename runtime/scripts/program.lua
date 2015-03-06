@@ -100,7 +100,7 @@ function portProgramStart()
     ui.update()
 
     ui.drawNodeInfo(CurrentNode)
-    viz.showVisualisations()
+    ui.xformList()
 
     if CurrentNode then
         local vizFunc = lexer.xformFunc[CurrentNode.xform.module][CurrentNode.xform.name].viz
@@ -112,4 +112,6 @@ function portProgramStart()
         end
         core.execNode(CurrentNode)
     end
+
+    viz.showVisualisations()
 end
