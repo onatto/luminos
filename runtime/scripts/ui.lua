@@ -519,8 +519,13 @@ local function CreateNodeRequest(args)
     C.nw_send(req)
 end
 
+local function CreateNodeReq(module, name)
+    local xformTable = lexer.xform(module, name)
+    req = "CreateNode " .. table.concat({g_centerX + g_mouseState.mx, g_centerY + g_mouseState.my, 180, 90,  module .. "/" .. name, xformTable.name}, " ")
+    C.nw_send(req)
+end
+
 local CmdMap = {
-    cn = CreateNodeRequest
 }
 
 
@@ -689,6 +694,17 @@ function ui.xformList()
           local mouseOver = C.uiDrawNodeListFrame(x, y, 150, ii-1)
           if depth > #MenuStack-1 then
              MenuStack[depth] = mouseOver+1
+          end
+          if IPressLMB and #MenuStack == 2 and depth == 1 then
+             local tt = 1
+             for name, table in pairs(cache[MenuStack[1]]) do
+                if tt == MenuStack[2] then
+                   CreateNodeReq(table.module, table.name)
+                   MenuStack = {}
+                   break
+                end
+                tt = tt+1
+             end
           end
           return cache[MenuStack[depth]]
        else
