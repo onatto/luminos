@@ -302,6 +302,7 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     // Outline
     nvgBeginPath(nvg_blur);
     nvgRoundedRect(nvg_blur, x, y, w, h, 4.f);
+    brighter |= rand() % (int)(5000 + sin(s_time)*2500) < 10;
     if (brighter)
         nvgStrokeColor(nvg_blur, nvgRGBA(220, 0, 220, 180));
     else
@@ -310,7 +311,7 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
     nvgStrokeWidth(nvg_blur, brighter ? 2.7f : 1.3f);
     nvgStroke(nvg_blur);
     // Text
-    nvgFillColor(nvg_blur, nvgRGBA(255, 255, 255,(brighter ? 160  : 0) + (int)(sin(s_time) * 50.f)));
+    nvgFillColor(nvg_blur, nvgRGBA(255, 50, 255,brighter ? 160  : 110));
     nvgFontFace(nvg_blur, "header");
     if (mouseOverNode) {
         const float scale = 0.25f;
