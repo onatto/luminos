@@ -118,4 +118,12 @@ function core.createConn(nodeInp, nodeOut, inpName, outName)
   core.nodes[nodeInp].connections[inpName] = {out_node_id = nodeOut, port_name = outName}
 end
 
+function core.defConst(node, input_name, const)
+  core.nodes[node].constants[input_name] = const
+end
+
+coreCreateNode = core.createNode
+coreCreateConn = core.createConn
+coreDefConst = core.defConst
+
 return core

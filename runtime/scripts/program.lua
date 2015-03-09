@@ -89,6 +89,7 @@ function portProgramStart()
     if (ui.getKeyboardState(SDL.Key.O) == KeyEvent.Press) then
         C.coreNewWorkspace()
         C.coreLoadWorkspace()
+        C.coreSetupWorkspace()
     end
     if (ui.getKeyboardState(SDL.Key.P) == KeyEvent.Press) then
         core.saveWorkspace()

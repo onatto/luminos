@@ -209,6 +209,77 @@ void coreDumpData()
     }
 }
 
+void coreSetupWorkspace()
+{
+   int ii;
+   lua_State* L = getLuaState(); 
+
+   //function core.createNode(id, x, y, w, h, module, submodule)
+   lua_getglobal(L, "coreCreateNode");
+   for (ii = 0; ii < nodeCnt; ii++) {
+       Node* n = (Node*)(s_nodePool.data + ii*sizeof(Node));
+       uint16 len_mod = (uint16)s_strPool.data[n->moduleOffset];
+       uint16 len_xform = (uint16)s_strPool.data[n->xformOffset];
+       uint8* mod = s_strPool.data + n->moduleOffset+2;
+       uint8* xform = s_strPool.data + n->xformOffset+2;
+       
+       lua_pushvalue(L, -1);
+       lua_pushinteger(L, n->id);
+       lua_pushinteger(L, n->x);
+       lua_pushinteger(L, n->y);
+       lua_pushinteger(L, n->w);
+       lua_pushinteger(L, n->h);
+       lua_pushlstring(L, mod, len_mod);
+       lua_pushlstring(L, xform, len_xform);
+       lua_call(L, 7, 0);
+   }
+   lua_pop(L, 1);
+   // function core.createConn(nodeInp, nodeOut, inpName, outName)
+   lua_getglobal(L, "coreCreateConn");
+   for (ii = 0; ii < connCnt; ii++) {
+       Connection* c = (Connection*)(s_connectionPool.data + ii*sizeof(Connection));
+       uint16 len_in = (uint16)s_strPool.data[c->inputNameOffset];
+       uint16 len_out = (uint16)s_strPool.data[c->outputNameOffset];
+       uint8* inp = s_strPool.data + c->inputNameOffset + 2;
+       uint8* out = s_strPool.data + c->outputNameOffset + 2;
+
+       lua_pushvalue(L, -1);
+       lua_pushinteger(L, c->inputNodeID);
+       lua_pushinteger(L, c->outputNodeID);
+       lua_pushlstring(L, inp, len_in);
+       lua_pushlstring(L, out, len_out);
+       lua_call(L, 4, 0);
+   }
+   lua_pop(L, 1);
+   //function core.defConst(node, input_name, const)
+   lua_getglobal(L, "coreDefConst");
+   for (ii = 0; ii < constStrCnt; ii++) {
+       Constant* c = (Constant*)(s_constStrPool.data + ii * sizeof(Constant));
+       uint16 len_inp = s_strPool.data[c->inputNameOffset];
+       uint16 len_constant = s_strPool.data[c->strOffset];
+       uint8* inp = s_strPool.data + c->inputNameOffset + 2;
+       uint8* constant = s_strPool.data + c->strOffset + 2;
+
+       lua_pushvalue(L, -1);
+       lua_pushinteger(L, c->id);
+       lua_pushlstring(L, inp, len_inp);
+       lua_pushlstring(L, constant, len_constant);
+       lua_call(L, 3, 0);
+   }
+   for (ii = 0; ii < constNumberCnt; ii++) {
+       Constant* c = (Constant*)(s_constNumberPool.data + ii * sizeof(Constant));
+       uint16 len_inp = s_strPool.data[c->inputNameOffset];
+       uint8* inp = s_strPool.data + c->inputNameOffset + 2;
+
+       lua_pushvalue(L, -1);
+       lua_pushinteger(L, c->id);
+       lua_pushlstring(L, inp, len_inp);
+       lua_pushnumber(L, c->val);
+       lua_call(L, 3, 0);
+   }
+   lua_pop(L, 1);
+}
+
 void coreNewWorkspace()
 {
     initBuffer(&s_strPool, STRING_POOL_SIZE);
@@ -247,7 +318,6 @@ void coreSaveWorkspace()
     writeBufferFile(&s_constStrPool, f);
     writeBufferFile(&s_connectionPool, f);
     fclose(f);
-    coreDumpWorkspace();
 }
 
 void coreLoadWorkspace()
@@ -265,7 +335,6 @@ void coreLoadWorkspace()
     readBufferFile(&s_constStrPool, f);
     readBufferFile(&s_connectionPool, f);
     fclose(f);
-    coreDumpWorkspace();
 }
 
 void coreStoreNode(uint32_t id, int32_t x, int32_t y, uint16_t w, uint16_t h, const char* module, const char* xform)

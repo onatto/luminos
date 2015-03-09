@@ -81,6 +81,9 @@ static char wbuffer[4096];
 static size_t wbuffer_len = 0;
 void nw_send(const char* msg)
 {
+    if (sockfd == 0) {
+        return;
+    }
     int len = strlen(msg);
     memcpy(wbuffer + wbuffer_len, msg, len);
     wbuffer[wbuffer_len + len] = 4;
@@ -91,7 +94,9 @@ void nw_send(const char* msg)
 // Flush writes at the end of the frame
 void networkFlushWrites()
 {
-    int n = send(sockfd, wbuffer, wbuffer_len, 0);
+    if (wbuffer_len > 0) {
+        int n = send(sockfd, wbuffer, wbuffer_len, 0);
+    }
     if (n < 0) {
         printf("Error writing to socket...\n");
     }
@@ -103,6 +108,10 @@ void networkFlushWrites()
 
 void networkUpdate()
 {
+    if (sockfd == 0) {
+        return;
+    }
+
     int n = read(sockfd, buffer, BUFFER_SIZE);
     if (n > 0) {
         receiveData(buffer, n);

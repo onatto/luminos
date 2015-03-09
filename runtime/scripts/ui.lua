@@ -170,7 +170,7 @@ end
 local function DrawNode(node)
     local numInputs = #node.xform.inputs
     local numOutputs = #node.xform.outputs
-    nodeStatus = C.uiDrawNode(node.x, node.y, node.w, node.h, node.hoverState, 
+    local nodeStatus = C.uiDrawNode(node.x, node.y, node.w, node.h, node.hoverState, 
     node.xform.dispname, numInputs, numOutputs, g_time)
 
     local selectedInput = bit.rshift(nodeStatus, 16)

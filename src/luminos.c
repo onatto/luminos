@@ -75,7 +75,6 @@ int main(int _argc, char** _argv)
 
     // Init core module
     coreInit("scripts/program.lua", getErrorMsg());
-    coreExecPort("portProgramInit");
 
     // Init UI module - depends on core
     uiInit();
@@ -84,6 +83,7 @@ int main(int _argc, char** _argv)
     lua_getglobal(getLuaState(), "serverIP");
     const char* server_ip = lua_tolstring(getLuaState(), -1, NULL);
     networkInit(getLuaState(), server_ip, 3333);
+    coreExecPort("portProgramInit"); // Also sends msg "Workspace"
 
     int64_t timeOffset = SDL_GetPerformanceCounter();
     SDL_Event event;
