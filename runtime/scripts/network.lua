@@ -8,7 +8,7 @@ local lexer = require 'lexer'
 
 ffi.cdef
 [[
-    void nw_send(const char* msg);
+    int nw_send(const char* msg);
 ]]
 
 local function SplitWhitespace(str)

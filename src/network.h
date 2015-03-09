@@ -10,7 +10,7 @@ struct lua_State;
 
 //extern "C"
 //{
-    FFI_EXPORT void nw_send(const char* msg);
+    FFI_EXPORT int nw_send(const char* msg);
 //}
 
 void networkInit(struct lua_State* l, const char* url, unsigned port);

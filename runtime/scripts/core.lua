@@ -122,6 +122,47 @@ function core.defConst(node, input_name, const)
   core.nodes[node].constants[input_name] = const
 end
 
+function core.updateConn(nodeInp, nodeOut, inputName, outputName)
+  local inpNode = core.nodes[nodeInp]
+  local outNode = core.nodes[nodeOut]
+  inpNode.connections[inputName] = {out_node_id = nodeOut, port_name = outputName}
+  C.nw_send("UpdateConn " .. tostring(nodeInp) .. " " .. inputName .. " " .. tostring(nodeOut) .. " " .. outputName)
+end
+
+function core.deleteConn(nodeInp, inputName)
+  core.nodes[nodeInp].connections[inputName] = nil
+  C.nw_send("DeleteConn " .. tostring(nodeInp) .. " " .. inputName)
+end
+
+function core.sendNodePosUpdate(nodeID, x, y)
+  local node = core.nodes[nodeID]
+  C.nw_send("UpdateNodePos " .. tostring(node.id) .. " " .. tostring(node.sx) .. " " .. tostring(node.sy))
+end
+
+function core.deleteNode(nodeID)
+  C.nw_send("DeleteNode " .. tostring(nodeID))
+end
+
+function core.updateConst(nodeID, inputName, constant)
+  local node = core.nodes[nodeID]
+  node.constants[inputName] = constant
+  C.nw_send("UpdateConst " .. tostring(nodeID) .. " " .. inputName .. " " .. tostring(constant))
+end
+
+function core.deleteConst(nodeID, inputName)
+  local node = core.nodes[nodeID]
+  node.constants[inputName] = nil
+  C.nw_send("DeleteConst " .. tostring(node.id) .. " " .. inputName)
+end
+
+function core.createNodeRequest(x, y, module, name)
+  local xformTable = lexer.xform(module, name)
+  local req = "CreateNode " .. table.concat({x, y, 180, 90,  module .. "/" .. name, xformTable.name}, " ")
+  if C.nw_send(req) == -1 then
+    core.createNode(#core.nodes + 1, x, y, 180, 90, module, name)
+  end
+end
+
 coreCreateNode = core.createNode
 coreCreateConn = core.createConn
 coreDefConst = core.defConst

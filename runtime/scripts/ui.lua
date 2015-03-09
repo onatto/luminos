@@ -130,8 +130,7 @@ function ui.dragConnectors()
        if not NodeStartIsInput then
           NodeStart, PortStart, NodeEnd, PortEnd, NodeStartID, NodeEndID = NodeEnd, PortEnd, NodeStart, PortStart, NodeEndID, NodeStartID
        end
-       NodeStart.connections[NodeStart.xform.input_map[PortStart]] = {out_node_id = NodeEnd.id, port_name = NodeEnd.xform.output_map[PortEnd]}
-       C.nw_send("UpdateConn " .. tostring(NodeStart.id) .. " " .. NodeStart.xform.input_map[PortStart] .. " " .. tostring(NodeEnd.id) .. " " .. NodeEnd.xform.output_map[PortEnd])
+       core.updateConn(NodeStart.id, NodeEnd.id, NodeStart.xform.input_map[PortStart], NodeEnd.xform.output_map[PortEnd])
     end
 
     if IPressLMB and MouseOnPort then
@@ -139,8 +138,7 @@ function ui.dragConnectors()
        -- Delete existing connection if there is any
        connection = NodeStart.connections[NodeStart.xform.input_map[PortStart]]
        if NodeStartIsInput and connection then
-          NodeStart.connections[NodeStart.xform.input_map[PortStart]] = nil
-          C.nw_send("DeleteConn " .. tostring(NodeStart.id) .. " " .. NodeStart.xform.inputs[PortStart].name)
+          core.deleteConn(NodeStart.id, NodeStart.xform.inputs[PortStart].name)
        end
     end
 
@@ -302,7 +300,7 @@ function ui.dragNodes()
 
     local StopDraggingNodes = function ()
         for i, node in ipairs(SelectedNodes) do
-            C.nw_send("UpdateNodePos " .. tostring(node.id) .. " " .. tostring(node.sx) .. " " .. tostring(node.sy))
+           core.sendNodePosUpdate(node.id, node.sx, node.sy)
         end
         DraggingNodes = false
     end
@@ -467,35 +465,8 @@ ui.TextInput = ""
 ui.EnteringCommands = false
 ui.UpdatingConstants = false
 
-local function CreateNodeRequest(args)
-    if not args or #args < 1 then
-        return
-    end
-    local xform = args[1]
-    cmp = helpers.split(xform, '/')
-    local module, submodule = cmp[1], cmp[2]
-    local xformTable = lexer.xform(module, submodule)
-    if not xformTable then
-       debugger.print("Couldn't create node with xform: " .. xform)
-       return
-    end
-
-    req = "CreateNode " .. table.concat({g_mouseState.mx, g_mouseState.my, 180, 90,  xform, xformTable.name}, " ")
-    if #args > 1 then
-        req = req .. " " .. table.concat(args, " ")
-    end
-    C.nw_send(req)
-end
-
-local function CreateNodeReq(module, name)
-    local xformTable = lexer.xform(module, name)
-    req = "CreateNode " .. table.concat({g_centerX + g_mouseState.mx, g_centerY + g_mouseState.my, 180, 90,  module .. "/" .. name, xformTable.name}, " ")
-    C.nw_send(req)
-end
-
 local CmdMap = {
 }
-
 
 function ui.update()
    local EnteringCommands = ui.EnteringCommands
@@ -529,7 +500,7 @@ function ui.update()
    end
    local function DeleteNodesMsg(SelectedNodes)
       for idx, node in ipairs(SelectedNodes) do
-         C.nw_send("DeleteNode " .. tostring(node.id))
+         core.deleteNode(node.id)
       end
    end
 
@@ -557,8 +528,7 @@ function ui.update()
       local NewConst = lexer.convertFromString(ui.TextInput, CurrentNode.xform.inputs[SelectedInput].type)
       -- Sanitize input at lexer.convertFromString
       if NewConst then
-         CurrentNode.constants[InputName] = NewConst
-         C.nw_send("UpdateConst " .. tostring(CurrentNode.id) .. " " .. InputName .. " " .. tostring(NewConst))
+         core.updateConst(CurrentNode.id, InputName, NewConst)
       end
    end
    local function RecacheAllNodes()
@@ -608,8 +578,7 @@ function ui.update()
           ui.TextInput = ""
        else
          local InputName = CurrentNode.xform.input_map[SelectedInput]
-         CurrentNode.constants[InputName] = CurrentNode.xform.inputs[SelectedInput].default
-         C.nw_send("DeleteConst " .. tostring(CurrentNode.id) .. " " .. InputName)
+         core.deleteConst(CurrentNode.id, InputName)
        end
     end
     if EnteringCommands then
@@ -667,7 +636,7 @@ function ui.xformList()
              local tt = 1
              for name, table in pairs(cache[MenuStack[1]]) do
                 if tt == MenuStack[2] then
-                   CreateNodeReq(table.module, table.name)
+                   core.createNodeRequest(g_centerX + g_mouseState.mx, g_centerY + g_mouseState.my, table.module, table.name)
                    MenuStack = {}
                    break
                 end

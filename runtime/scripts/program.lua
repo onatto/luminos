@@ -86,12 +86,12 @@ function portProgramStart()
         loadTransforms()
     end
 
-    if (ui.getKeyboardState(SDL.Key.O) == KeyEvent.Press) then
+    if (ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold and ui.getKeyboardState(SDL.Key.L) == KeyEvent.Press) then
         C.coreNewWorkspace()
         C.coreLoadWorkspace()
         C.coreSetupWorkspace()
     end
-    if (ui.getKeyboardState(SDL.Key.P) == KeyEvent.Press) then
+    if (ui.getKeyboardState(SDL.Key.LCTRL) == KeyEvent.Hold and ui.getKeyboardState(SDL.Key.S) == KeyEvent.Press) then
         core.saveWorkspace()
     end
 

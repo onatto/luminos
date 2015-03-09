@@ -79,16 +79,17 @@ void networkInit(struct lua_State* l, const char* url, unsigned port)
 
 static char wbuffer[4096];
 static size_t wbuffer_len = 0;
-void nw_send(const char* msg)
+int nw_send(const char* msg)
 {
     if (sockfd == 0) {
-        return;
+        return -1;
     }
     int len = strlen(msg);
     memcpy(wbuffer + wbuffer_len, msg, len);
     wbuffer[wbuffer_len + len] = 4;
     wbuffer_len += len+1;
     printf("Sending msg: %s\n", msg);
+    return 0;
 }
 
 // Flush writes at the end of the frame
