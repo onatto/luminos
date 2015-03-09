@@ -140,7 +140,16 @@ function core.sendNodePosUpdate(nodeID, x, y)
 end
 
 function core.deleteNode(nodeID)
-  C.nw_send("DeleteNode " .. tostring(nodeID))
+  if C.nw_send("DeleteNode " .. tostring(nodeID)) == -1 then
+    local node = core.nodes[nodeID]
+    if node then
+      local deleteFunc = lexer.xformFunc[node.xform.module][node.xform.name].delete
+      if deleteFunc then
+        deleteFunc(node.input_values,node.output_values)
+      end
+    end
+    core.nodes[nodeID] = nil
+  end
 end
 
 function core.updateConst(nodeID, inputName, constant)
