@@ -32,7 +32,7 @@ local function CreateNodeCmd(args)
   local name =       args[7]
   cmp = helpers.split(xform, '/')
   local module, submodule = cmp[1], cmp[2]
-  ui.createNode(id,x,y,w,h,module,submodule)
+  core.createNode(id,x,y,w,h,module,submodule)
 end
 
 local function CreateConnCmd(args)

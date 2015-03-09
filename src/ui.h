@@ -17,8 +17,8 @@ void uiShutdown();
 
 // For the FFI, export these as C functions
 FFI_EXPORT uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* title, uint8 numInputs, uint8 numOutputs);
-FFI_EXPORT void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
-FFI_EXPORT void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
+FFI_EXPORT void uiDrawPort(float x, float y, char r, char g, char b, char a);
+FFI_EXPORT void uiDrawWire(float px, float py, float qx, float qy);
 FFI_EXPORT uint8 uiGetKeyboardState(uint16 key);
 FFI_EXPORT void uiWarpMouseInWindow(int x, int y);
 FFI_EXPORT void uiSaveNVGState();

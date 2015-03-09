@@ -87,4 +87,35 @@ function core.cacheNode(node)
   end
 end
 
+function core.createNode(id, x, y, w, h, module, submodule)
+    local node = {}
+    node.sx = x
+    node.sy = y
+    node.w = w
+    node.h = h
+    node.id = id
+    node.hoverState = 0
+    node.constants = {}
+    node.connections = {}
+    node.module = module
+    node.submodule = submodule
+    node.xform = lexer.xform(module,submodule)
+    node.input_values = {}
+    node.output_values = {}
+
+    -- Initialise table values to {} so that their contents can be set inside the xform
+    for idx, output in ipairs(node.xform.outputs) do
+       if (lexer.generaliseType(output.type) == lexer.Types.Table) then
+          node.output_values[output.name] = {}
+       end
+    end
+
+    core.nodes[id] = node
+    return node
+end
+
+function core.createConn(nodeInp, nodeOut, inpName, outName)
+  core.nodes[nodeInp].connections[inpName] = {out_node_id = nodeOut, port_name = outName}
+end
+
 return core

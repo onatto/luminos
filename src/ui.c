@@ -330,7 +330,7 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
         float portX = x + spacing * i;
         bool mouseOver = AABBPointTest(portX - 8.f, portY - 8.f, 16.f, 16.f, mouseX, mouseY);
         mouseOverInput = mouseOver ? i : mouseOverInput;
-        uiDrawPort(portX, portY, 0, 0, 100, 255, mouseOver ? 150 : 90);
+        uiDrawPort(portX, portY, 0, 100, 255, mouseOver ? 150 : 90);
     }
 
     spacing = w / (float)(numOutputs+1);
@@ -340,7 +340,7 @@ uint32 uiDrawNode(float x, float y, float w, float h, uint8 state, const char* t
         float portX = x + spacing * i;
         bool mouseOver = AABBPointTest(portX - 8.f, portY - 8.f, 16.f, 16.f, mouseX, mouseY);
         mouseOverOutput = mouseOver ? i : mouseOverOutput;
-        uiDrawPort(portX, portY, 0, 255, 0, 0, mouseOver ? 150 : 90);
+        uiDrawPort(portX, portY, 255, 0, 0, mouseOver ? 150 : 90);
     }
 
     return (mouseOverInput << 16) | (mouseOverOutput << 8)  | (mouseOverNode << 0);
@@ -351,7 +351,7 @@ uint8 uiGetKeyboardState(uint16 key)
     return (keyboard_state_prev[key] << 1) | (keyboard_state[key] << 0);
 }
 
-void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char a)
+void uiDrawPort(float x, float y, char r, char g, char b, char a)
 {
     nvgBeginPath(nvg_blur);
     nvgCircle(nvg_blur, x, y, 5.f);
@@ -362,7 +362,7 @@ void uiDrawPort(float x, float y, int widgetState, char r, char g, char b, char 
     nvgFill(nvg_blur);
 }
 
-void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state)
+void uiDrawWire(float px, float py, float qx, float qy)
 {
     float tmp;
     if (py<qy) {

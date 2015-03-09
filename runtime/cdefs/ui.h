@@ -1,6 +1,5 @@
 uint32_t uiDrawNode(float x, float y, float w, float h, uint8_t state, const char* title, uint8_t numInputs, uint8_t numOutputs, float time);
-void uiDrawPort(float x, float y, int widget_state, char r, char g, char b, char a);
-void uiDrawWire(float px, float py, float qx, float qy, int start_state, int end_state);
+void uiDrawWire(float px, float py, float qx, float qy);
 uint8_t uiGetKeyboardState(uint16_t key);
 void uiWarpMouseInWindow(int x, int y);
 void uiSaveNVGState();

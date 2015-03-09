@@ -13,41 +13,10 @@ local C = ffi.C
 
 helpers.cdef(ffi, "ui.h")
 
-ui.drawNode = ffi.C.uiDrawNode
-ui.drawPort = ffi.C.uiDrawPort
-ui.drawWire = ffi.C.uiDrawWire
 ui.getKeyboardState = ffi.C.uiGetKeyboardState
 ui.warpMouse = ffi.C.uiWarpMouseInWindow
 
-local BNDWidgetState = { Default = 0, Hover = 1, Active = 2 }
-
-function ui.createNode(id, x, y, w, h, module, submodule)
-    local node = {}
-    node.sx = x
-    node.sy = y
-    node.w = w
-    node.h = h
-    node.id = id
-    node.bndWidgetState = BNDWidgetState.Default
-    node.constants = {}
-    node.connections = {}
-    node.module = module
-    node.submodule = submodule
-    node.xform = lexer.xform(module,submodule)
-    node.input_values = {}
-    node.output_values = {}
-
-    -- Initialise table values to {} so that their contents can be set inside the xform
-    for idx, output in ipairs(node.xform.outputs) do
-       if (lexer.generaliseType(output.type) == lexer.Types.Table) then
-          node.output_values[output.name] = {}
-       end
-    end
-
-    core.nodes[id] = node
-    --table.insert(core.nodes, node)
-    return node
-end
+local HoverState = { Default = 0, Hover = 1, Active = 2 }
 
 function ui.shutdown()
 end
@@ -185,7 +154,7 @@ function ui.dragConnectors()
            PortEnd = HoveredInput
         end
         -- Draw the dragged wire
-        ui.drawWire(MouseDrag.canchorx, MouseDrag.canchory, MouseX, MouseY, BNDWidgetState.Active, BNDWidgetState.Active)
+        C.uiDrawWire(MouseDrag.canchorx, MouseDrag.canchory, MouseX, MouseY)
     end
 
     if IReleaseLMB and DraggingConnectors then
@@ -201,7 +170,7 @@ end
 local function DrawNode(node)
     local numInputs = #node.xform.inputs
     local numOutputs = #node.xform.outputs
-    nodeStatus = ui.drawNode(node.x, node.y, node.w, node.h, node.bndWidgetState, 
+    nodeStatus = C.uiDrawNode(node.x, node.y, node.w, node.h, node.hoverState, 
     node.xform.dispname, numInputs, numOutputs, g_time)
 
     local selectedInput = bit.rshift(nodeStatus, 16)
@@ -223,8 +192,7 @@ local function DrawNode(node)
            if inputPortX < outputPortX then
               inputPortX, outputPortX, inputPortY, outputPortY = outputPortX, inputPortX, outputPortY, inputPortY
            end
-           ui.drawWire(inputPortX, inputPortY, outputPortX, outputPortY,
-           BNDWidgetState.Active, BNDWidgetState.Active)
+           C.uiDrawWire(inputPortX, inputPortY, outputPortX, outputPortY)
         end
      end
 
@@ -276,7 +244,7 @@ function ui.selectNodes()
         FoundNode = SearchInSelectedNodes(HoveredNode)
         if FoundNode then
             local removedNode = table.remove(SelectedNodes, FoundNode)
-            removedNode .bndWidgetState = BNDWidgetState.Default
+            removedNode.hoverState = HoverState.Default
         else
             table.insert(SelectedNodes, HoveredNode)
         end
@@ -284,7 +252,7 @@ function ui.selectNodes()
 
     local SelectNodeWithoutCTRL = function ()
        for i, node in ipairs(SelectedNodes) do
-          node.bndWidgetState = BNDWidgetState.Default
+          node.hoverState = HoverState.Default
        end
        SelectedNodes = {HoveredNode}
     end
@@ -299,13 +267,13 @@ function ui.selectNodes()
 
     if IPressLMB and not HoveredNode then
        for i, node in ipairs(SelectedNodes) do
-          node.bndWidgetState = BNDWidgetState.Default
+          node.hoverState = HoverState.Default
        end
         SelectedNodes = {}
     end
 
     for i, node in ipairs(SelectedNodes) do
-        node.bndWidgetState = BNDWidgetState.Active
+        node.hoverState = HoverState.Active
     end
 end
 
