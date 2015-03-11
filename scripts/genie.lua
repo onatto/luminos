@@ -6,6 +6,7 @@
 LUMINOS_DIR = path.getabsolute("./../") .. "/"
 LUA_DIR = os.getenv("LUAJIT_DIR") or LUMINOS_DIR .. "../luajit-2.0/"
 SDL2_DIR = os.getenv("SDL2_DIR") or LUMINOS_DIR .. "../SDL/"
+OVR_DIR = os.getenv("OVR_DIR") or LUMINOS_DIR .. "../OculusSDK/LibOVR/"
 
 solution "luminos"
 	configurations {
@@ -42,10 +43,12 @@ includedirs {
     LUMINOS_DIR .. "/3rdparty",
     LUMINOS_DIR .. "/src",
     LUA_DIR .. "/src",
+    OVR_DIR .. "/Include/",
 }
 
 
 files {
+    LUMINOS_DIR .. "/src/**.cpp",
     LUMINOS_DIR .. "/src/**.c",
     LUMINOS_DIR .. "/src/**.h",
     LUMINOS_DIR .. "/3rdparty/nanovg/*.c",
@@ -57,13 +60,6 @@ links {
 
 libdirs {
     LUA_DIR .. "/src",
-}
-
-configuration { "x32", "windows*" }
-libdirs {
-}
-configuration { "x64", "windows*" }
-libdirs {
 }
 
 configuration { "x32", "linux" }
@@ -84,10 +80,22 @@ libdirs {
 }
 
 configuration { "x32", "windows" }
-    libdirs { SDL2_DIR .. "lib/x86" }
+    libdirs { SDL2_DIR .. "lib/x86"}
 
 configuration { "x64", "windows" }
-    libdirs { SDL2_DIR .. "lib/x64" }
+    libdirs { SDL2_DIR .. "lib/x64"}
+
+configuration { "x64", "vs2012" }
+    links {  OVR_DIR .. "Lib/x64/VS2012/libovr64"}
+
+configuration { "x32", "vs2012" }
+    links {  OVR_DIR .. "Lib/Win32/VS2012/libovr"}
+
+configuration { "x64", "vs2013" }
+    links {  OVR_DIR .. "Lib/x64/VS2013/libovr64"}
+
+configuration { "x32", "vs2013" }
+    links {  OVR_DIR .. "Lib/Win32/VS2013/libovr"}
 
 configuration { "vs*" }
     linkoptions {
@@ -95,7 +103,8 @@ configuration { "vs*" }
     }
     links {
 	    "lua51",
-	    "opengl32"
+	    "opengl32",
+	    "winmm"
     }
 
 configuration { "vs201*" }

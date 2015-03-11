@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include "types.h"
-#include "gl44.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+
+#include "gl44.h"
 
 void wndResizeWindow(uint32 width, uint32 height)
 {
@@ -23,7 +25,6 @@ struct SDL_Window* wndInitSDL(uint32_t width, uint32_t height)
                     , SDL_WINDOW_SHOWN
                     | SDL_WINDOW_RESIZABLE
                     | SDL_WINDOW_OPENGL
-                    | SDL_WINDOW_FULLSCREEN
                     );
 
     if (wnd == NULL) {
@@ -40,4 +41,15 @@ void wndInitGL(struct SDL_Window* wnd)
     if(ogl_LoadFunctions() == ogl_LOAD_FAILED) {
         printf("Loading GL functions failed.\n");
     }
+}
+
+void* wndHandle(struct SDL_Window* wnd)
+{
+    SDL_SysWMinfo info;
+    SDL_GetWindowWMInfo(wnd, &info);
+#ifdef MSVC
+    return info.info.win.window;
+#else
+    return info.info.x11.window;
+#endif
 }
