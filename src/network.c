@@ -97,13 +97,13 @@ void networkFlushWrites()
 {
     if (wbuffer_len > 0) {
         int n = send(sockfd, wbuffer, wbuffer_len, 0);
-    }
-    if (n < 0) {
-        printf("Error writing to socket...\n");
-    }
-    else
-    {
-        wbuffer_len = 0;
+        if (n < 0) {
+            printf("Error writing to socket...\n");
+        }
+        else
+        {
+            wbuffer_len = 0;
+        }
     }
 }
 

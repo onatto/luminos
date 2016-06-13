@@ -21,7 +21,6 @@
 #include "ui.h"
 #include "linmath.h"
 #include "primitives.h"
-#include "vr.h"
 
 static bool quit = false;
 
@@ -74,8 +73,6 @@ int main(int _argc, char** _argv)
     uint32 tex = gfxCreateTexture2D("textures/doge.png", 0, 0, TEX_RGBA8, 0);
     uint32 location = glGetUniformLocation(ssquad.fsh, "tex");
 
-    vrInit();
-    vrCreateHMD(wndHandle(wnd));
     // Init core module
     coreInit("scripts/program.lua", getErrorMsg());
 
@@ -149,9 +146,6 @@ int main(int _argc, char** _argv)
         gfxBlitFramebuffer(color_tex, (float)width-300.f, 0.f, 300.f, 300.f, width, height);
         uiVisualiserFrame((float)width-300.f, 0.f, 300.f, 300.f);
 
-        vrBeginFrame();
-        vrEndFrame();
-       
         networkUpdate();
         networkFlushWrites();
         SDL_WaitEventTimeout(NULL, 16);
@@ -161,7 +155,6 @@ int main(int _argc, char** _argv)
     uiShutdown();
     networkShutdown();
     coreShutdown();
-    vrShutdown();
     gfxShutdown();
 
     SDL_DestroyWindow(sdl_wnd);
