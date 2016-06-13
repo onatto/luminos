@@ -55,8 +55,3 @@ elseif arg[1] == 'r64' then
     config = 'release64'
     builddir = 'linux64_clang'
 end
-
-exec ("cd /home/onat/code/luminos/")
-exec ("make config=" .. config .. " -C .build/projects/gmake-linux-clang")
-exec ("cp .build/" .. builddir .. "/bin/" .. prgname .. " runtime")
-exec ("cd runtime ; ./" .. prgname .. " &")

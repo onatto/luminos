@@ -7,17 +7,26 @@ Dependencies
 -------------
 SDL2
 luajit2.0
+redis
+golang
 
 Installation
 ------------
 Set $(SDL2_DIR) and $(LUAJIT_DIR) environment variables, otherwise they are expected at ../luajit/
 
-For Visual Studio project files:
+Generate Visual Studio project files:
 lua build.lua vs
 
 Building for Linux:
 lua build.lua clang
 lua build.lua d64
+
+Running
+-----------------
+redis-server
+go run scripts/server.go
+cd runtime
+./luminosDebug
 
 Screenshot
 ----------
